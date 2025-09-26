@@ -1,9 +1,11 @@
+import { AppRoutes } from "./routes/AppRoutes";
+import { AuthProvider } from "./contexts/AuthContext";
+
 function App() {
   return (
-    <div>
-      <h1>Projeto Limpo</h1>
-      <p>Pronto para desenvolvimento!</p>
-    </div>
+    <AuthProvider>
+      <AppRoutes />
+    </AuthProvider>
   );
 }
 

@@ -1,0 +1,233 @@
+/* Register Page Styles */
+.register-container {
+  min-height: 100vh;
+  background-color: #f9fafb;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 3rem 0;
+}
+
+@media (min-width: 640px) {
+  .register-container {
+    padding: 3rem 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .register-container {
+    padding: 3rem 2rem;
+  }
+}
+
+/* Register Header */
+.register-header {
+  margin: 0 auto;
+  width: 100%;
+  max-width: 28rem;
+  margin-bottom: 2rem;
+}
+
+.register-title {
+  margin-top: 1.5rem;
+  text-align: center;
+  font-size: 1.875rem;
+  font-weight: 800;
+  color: #111827;
+}
+
+.register-subtitle {
+  margin-top: 0.5rem;
+  text-align: center;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+/* Register Form Container */
+.register-form-container {
+  margin-top: 2rem;
+  margin: 0 auto;
+  width: 100%;
+  max-width: 28rem;
+}
+
+.register-form-card {
+  background-color: white;
+  padding: 2rem 1rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  border-radius: 0.5rem;
+}
+
+@media (min-width: 640px) {
+  .register-form-card {
+    padding: 2rem 2.5rem;
+  }
+}
+
+/* Register Form Styles */
+.register-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Error Message */
+.register-error {
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  padding: 0.75rem 1rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+}
+
+/* Form Field */
+.register-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.register-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.25rem;
+}
+
+.register-input {
+  appearance: none;
+  display: block;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  background-color: white;
+  color: #111827;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  box-sizing: border-box;
+}
+
+.register-input::placeholder {
+  color: #9ca3af;
+}
+
+.register-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.register-select {
+  appearance: none;
+  display: block;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  background-color: white;
+  color: #111827;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 0.5rem center;
+  background-repeat: no-repeat;
+  background-size: 1.5em 1.5em;
+  padding-right: 2.5rem;
+  box-sizing: border-box;
+}
+
+.register-select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Checkbox and Terms */
+.register-checkbox-container {
+  display: flex;
+  align-items: flex-start;
+}
+
+.register-checkbox {
+  width: 1rem;
+  height: 1rem;
+  color: #2563eb;
+  border: 1px solid #d1d5db;
+  border-radius: 0.25rem;
+  margin-right: 0.5rem;
+  margin-top: 0.125rem;
+  flex-shrink: 0;
+  background-color: white;
+}
+
+.register-checkbox:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.register-checkbox-label {
+  font-size: 0.875rem;
+  color: #111827;
+  line-height: 1.4;
+}
+
+.register-terms-link {
+  color: #2563eb;
+  text-decoration: none;
+}
+
+.register-terms-link:hover {
+  color: #1d4ed8;
+}
+
+/* Button Container */
+.register-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.register-button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Register Footer */
+.register-footer {
+  text-align: center;
+  margin-top: 1.5rem;
+}
+
+.register-footer-text {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.register-footer-link {
+  font-weight: 500;
+  color: #2563eb;
+  text-decoration: none;
+}
+
+.register-footer-link:hover {
+  color: #1d4ed8;
+}
+
+/* Responsive Design */
+@media (max-width: 640px) {
+  .register-container {
+    padding: 1rem;
+  }
+
+  .register-form-card {
+    padding: 1.5rem 1rem;
+  }
+
+  .register-title {
+    font-size: 1.5rem;
+  }
+}

@@ -1,0 +1,101 @@
+/* Button Base Styles */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  transition: all 0.2s ease-in-out;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  outline: none;
+  position: relative;
+}
+
+.btn:focus {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Button Variants */
+.btn--primary {
+  background-color: #2563eb;
+  color: white;
+}
+
+.btn--primary:hover:not(:disabled) {
+  background-color: #1d4ed8;
+}
+
+.btn--secondary {
+  background-color: #4b5563;
+  color: white;
+}
+
+.btn--secondary:hover:not(:disabled) {
+  background-color: #374151;
+}
+
+.btn--outline {
+  background-color: white;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.btn--outline:hover:not(:disabled) {
+  background-color: #f9fafb;
+}
+
+.btn--ghost {
+  background-color: transparent;
+  color: #374151;
+}
+
+.btn--ghost:hover:not(:disabled) {
+  background-color: #f3f4f6;
+}
+
+/* Button Sizes */
+.btn--sm {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+}
+
+.btn--md {
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+}
+
+.btn--lg {
+  padding: 0.75rem 1.5rem;
+  font-size: 1.125rem;
+}
+
+/* Loading Spinner */
+.btn__spinner {
+  animation: spin 1s linear infinite;
+  margin-right: 0.5rem;
+  width: 1rem;
+  height: 1rem;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Full Width */
+.btn--full {
+  width: 100%;
+}

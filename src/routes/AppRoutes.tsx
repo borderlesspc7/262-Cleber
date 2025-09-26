@@ -1,17 +1,12 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { paths } from "./paths";
 import { ProtectedRoute } from "./ProtectedRoutes";
+import { LoginPage } from "../pages/Login/Login";
+import { RegisterPage } from "../pages/Register/Register";
 
 export const AppRoutes = () => {
   function DashboardPage() {
     return <div>DashboardPage</div>;
-  }
-
-  function LoginPage() {
-    return <div>LoginPage</div>;
-  }
-  function RegisterPage() {
-    return <div>RegisterPage</div>;
   }
 
   return (
