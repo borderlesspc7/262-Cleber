@@ -3,12 +3,9 @@ import { paths } from "./paths";
 import { ProtectedRoute } from "./ProtectedRoutes";
 import { LoginPage } from "../pages/Login/Login";
 import { RegisterPage } from "../pages/Register/Register";
+import { DashboardPage } from "../pages/Dashboard/Dashboard";
 
 export const AppRoutes = () => {
-  function DashboardPage() {
-    return <div>DashboardPage</div>;
-  }
-
   return (
     <BrowserRouter>
       <Routes>
