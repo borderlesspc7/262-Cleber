@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Layout } from "../../components/Layout/Layout";
 import { DashboardTab } from "../../components/tabs/DashboardTab";
-import { CadastrosTab } from "../../components/tabs/CadastrosTab";
+import { CadastrosTab } from "../Cadastros/CadastrosTab";
 import { FaccoesTab } from "../../components/tabs/FaccoesTab";
 import { EtapasTab } from "../../components/tabs/EtapasTab";
 import { ProdutoTab } from "../../components/tabs/ProdutoTab";
@@ -10,28 +10,36 @@ import { GestaoProducoesTab } from "../../components/tabs/GestaoProducoesTab";
 import { FinanceiroTab } from "../../components/tabs/FinanceiroTab";
 import "./Dashboard.css";
 
-type TabType = 'dashboard' | 'cadastros' | 'faccoes' | 'etapas' | 'produto' | 'ordemProducoes' | 'gestaoProducoes' | 'financeiro';
+type TabType =
+  | "dashboard"
+  | "cadastros"
+  | "faccoes"
+  | "etapas"
+  | "produto"
+  | "ordemProducoes"
+  | "gestaoProducoes"
+  | "financeiro";
 
 export const DashboardPage = () => {
-  const [activeTab, setActiveTab] = useState<TabType>('dashboard');
+  const [activeTab, setActiveTab] = useState<TabType>("dashboard");
 
   const renderTabContent = () => {
     switch (activeTab) {
-      case 'dashboard':
+      case "dashboard":
         return <DashboardTab />;
-      case 'cadastros':
-        return <CadastrosTab />;
-      case 'faccoes':
+      case "cadastros":
+        return <CadastrosTab onTabChange={handleTabChange} />;
+      case "faccoes":
         return <FaccoesTab />;
-      case 'etapas':
+      case "etapas":
         return <EtapasTab />;
-      case 'produto':
+      case "produto":
         return <ProdutoTab />;
-      case 'ordemProducoes':
+      case "ordemProducoes":
         return <OrdemProducoesTab />;
-      case 'gestaoProducoes':
+      case "gestaoProducoes":
         return <GestaoProducoesTab />;
-      case 'financeiro':
+      case "financeiro":
         return <FinanceiroTab />;
       default:
         return <DashboardTab />;
@@ -44,9 +52,7 @@ export const DashboardPage = () => {
 
   return (
     <Layout activeTab={activeTab} onTabChange={handleTabChange}>
-      <div className="dashboard-container">
-        {renderTabContent()}
-      </div>
+      <div className="dashboard-container">{renderTabContent()}</div>
     </Layout>
   );
 };

@@ -1,31 +1,26 @@
 import React, { useState } from "react";
-import { 
-  Package, 
-  Tag, 
-  Palette, 
-  Ruler
-} from "lucide-react";
+import { Package, Tag, Palette, Ruler } from "lucide-react";
 import "../products/products.css";
 import { CategoriaFormComponent } from "../products/CategoriaForm";
 import { CorFormComponent } from "../products/CorForm";
 import { TamanhoFormComponent } from "../products/TamanhoForm";
 import { ProdutoFormComponent } from "../products/ProdutoForm";
-import type { 
-  Categoria, 
-  Cor, 
-  Tamanho, 
+import type {
+  Categoria,
+  Cor,
+  Tamanho,
   Produto,
   CategoriaForm,
   CorForm,
   TamanhoForm,
-  ProdutoForm
+  ProdutoForm,
 } from "../../types/product";
 
-type ProductTabType = 'produtos' | 'categorias' | 'cores' | 'tamanhos';
+type ProductTabType = "produtos" | "categorias" | "cores" | "tamanhos";
 
 export const ProdutoTab: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<ProductTabType>('produtos');
-  
+  const [activeTab, setActiveTab] = useState<ProductTabType>("produtos");
+
   // Estados para os dados (em produção real, viriam de uma API)
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [cores, setCores] = useState<Cor[]>([]);
@@ -45,15 +40,21 @@ export const ProdutoTab: React.FC = () => {
   };
 
   const handleEditCategoria = (id: string, categoriaForm: CategoriaForm) => {
-    setCategorias(categorias.map(c => 
-      c.id === id 
-        ? { ...c, nome: categoriaForm.nome, descricao: categoriaForm.descricao }
-        : c
-    ));
+    setCategorias(
+      categorias.map((c) =>
+        c.id === id
+          ? {
+              ...c,
+              nome: categoriaForm.nome,
+              descricao: categoriaForm.descricao,
+            }
+          : c
+      )
+    );
   };
 
   const handleDeleteCategoria = (id: string) => {
-    setCategorias(categorias.filter(c => c.id !== id));
+    setCategorias(categorias.filter((c) => c.id !== id));
   };
 
   // Funções para gerenciar cores
@@ -69,15 +70,15 @@ export const ProdutoTab: React.FC = () => {
   };
 
   const handleEditCor = (id: string, corForm: CorForm) => {
-    setCores(cores.map(c => 
-      c.id === id 
-        ? { ...c, nome: corForm.nome, codigo: corForm.codigo }
-        : c
-    ));
+    setCores(
+      cores.map((c) =>
+        c.id === id ? { ...c, nome: corForm.nome, codigo: corForm.codigo } : c
+      )
+    );
   };
 
   const handleDeleteCor = (id: string) => {
-    setCores(cores.filter(c => c.id !== id));
+    setCores(cores.filter((c) => c.id !== id));
   };
 
   // Funções para gerenciar tamanhos
@@ -93,23 +94,28 @@ export const ProdutoTab: React.FC = () => {
   };
 
   const handleEditTamanho = (id: string, tamanhoForm: TamanhoForm) => {
-    setTamanhos(tamanhos.map(t => 
-      t.id === id 
-        ? { ...t, nome: tamanhoForm.nome, ordem: tamanhoForm.ordem }
-        : t
-    ));
+    setTamanhos(
+      tamanhos.map((t) =>
+        t.id === id
+          ? { ...t, nome: tamanhoForm.nome, ordem: tamanhoForm.ordem }
+          : t
+      )
+    );
   };
 
   const handleDeleteTamanho = (id: string) => {
-    setTamanhos(tamanhos.filter(t => t.id !== id));
+    setTamanhos(tamanhos.filter((t) => t.id !== id));
   };
-
 
   // Funções para gerenciar produtos
   const handleAddProduto = (produtoForm: ProdutoForm) => {
-    const categoria = categorias.find(c => c.id === produtoForm.categoriaId);
-    const coresSelecionadas = cores.filter(c => produtoForm.coresIds.includes(c.id));
-    const tamanhosSelecionados = tamanhos.filter(t => produtoForm.tamanhosIds.includes(t.id));
+    const categoria = categorias.find((c) => c.id === produtoForm.categoriaId);
+    const coresSelecionadas = cores.filter((c) =>
+      produtoForm.coresIds.includes(c.id)
+    );
+    const tamanhosSelecionados = tamanhos.filter((t) =>
+      produtoForm.tamanhosIds.includes(t.id)
+    );
 
     if (!categoria) return;
 
@@ -128,41 +134,47 @@ export const ProdutoTab: React.FC = () => {
   };
 
   const handleEditProduto = (id: string, produtoForm: ProdutoForm) => {
-    const categoria = categorias.find(c => c.id === produtoForm.categoriaId);
-    const coresSelecionadas = cores.filter(c => produtoForm.coresIds.includes(c.id));
-    const tamanhosSelecionados = tamanhos.filter(t => produtoForm.tamanhosIds.includes(t.id));
+    const categoria = categorias.find((c) => c.id === produtoForm.categoriaId);
+    const coresSelecionadas = cores.filter((c) =>
+      produtoForm.coresIds.includes(c.id)
+    );
+    const tamanhosSelecionados = tamanhos.filter((t) =>
+      produtoForm.tamanhosIds.includes(t.id)
+    );
 
     if (!categoria) return;
 
-    setProdutos(produtos.map(p => 
-      p.id === id 
-        ? { 
-            ...p, 
-            refCodigo: produtoForm.refCodigo,
-            descricao: produtoForm.descricao,
-            categoria,
-            cores: coresSelecionadas,
-            tamanhos: tamanhosSelecionados,
-            updatedAt: new Date()
-          }
-        : p
-    ));
+    setProdutos(
+      produtos.map((p) =>
+        p.id === id
+          ? {
+              ...p,
+              refCodigo: produtoForm.refCodigo,
+              descricao: produtoForm.descricao,
+              categoria,
+              cores: coresSelecionadas,
+              tamanhos: tamanhosSelecionados,
+              updatedAt: new Date(),
+            }
+          : p
+      )
+    );
   };
 
   const handleDeleteProduto = (id: string) => {
-    setProdutos(produtos.filter(p => p.id !== id));
+    setProdutos(produtos.filter((p) => p.id !== id));
   };
 
   const tabs = [
-    { key: 'produtos', label: 'Produtos', icon: Package },
-    { key: 'categorias', label: 'Categorias', icon: Tag },
-    { key: 'cores', label: 'Cores', icon: Palette },
-    { key: 'tamanhos', label: 'Tamanhos', icon: Ruler },
+    { key: "produtos", label: "Produtos", icon: Package },
+    { key: "categorias", label: "Categorias", icon: Tag },
+    { key: "cores", label: "Cores", icon: Palette },
+    { key: "tamanhos", label: "Tamanhos", icon: Ruler },
   ];
 
   const renderTabContent = () => {
     switch (activeTab) {
-      case 'produtos':
+      case "produtos":
         return (
           <ProdutoFormComponent
             produtos={produtos}
@@ -174,7 +186,7 @@ export const ProdutoTab: React.FC = () => {
             onDelete={handleDeleteProduto}
           />
         );
-      case 'categorias':
+      case "categorias":
         return (
           <CategoriaFormComponent
             categorias={categorias}
@@ -183,7 +195,7 @@ export const ProdutoTab: React.FC = () => {
             onDelete={handleDeleteCategoria}
           />
         );
-      case 'cores':
+      case "cores":
         return (
           <CorFormComponent
             cores={cores}
@@ -192,7 +204,7 @@ export const ProdutoTab: React.FC = () => {
             onDelete={handleDeleteCor}
           />
         );
-      case 'tamanhos':
+      case "tamanhos":
         return (
           <TamanhoFormComponent
             tamanhos={tamanhos}
@@ -221,7 +233,9 @@ export const ProdutoTab: React.FC = () => {
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key as ProductTabType)}
-              className={`product-tab-button ${activeTab === tab.key ? 'active' : ''}`}
+              className={`product-tab-button ${
+                activeTab === tab.key ? "active" : ""
+              }`}
             >
               <tab.icon size={16} />
               {tab.label}
@@ -229,9 +243,7 @@ export const ProdutoTab: React.FC = () => {
           ))}
         </div>
 
-        <div className="product-tab-content">
-          {renderTabContent()}
-        </div>
+        <div className="product-tab-content">{renderTabContent()}</div>
       </div>
     </div>
   );
