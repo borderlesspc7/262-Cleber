@@ -1,0 +1,258 @@
+/* Etapas Tab Styles */
+.etapas-container {
+  background: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
+.etapas-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.etapas-title-section {
+  flex: 1;
+}
+
+.etapas-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 0.25rem 0;
+}
+
+.etapas-subtitle {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+.etapas-add-button {
+  background: #111827;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.etapas-add-button:hover {
+  background: #374151;
+  transform: scale(1.02);
+}
+
+.etapas-add-icon {
+  color: white;
+  font-size: 1rem;
+  font-weight: 300;
+}
+
+.etapas-add-text {
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.etapas-content {
+  padding: 1.5rem;
+}
+
+.etapas-loading,
+.etapas-empty {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #6b7280;
+}
+
+.etapas-empty-subtitle {
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+  opacity: 0.7;
+}
+
+.etapas-table-container {
+  overflow-x: auto;
+}
+
+.etapas-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.etapas-table thead {
+  background: #f9fafb;
+}
+
+.etapas-table th {
+  padding: 0.75rem;
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.etapas-table td {
+  padding: 0.75rem;
+  border-bottom: 1px solid #f3f4f6;
+  vertical-align: top;
+}
+
+.etapas-table tbody tr:hover {
+  background: #f9fafb;
+}
+
+.etapas-order {
+  font-weight: 500;
+  color: #6b7280;
+  text-align: center;
+  width: 80px;
+}
+
+.etapas-name {
+  font-weight: 600;
+  color: #111827;
+  min-width: 120px;
+}
+
+.etapas-description {
+  color: #6b7280;
+  line-height: 1.4;
+}
+
+.etapas-actions {
+  text-align: center;
+  width: 100px;
+}
+
+.etapas-action {
+  background: none;
+  border: 1px solid #d1d5db;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  margin: 0 0.125rem;
+}
+
+.etapas-edit {
+  color: #374151;
+  border-color: #d1d5db;
+}
+
+.etapas-edit:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+.etapas-delete {
+  color: #dc2626;
+  border-color: #fecaca;
+}
+
+.etapas-delete:hover {
+  background: #fef2f2;
+  border-color: #fca5a5;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .etapas-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+  
+  .etapas-add-button {
+    align-self: flex-start;
+  }
+  
+  .etapas-content {
+    padding: 1rem;
+  }
+  
+  .etapas-table {
+    font-size: 0.75rem;
+  }
+  
+  .etapas-table th,
+  .etapas-table td {
+    padding: 0.5rem;
+  }
+  
+  .etapas-description {
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 640px) {
+  .etapas-table-container {
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+  }
+  
+  .etapas-table thead {
+    display: none;
+  }
+  
+  .etapas-table tbody tr {
+    display: block;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    margin-bottom: 0.5rem;
+    padding: 1rem;
+  }
+  
+  .etapas-table tbody tr:hover {
+    background: white;
+  }
+  
+  .etapas-table td {
+    display: block;
+    border: none;
+    padding: 0.25rem 0;
+  }
+  
+  .etapas-table td:before {
+    content: attr(data-label) ": ";
+    font-weight: 600;
+    color: #374151;
+  }
+  
+  .etapas-order:before {
+    content: "Ordem: ";
+  }
+  
+  .etapas-name:before {
+    content: "Nome: ";
+  }
+  
+  .etapas-description:before {
+    content: "Descrição: ";
+  }
+  
+  .etapas-actions {
+    text-align: left;
+    margin-top: 0.5rem;
+  }
+  
+  .etapas-actions:before {
+    content: "Ações: ";
+  }
+}

@@ -1,4 +1,5 @@
 import React from "react";
+import { AgendaCard } from "../agenda/AgendaCard";
 
 export const DashboardTab: React.FC = () => {
   return (
@@ -22,6 +23,9 @@ export const DashboardTab: React.FC = () => {
           <div className="dashboard-card">
             <h3>Financeiro</h3>
             <p>Resumo financeiro</p>
+          </div>
+          <div className="dashboard-card agenda-card-container">
+            <AgendaCard />
           </div>
         </div>
       </div>

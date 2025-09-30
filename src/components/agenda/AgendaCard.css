@@ -1,0 +1,257 @@
+/* Agenda Card Styles */
+.agenda-card {
+  background: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+  height: fit-content;
+}
+
+.agenda-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.agenda-title-section {
+  flex: 1;
+}
+
+.agenda-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.agenda-icon {
+  font-size: 1.25rem;
+}
+
+.agenda-title h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.agenda-subtitle {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+.agenda-add-button {
+  background: #111827;
+  border: none;
+  border-radius: 0.5rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.agenda-add-button:hover {
+  background: #374151;
+  transform: scale(1.05);
+}
+
+.agenda-add-icon {
+  color: white;
+  font-size: 1.25rem;
+  font-weight: 300;
+}
+
+.agenda-content {
+  padding: 1.5rem;
+}
+
+.agenda-loading,
+.agenda-empty {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: #6b7280;
+}
+
+.agenda-empty-subtitle {
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+  opacity: 0.7;
+}
+
+.agenda-tasks {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.agenda-task {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  transition: all 0.2s;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.agenda-task:hover {
+  border-color: #d1d5db;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.agenda-task.task-completed {
+  opacity: 0.6;
+  background: #f9fafb;
+}
+
+.task-content {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.task-main {
+  flex: 1;
+}
+
+.task-description {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 0.5rem 0;
+  line-height: 1.4;
+}
+
+.task-completed .task-description {
+  text-decoration: line-through;
+  color: #6b7280;
+}
+
+.task-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.task-priority {
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: lowercase;
+  letter-spacing: 0.025em;
+}
+
+.task-priority-high {
+  background: #dc2626;
+  color: white;
+}
+
+.task-priority-medium {
+  background: #111827;
+  color: white;
+}
+
+.task-priority-low {
+  background: #6b7280;
+  color: white;
+}
+
+.task-time {
+  font-size: 0.875rem;
+  color: #6b7280;
+  font-weight: 400;
+}
+
+.task-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.task-action {
+  background: none;
+  border: 1px solid #d1d5db;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  color: #374151;
+}
+
+.task-complete {
+  color: #374151;
+  border-color: #d1d5db;
+}
+
+.task-complete:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+.task-completed-icon {
+  background: #10b981;
+  color: white;
+  border-color: #10b981;
+}
+
+.task-completed-icon:hover {
+  background: #059669;
+  border-color: #059669;
+}
+
+.task-edit {
+  color: #374151;
+  border-color: #d1d5db;
+}
+
+.task-edit:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+.task-delete {
+  color: #dc2626;
+  border-color: #fecaca;
+}
+
+.task-delete:hover {
+  background: #fef2f2;
+  border-color: #fca5a5;
+}
+
+/* Responsive Design */
+@media (max-width: 640px) {
+  .agenda-header {
+    padding: 1rem;
+  }
+  
+  .agenda-content {
+    padding: 1rem;
+  }
+  
+  .task-content {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .task-actions {
+    align-self: flex-end;
+  }
+  
+  .task-meta {
+    flex-wrap: wrap;
+  }
+}
