@@ -44,7 +44,7 @@
 }
 
 .agenda-add-button {
-  background: #111827;
+  background: #1e3a8a;
   border: none;
   border-radius: 0.5rem;
   width: 2.5rem;
@@ -237,20 +237,20 @@
   .agenda-header {
     padding: 1rem;
   }
-  
+
   .agenda-content {
     padding: 1rem;
   }
-  
+
   .task-content {
     flex-direction: column;
     gap: 0.75rem;
   }
-  
+
   .task-actions {
     align-self: flex-end;
   }
-  
+
   .task-meta {
     flex-wrap: wrap;
   }

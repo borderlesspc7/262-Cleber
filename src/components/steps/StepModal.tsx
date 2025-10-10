@@ -1,13 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { Button } from "../ui/Button/Button";
-import type { CreateStepData } from "../../types/step";
+import type { CreateStepData, ProductionStep } from "../../types/step";
 import "./StepModal.css";
 
 interface StepModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (stepData: CreateStepData) => Promise<void>;
+  stepToEdit?: ProductionStep | null;
   isLoading?: boolean;
 }
 
@@ -15,6 +16,7 @@ export const StepModal: React.FC<StepModalProps> = ({
   isOpen,
   onClose,
   onSubmit,
+  stepToEdit,
   isLoading = false,
 }) => {
   const [formData, setFormData] = useState<CreateStepData>({
@@ -22,6 +24,22 @@ export const StepModal: React.FC<StepModalProps> = ({
     description: "",
     order: 0,
   });
+
+  useEffect(() => {
+    if (stepToEdit) {
+      setFormData({
+        name: stepToEdit.name,
+        description: stepToEdit.description,
+        order: stepToEdit.order,
+      });
+    } else {
+      setFormData({
+        name: "",
+        description: "",
+        order: 0,
+      });
+    }
+  }, [stepToEdit, isOpen]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -35,7 +53,7 @@ export const StepModal: React.FC<StepModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.name.trim() || !formData.description.trim()) {
       alert("Por favor, preencha todos os campos obrigatórios");
       return;
@@ -50,7 +68,7 @@ export const StepModal: React.FC<StepModalProps> = ({
       });
       onClose();
     } catch (error) {
-      console.error("Erro ao criar etapa:", error);
+      console.error("Erro ao salvar etapa:", error);
     }
   };
 
@@ -70,9 +88,13 @@ export const StepModal: React.FC<StepModalProps> = ({
       <div className="step-modal" onClick={(e) => e.stopPropagation()}>
         <div className="step-modal-header">
           <div className="step-modal-title-section">
-            <h2 className="step-modal-title">Nova Etapa</h2>
+            <h2 className="step-modal-title">
+              {stepToEdit ? "Editar Etapa" : "Nova Etapa"}
+            </h2>
             <p className="step-modal-subtitle">
-              Configure uma etapa do processo produtivo
+              {stepToEdit
+                ? "Atualize as informações da etapa"
+                : "Configure uma etapa do processo produtivo"}
             </p>
           </div>
           <button className="step-modal-close" onClick={handleClose}>
@@ -144,7 +166,7 @@ export const StepModal: React.FC<StepModalProps> = ({
               isLoading={isLoading}
               disabled={!formData.name.trim() || !formData.description.trim()}
             >
-              Cadastrar
+              {stepToEdit ? "Salvar Alterações" : "Cadastrar"}
             </Button>
           </div>
         </form>

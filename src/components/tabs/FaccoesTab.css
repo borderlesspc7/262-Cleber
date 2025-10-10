@@ -1,0 +1,340 @@
+/* Facções Tab Styles */
+.faccoes-container {
+  background: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
+.faccoes-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.faccoes-title-section {
+  flex: 1;
+}
+
+.faccoes-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 0.25rem 0;
+}
+
+.faccoes-subtitle {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+.faccoes-add-button {
+  background: #1e3a8a;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.faccoes-add-button:hover {
+  background: #1e40af;
+  transform: scale(1.02);
+}
+
+.faccoes-add-icon {
+  color: white;
+  font-size: 1.25rem;
+  font-weight: 300;
+  line-height: 1;
+}
+
+.faccoes-add-text {
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+/* Search Container */
+.faccoes-search-container {
+  padding: 1.5rem;
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.faccoes-search-box {
+  position: relative;
+  max-width: 500px;
+}
+
+.faccoes-search-icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9ca3af;
+}
+
+.faccoes-search-input {
+  width: 100%;
+  padding: 0.75rem 1rem 0.75rem 3rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+  box-sizing: border-box;
+}
+
+.faccoes-search-input:focus {
+  outline: none;
+  border-color: #1e3a8a;
+  box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1);
+}
+
+/* Content */
+.faccoes-content {
+  padding: 1.5rem;
+  min-height: 300px;
+}
+
+.faccoes-loading,
+.faccoes-empty {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #6b7280;
+}
+
+.faccoes-empty svg {
+  margin: 0 auto 1rem;
+  color: #d1d5db;
+}
+
+.faccoes-empty-subtitle {
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+  opacity: 0.7;
+}
+
+/* Faccoes Grid */
+.faccoes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 1.5rem;
+}
+
+/* Faccao Card */
+.faccao-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  transition: all 0.2s;
+}
+
+.faccao-card:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transform: translateY(-2px);
+}
+
+.faccao-card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1.25rem;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.faccao-avatar {
+  width: 48px;
+  height: 48px;
+  background: #1e3a8a;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  flex-shrink: 0;
+}
+
+.faccao-header-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.faccao-name {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 0.25rem 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.faccao-status {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  background: #1e3a8a;
+  color: white;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.faccao-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.faccao-action-btn {
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  padding: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.faccao-edit-btn {
+  color: #1e3a8a;
+}
+
+.faccao-edit-btn:hover {
+  background: #dbeafe;
+  border-color: #1e3a8a;
+}
+
+.faccao-delete-btn {
+  color: #dc2626;
+}
+
+.faccao-delete-btn:hover {
+  background: #fee2e2;
+  border-color: #dc2626;
+}
+
+/* Card Body */
+.faccao-card-body {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.faccao-info-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.faccao-icon {
+  color: #6b7280;
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+}
+
+.faccao-info-text {
+  font-size: 0.875rem;
+  color: #4b5563;
+  line-height: 1.5;
+}
+
+/* Serviços */
+.faccao-servicos {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.faccao-servicos-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.faccao-servico-tag {
+  padding: 0.375rem 0.75rem;
+  background: #dbeafe;
+  color: #1e3a8a;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+/* Contact */
+.faccao-contact {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.faccao-contact-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: #4b5563;
+}
+
+.faccao-contact-icon {
+  color: #6b7280;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .faccoes-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+
+  .faccoes-add-button {
+    align-self: flex-start;
+  }
+
+  .faccoes-content {
+    padding: 1rem;
+  }
+
+  .faccoes-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .faccao-card-header {
+    flex-wrap: wrap;
+  }
+
+  .faccao-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 640px) {
+  .faccoes-search-container {
+    padding: 1rem;
+  }
+
+  .faccoes-header {
+    padding: 1rem;
+  }
+
+  .faccoes-title {
+    font-size: 1.25rem;
+  }
+}

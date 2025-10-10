@@ -16,7 +16,7 @@
 .btn:focus {
   outline: 2px solid transparent;
   outline-offset: 2px;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+  box-shadow: 0 0 0 2px rgba(30, 58, 138, 0.5);
 }
 
 .btn:disabled {
@@ -26,12 +26,12 @@
 
 /* Button Variants */
 .btn--primary {
-  background-color: #2563eb;
+  background-color: #1e3a8a;
   color: white;
 }
 
 .btn--primary:hover:not(:disabled) {
-  background-color: #1d4ed8;
+  background-color: #1e40af;
 }
 
 .btn--secondary {

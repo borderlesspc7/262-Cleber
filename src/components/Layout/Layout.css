@@ -41,14 +41,43 @@
   gap: 0.75rem;
 }
 
+.company-logo-img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
 .logo-icon {
   color: #3b82f6;
+  flex-shrink: 0;
+}
+
+.company-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  overflow: hidden;
+  flex: 1;
 }
 
 .logo-text {
   font-size: 1.25rem;
   font-weight: 700;
   color: #1e293b;
+  line-height: 1.2;
+}
+
+.company-address {
+  font-size: 0.7rem;
+  color: #64748b;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .sidebar-close-btn {
@@ -227,20 +256,20 @@
     position: fixed;
     transform: translateX(0);
   }
-  
+
   .main-content {
     margin-left: 280px;
     width: calc(100% - 280px);
   }
-  
+
   .menu-toggle {
     display: none;
   }
-  
+
   .sidebar-close-btn {
     display: none;
   }
-  
+
   .sidebar-overlay {
     display: none;
   }
@@ -250,7 +279,7 @@
   .header-title {
     font-size: 1.25rem;
   }
-  
+
   .page-content {
     padding: 1.5rem 1rem;
   }
@@ -260,11 +289,11 @@
   .header {
     padding: 1rem;
   }
-  
+
   .header-title {
     font-size: 1.125rem;
   }
-  
+
   .page-content {
     padding: 1rem;
   }

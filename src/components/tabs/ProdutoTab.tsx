@@ -1,5 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Package, Tag, Palette, Ruler } from "lucide-react";
+import { useAuth } from "../../hooks/useAuth";
+import {
+  categoriaService,
+  corService,
+  tamanhoService,
+  produtoService,
+} from "../../services/productService";
 import "../products/products.css";
 import { CategoriaFormComponent } from "../products/CategoriaForm";
 import { CorFormComponent } from "../products/CorForm";
@@ -19,150 +26,212 @@ import type {
 type ProductTabType = "produtos" | "categorias" | "cores" | "tamanhos";
 
 export const ProdutoTab: React.FC = () => {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<ProductTabType>("produtos");
+  const [loading, setLoading] = useState(true);
 
-  // Estados para os dados (em produção real, viriam de uma API)
+  // Estados para os dados
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [cores, setCores] = useState<Cor[]>([]);
   const [tamanhos, setTamanhos] = useState<Tamanho[]>([]);
   const [produtos, setProdutos] = useState<Produto[]>([]);
 
+  // Carregar dados do Firebase
+  useEffect(() => {
+    if (user) {
+      loadAllData();
+    }
+  }, [user]);
+
+  const loadAllData = async () => {
+    if (!user) return;
+
+    try {
+      setLoading(true);
+      const [categoriasData, coresData, tamanhosData, produtosData] =
+        await Promise.all([
+          categoriaService.getCategorias(user.uid),
+          corService.getCores(user.uid),
+          tamanhoService.getTamanhos(user.uid),
+          produtoService.getProdutos(user.uid),
+        ]);
+
+      setCategorias(categoriasData);
+      setCores(coresData);
+      setTamanhos(tamanhosData);
+
+      // Reconstruir produtos com objetos completos
+      const produtosCompletos = produtosData.map((produto) => {
+        const categoria = categoriasData.find(
+          (c) => c.id === produto.categoriaId
+        );
+        const coresProduto = coresData.filter((c) =>
+          produto.coresIds?.includes(c.id)
+        );
+        const tamanhosProduto = tamanhosData.filter((t) =>
+          produto.tamanhosIds?.includes(t.id)
+        );
+
+        return {
+          ...produto,
+          categoria: categoria || produto.categoria,
+          cores: coresProduto.length > 0 ? coresProduto : produto.cores || [],
+          tamanhos:
+            tamanhosProduto.length > 0
+              ? tamanhosProduto
+              : produto.tamanhos || [],
+        };
+      });
+
+      setProdutos(produtosCompletos);
+    } catch (error) {
+      console.error("Erro ao carregar dados:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Funções para gerenciar categorias
-  const handleAddCategoria = (categoriaForm: CategoriaForm) => {
-    const novaCategoria: Categoria = {
-      id: Date.now().toString(),
-      nome: categoriaForm.nome,
-      descricao: categoriaForm.descricao,
-      ativo: true,
-      createdAt: new Date(),
-    };
-    setCategorias([...categorias, novaCategoria]);
+  const handleAddCategoria = async (categoriaForm: CategoriaForm) => {
+    if (!user) return;
+
+    try {
+      await categoriaService.createCategoria(user.uid, categoriaForm);
+      await loadAllData(); // Recarregar dados
+    } catch (error) {
+      console.error("Erro ao adicionar categoria:", error);
+      alert("Erro ao adicionar categoria");
+    }
   };
 
-  const handleEditCategoria = (id: string, categoriaForm: CategoriaForm) => {
-    setCategorias(
-      categorias.map((c) =>
-        c.id === id
-          ? {
-              ...c,
-              nome: categoriaForm.nome,
-              descricao: categoriaForm.descricao,
-            }
-          : c
-      )
-    );
+  const handleEditCategoria = async (
+    id: string,
+    categoriaForm: CategoriaForm
+  ) => {
+    try {
+      await categoriaService.updateCategoria(id, categoriaForm);
+      await loadAllData(); // Recarregar dados
+    } catch (error) {
+      console.error("Erro ao editar categoria:", error);
+      alert("Erro ao editar categoria");
+    }
   };
 
-  const handleDeleteCategoria = (id: string) => {
-    setCategorias(categorias.filter((c) => c.id !== id));
+  const handleDeleteCategoria = async (id: string) => {
+    if (!confirm("Tem certeza que deseja excluir esta categoria?")) return;
+
+    try {
+      await categoriaService.deleteCategoria(id);
+      await loadAllData(); // Recarregar dados
+    } catch (error) {
+      console.error("Erro ao excluir categoria:", error);
+      alert("Erro ao excluir categoria");
+    }
   };
 
   // Funções para gerenciar cores
-  const handleAddCor = (corForm: CorForm) => {
-    const novaCor: Cor = {
-      id: Date.now().toString(),
-      nome: corForm.nome,
-      codigo: corForm.codigo,
-      ativo: true,
-      createdAt: new Date(),
-    };
-    setCores([...cores, novaCor]);
+  const handleAddCor = async (corForm: CorForm) => {
+    if (!user) return;
+
+    try {
+      await corService.createCor(user.uid, corForm);
+      await loadAllData(); // Recarregar dados
+    } catch (error) {
+      console.error("Erro ao adicionar cor:", error);
+      alert("Erro ao adicionar cor");
+    }
   };
 
-  const handleEditCor = (id: string, corForm: CorForm) => {
-    setCores(
-      cores.map((c) =>
-        c.id === id ? { ...c, nome: corForm.nome, codigo: corForm.codigo } : c
-      )
-    );
+  const handleEditCor = async (id: string, corForm: CorForm) => {
+    try {
+      await corService.updateCor(id, corForm);
+      await loadAllData(); // Recarregar dados
+    } catch (error) {
+      console.error("Erro ao editar cor:", error);
+      alert("Erro ao editar cor");
+    }
   };
 
-  const handleDeleteCor = (id: string) => {
-    setCores(cores.filter((c) => c.id !== id));
+  const handleDeleteCor = async (id: string) => {
+    if (!confirm("Tem certeza que deseja excluir esta cor?")) return;
+
+    try {
+      await corService.deleteCor(id);
+      await loadAllData(); // Recarregar dados
+    } catch (error) {
+      console.error("Erro ao excluir cor:", error);
+      alert("Erro ao excluir cor");
+    }
   };
 
   // Funções para gerenciar tamanhos
-  const handleAddTamanho = (tamanhoForm: TamanhoForm) => {
-    const novoTamanho: Tamanho = {
-      id: Date.now().toString(),
-      nome: tamanhoForm.nome,
-      ordem: tamanhoForm.ordem,
-      ativo: true,
-      createdAt: new Date(),
-    };
-    setTamanhos([...tamanhos, novoTamanho]);
+  const handleAddTamanho = async (tamanhoForm: TamanhoForm) => {
+    if (!user) return;
+
+    try {
+      await tamanhoService.createTamanho(user.uid, tamanhoForm);
+      await loadAllData(); // Recarregar dados
+    } catch (error) {
+      console.error("Erro ao adicionar tamanho:", error);
+      alert("Erro ao adicionar tamanho");
+    }
   };
 
-  const handleEditTamanho = (id: string, tamanhoForm: TamanhoForm) => {
-    setTamanhos(
-      tamanhos.map((t) =>
-        t.id === id
-          ? { ...t, nome: tamanhoForm.nome, ordem: tamanhoForm.ordem }
-          : t
-      )
-    );
+  const handleEditTamanho = async (id: string, tamanhoForm: TamanhoForm) => {
+    try {
+      await tamanhoService.updateTamanho(id, tamanhoForm);
+      await loadAllData(); // Recarregar dados
+    } catch (error) {
+      console.error("Erro ao editar tamanho:", error);
+      alert("Erro ao editar tamanho");
+    }
   };
 
-  const handleDeleteTamanho = (id: string) => {
-    setTamanhos(tamanhos.filter((t) => t.id !== id));
+  const handleDeleteTamanho = async (id: string) => {
+    if (!confirm("Tem certeza que deseja excluir este tamanho?")) return;
+
+    try {
+      await tamanhoService.deleteTamanho(id);
+      await loadAllData(); // Recarregar dados
+    } catch (error) {
+      console.error("Erro ao excluir tamanho:", error);
+      alert("Erro ao excluir tamanho");
+    }
   };
 
   // Funções para gerenciar produtos
-  const handleAddProduto = (produtoForm: ProdutoForm) => {
-    const categoria = categorias.find((c) => c.id === produtoForm.categoriaId);
-    const coresSelecionadas = cores.filter((c) =>
-      produtoForm.coresIds.includes(c.id)
-    );
-    const tamanhosSelecionados = tamanhos.filter((t) =>
-      produtoForm.tamanhosIds.includes(t.id)
-    );
+  const handleAddProduto = async (produtoForm: ProdutoForm) => {
+    if (!user) return;
 
-    if (!categoria) return;
-
-    const novoProduto: Produto = {
-      id: Date.now().toString(),
-      refCodigo: produtoForm.refCodigo,
-      descricao: produtoForm.descricao,
-      categoria,
-      cores: coresSelecionadas,
-      tamanhos: tamanhosSelecionados,
-      ativo: true,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-    setProdutos([...produtos, novoProduto]);
+    try {
+      await produtoService.createProduto(user.uid, produtoForm);
+      await loadAllData(); // Recarregar dados
+    } catch (error) {
+      console.error("Erro ao adicionar produto:", error);
+      alert("Erro ao adicionar produto");
+    }
   };
 
-  const handleEditProduto = (id: string, produtoForm: ProdutoForm) => {
-    const categoria = categorias.find((c) => c.id === produtoForm.categoriaId);
-    const coresSelecionadas = cores.filter((c) =>
-      produtoForm.coresIds.includes(c.id)
-    );
-    const tamanhosSelecionados = tamanhos.filter((t) =>
-      produtoForm.tamanhosIds.includes(t.id)
-    );
-
-    if (!categoria) return;
-
-    setProdutos(
-      produtos.map((p) =>
-        p.id === id
-          ? {
-              ...p,
-              refCodigo: produtoForm.refCodigo,
-              descricao: produtoForm.descricao,
-              categoria,
-              cores: coresSelecionadas,
-              tamanhos: tamanhosSelecionados,
-              updatedAt: new Date(),
-            }
-          : p
-      )
-    );
+  const handleEditProduto = async (id: string, produtoForm: ProdutoForm) => {
+    try {
+      await produtoService.updateProduto(id, produtoForm);
+      await loadAllData(); // Recarregar dados
+    } catch (error) {
+      console.error("Erro ao editar produto:", error);
+      alert("Erro ao editar produto");
+    }
   };
 
-  const handleDeleteProduto = (id: string) => {
-    setProdutos(produtos.filter((p) => p.id !== id));
+  const handleDeleteProduto = async (id: string) => {
+    if (!confirm("Tem certeza que deseja excluir este produto?")) return;
+
+    try {
+      await produtoService.deleteProduto(id);
+      await loadAllData(); // Recarregar dados
+    } catch (error) {
+      console.error("Erro ao excluir produto:", error);
+      alert("Erro ao excluir produto");
+    }
   };
 
   const tabs = [
@@ -227,24 +296,30 @@ export const ProdutoTab: React.FC = () => {
         </p>
       </div>
 
-      <div className="product-tabs">
-        <div className="product-tab-nav">
-          {tabs.map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key as ProductTabType)}
-              className={`product-tab-button ${
-                activeTab === tab.key ? "active" : ""
-              }`}
-            >
-              <tab.icon size={16} />
-              {tab.label}
-            </button>
-          ))}
+      {loading ? (
+        <div style={{ textAlign: "center", padding: "3rem" }}>
+          <p>Carregando dados...</p>
         </div>
+      ) : (
+        <div className="product-tabs">
+          <div className="product-tab-nav">
+            {tabs.map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key as ProductTabType)}
+                className={`product-tab-button ${
+                  activeTab === tab.key ? "active" : ""
+                }`}
+              >
+                <tab.icon size={16} />
+                {tab.label}
+              </button>
+            ))}
+          </div>
 
-        <div className="product-tab-content">{renderTabContent()}</div>
-      </div>
+          <div className="product-tab-content">{renderTabContent()}</div>
+        </div>
+      )}
     </div>
   );
 };

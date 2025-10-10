@@ -95,15 +95,15 @@
 .card-count {
   font-size: 0.875rem;
   font-weight: 500;
-  color: #8b5cf6;
-  background-color: #f3f4f6;
+  color: #1e3a8a;
+  background-color: #dbeafe;
   padding: 0.25rem 0.75rem;
   border-radius: 6px;
   display: inline-block;
 }
 
 .card-button {
-  background-color: #8b5cf6;
+  background-color: #1e3a8a;
   color: white;
   border: none;
   border-radius: 8px;
@@ -116,7 +116,7 @@
 }
 
 .card-button:hover {
-  background-color: #7c3aed;
+  background-color: #1e40af;
   transform: translateY(-2px);
 }
 

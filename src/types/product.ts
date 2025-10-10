@@ -40,6 +40,10 @@ export interface Produto {
   categoria: Categoria;
   cores: Cor[];
   tamanhos: Tamanho[];
+  categoriaId?: string;
+  coresIds?: string[];
+  tamanhosIds?: string[];
+  userId?: string;
   ativo: boolean;
   createdAt: Date;
   updatedAt: Date;

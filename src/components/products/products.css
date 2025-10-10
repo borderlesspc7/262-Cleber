@@ -33,9 +33,9 @@
 }
 
 .product-tab-button.active {
-  color: #3b82f6;
-  border-bottom-color: #3b82f6;
-  background-color: #eff6ff;
+  color: #1e3a8a;
+  border-bottom-color: #1e3a8a;
+  background-color: #dbeafe;
 }
 
 .product-tab-content {
@@ -67,7 +67,7 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 1rem;
-  background-color: #3b82f6;
+  background-color: #1e3a8a;
   color: white;
   border: none;
   border-radius: 0.375rem;
@@ -78,7 +78,7 @@
 }
 
 .add-button:hover {
-  background-color: #2563eb;
+  background-color: #1e40af;
 }
 
 .form {
@@ -142,7 +142,7 @@
 
 .save-button {
   padding: 0.5rem 1rem;
-  background-color: #10b981;
+  background-color: #1e3a8a;
   color: white;
   border: none;
   border-radius: 0.375rem;
@@ -153,7 +153,7 @@
 }
 
 .save-button:hover {
-  background-color: #059669;
+  background-color: #1e40af;
 }
 
 .cancel-button {
@@ -526,15 +526,15 @@
   .form-row {
     grid-template-columns: 1fr;
   }
-  
+
   .checkbox-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .product-tab-nav {
     flex-wrap: wrap;
   }
-  
+
   .categoria-item,
   .cor-item,
   .tamanho-item,
@@ -544,7 +544,7 @@
     align-items: flex-start;
     gap: 1rem;
   }
-  
+
   .categoria-actions,
   .cor-actions,
   .tamanho-actions,

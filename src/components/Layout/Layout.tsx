@@ -1,17 +1,19 @@
 import React from "react";
-import { 
-  LayoutDashboard, 
-  UserPlus, 
-  Factory, 
-  GitBranch, 
-  Package, 
-  ClipboardList, 
-  Cog, 
-  DollarSign, 
+import {
+  LayoutDashboard,
+  UserPlus,
+  Factory,
+  GitBranch,
+  Package,
+  ClipboardList,
+  Cog,
+  DollarSign,
   LogOut,
   Menu,
-  X
+  X,
 } from "lucide-react";
+import { companyService } from "../../services/companyService";
+import type { Company } from "../../types/company";
 import "./Layout.css";
 
 interface LayoutProps {
@@ -20,8 +22,37 @@ interface LayoutProps {
   onTabChange?: (tab: string) => void;
 }
 
-export const Layout: React.FC<LayoutProps> = ({ children, activeTab = 'dashboard', onTabChange }) => {
+export const Layout: React.FC<LayoutProps> = ({
+  children,
+  activeTab = "dashboard",
+  onTabChange,
+}) => {
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
+  const [companyInfo, setCompanyInfo] = React.useState<Company | null>(null);
+
+  React.useEffect(() => {
+    loadCompanyInfo();
+
+    // Listener para atualizar quando as informações forem salvas
+    const handleCompanyUpdate = () => {
+      loadCompanyInfo();
+    };
+
+    window.addEventListener("companyInfoUpdated", handleCompanyUpdate);
+
+    return () => {
+      window.removeEventListener("companyInfoUpdated", handleCompanyUpdate);
+    };
+  }, []);
+
+  const loadCompanyInfo = async () => {
+    try {
+      const data = await companyService.getCompanyInfo();
+      setCompanyInfo(data);
+    } catch (error) {
+      console.error("Erro ao carregar informações da empresa:", error);
+    }
+  };
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
@@ -47,16 +78,28 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab = 'dashboard
   return (
     <div className="layout-container">
       {/* Sidebar */}
-      <aside className={`sidebar ${sidebarOpen ? 'sidebar-open' : ''}`}>
+      <aside className={`sidebar ${sidebarOpen ? "sidebar-open" : ""}`}>
         <div className="sidebar-header">
           <div className="sidebar-logo">
-            <LayoutDashboard className="logo-icon" />
-            <span className="logo-text">Nome da empresa</span>
+            {companyInfo?.logoUrl ? (
+              <img
+                src={companyInfo.logoUrl}
+                alt={companyInfo.nome || "Logo"}
+                className="company-logo-img"
+              />
+            ) : (
+              <LayoutDashboard className="logo-icon" />
+            )}
+            <div className="company-info">
+              <span className="logo-text">
+                {companyInfo?.nome || "Nome da empresa"}
+              </span>
+              {companyInfo?.endereco && (
+                <span className="company-address">{companyInfo.endereco}</span>
+              )}
+            </div>
           </div>
-          <button 
-            className="sidebar-close-btn"
-            onClick={toggleSidebar}
-          >
+          <button className="sidebar-close-btn" onClick={toggleSidebar}>
             <X size={20} />
           </button>
         </div>
@@ -65,9 +108,11 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab = 'dashboard
           <ul className="nav-list">
             {menuItems.map((item, index) => (
               <li key={index} className="nav-item">
-                <button 
+                <button
                   onClick={() => handleTabClick(item.key)}
-                  className={`nav-link ${activeTab === item.key ? 'nav-link-active' : ''}`}
+                  className={`nav-link ${
+                    activeTab === item.key ? "nav-link-active" : ""
+                  }`}
                 >
                   <item.icon size={20} className="nav-icon" />
                   <span className="nav-label">{item.label}</span>
@@ -90,10 +135,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab = 'dashboard
         {/* Header */}
         <header className="header">
           <div className="header-left">
-            <button 
-              className="menu-toggle"
-              onClick={toggleSidebar}
-            >
+            <button className="menu-toggle" onClick={toggleSidebar}>
               <Menu size={24} />
             </button>
             <h1 className="header-title">
@@ -106,17 +148,12 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab = 'dashboard
         </header>
 
         {/* Page Content */}
-        <main className="page-content">
-          {children}
-        </main>
+        <main className="page-content">{children}</main>
       </div>
 
       {/* Overlay for mobile */}
       {sidebarOpen && (
-        <div 
-          className="sidebar-overlay"
-          onClick={toggleSidebar}
-        />
+        <div className="sidebar-overlay" onClick={toggleSidebar} />
       )}
     </div>
   );
