@@ -1,19 +1,64 @@
-import { 
-  collection, 
-  addDoc, 
-  updateDoc, 
-  deleteDoc, 
-  doc, 
-  query, 
-  where, 
-  getDocs, 
-  Timestamp 
+import {
+  collection,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  query,
+  where,
+  getDocs,
+  Timestamp,
+  orderBy,
 } from "firebase/firestore";
 import { db } from "../lib/firebaseconfig";
-import type { ProductionStep, CreateStepData, UpdateStepData } from "../types/step";
+import type {
+  ProductionStep,
+  CreateStepData,
+  UpdateStepData,
+} from "../types/step";
 
 export const stepService = {
-  async createStep(userId: string, stepData: CreateStepData): Promise<ProductionStep> {
+  async getStepsCount(): Promise<number> {
+    try {
+      const querySnapshot = await getDocs(collection(db, "productionSteps"));
+      return querySnapshot.size;
+    } catch (error) {
+      console.error("Erro ao buscar etapas:", error);
+      throw new Error("Erro ao buscar etapas");
+    }
+  },
+
+  async getAllSteps(): Promise<ProductionStep[]> {
+    try {
+      const q = query(
+        collection(db, "productionSteps"),
+        orderBy("order", "asc")
+      );
+      const querySnapshot = await getDocs(q);
+      const steps: ProductionStep[] = [];
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        steps.push({
+          id: doc.id,
+          name: data.name,
+          description: data.description,
+          order: data.order,
+          userId: data.userId,
+          createdAt: data.createdAt.toDate(),
+          updatedAt: data.updatedAt.toDate(),
+        });
+      });
+      return steps;
+    } catch (error) {
+      console.error("Erro ao buscar etapas:", error);
+      throw new Error("Erro ao buscar etapas");
+    }
+  },
+
+  async createStep(
+    userId: string,
+    stepData: CreateStepData
+  ): Promise<ProductionStep> {
     try {
       const now = new Date();
       const stepRef = await addDoc(collection(db, "productionSteps"), {
@@ -43,7 +88,7 @@ export const stepService = {
         collection(db, "productionSteps"),
         where("userId", "==", userId)
       );
-      
+
       const querySnapshot = await getDocs(q);
       const steps: ProductionStep[] = [];
 

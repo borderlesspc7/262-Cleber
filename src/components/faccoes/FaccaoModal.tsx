@@ -1,22 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { X } from "lucide-react";
-import type { Faccao, ServicoFaccao } from "../../types/faccao";
+import type { Faccao } from "../../types/faccao";
+import { stepService } from "../../services/stepService";
+import type { ProductionStep } from "../../types/step";
 import "./FaccaoModal.css";
+import { useAuth } from "../../hooks/useAuth";
 
 interface FaccaoModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (faccao: Omit<Faccao, "id">) => Promise<void>;
   faccaoToEdit?: Faccao | null;
+  userId: string;
 }
-
-const SERVICOS_DISPONIVEIS: ServicoFaccao[] = [
-  "Corte",
-  "Costura",
-  "Silk",
-  "Transfer",
-  "Apontamento",
-];
 
 export const FaccaoModal: React.FC<FaccaoModalProps> = ({
   isOpen,
@@ -24,9 +20,10 @@ export const FaccaoModal: React.FC<FaccaoModalProps> = ({
   onSave,
   faccaoToEdit,
 }) => {
+  const { user } = useAuth();
   const [formData, setFormData] = useState<Omit<Faccao, "id">>({
     nome: "",
-    servicoPrestado: "Corte",
+    servicoPrestado: "",
     enderecoCompleto: "",
     telefone: "",
     email: "",
@@ -34,6 +31,22 @@ export const FaccaoModal: React.FC<FaccaoModalProps> = ({
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [etapas, setEtapas] = useState<ProductionStep[]>([]);
+
+  useEffect(() => {
+    const loadEtapas = async () => {
+      try {
+        const etapasData = await stepService.getStepsByUser(user!.uid);
+        setEtapas(etapasData);
+      } catch (error) {
+        console.error("Erro ao buscar etapas:", error);
+      }
+      if (isOpen) {
+        loadEtapas();
+      }
+    };
+    loadEtapas();
+  }, [isOpen, user]);
 
   useEffect(() => {
     if (faccaoToEdit) {
@@ -48,7 +61,7 @@ export const FaccaoModal: React.FC<FaccaoModalProps> = ({
     } else {
       setFormData({
         nome: "",
-        servicoPrestado: "Corte",
+        servicoPrestado: "",
         enderecoCompleto: "",
         telefone: "",
         email: "",
@@ -134,16 +147,20 @@ export const FaccaoModal: React.FC<FaccaoModalProps> = ({
                 onChange={(e) =>
                   setFormData({
                     ...formData,
-                    servicoPrestado: e.target.value as ServicoFaccao,
+                    servicoPrestado: e.target.value as string,
                   })
                 }
                 required
               >
-                {SERVICOS_DISPONIVEIS.map((servico) => (
-                  <option key={servico} value={servico}>
-                    {servico}
-                  </option>
-                ))}
+                {etapas.length === 0 ? (
+                  <option value="">Nenhuma etapa encontrada</option>
+                ) : (
+                  etapas.map((etapa) => (
+                    <option key={etapa.id} value={etapa.name}>
+                      {etapa.name}
+                    </option>
+                  ))
+                )}
               </select>
             </div>
           </div>

@@ -1,4 +1,8 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { useAuth } from "../../hooks/useAuth";
+import { produtoService } from "../../services/productService";
+import { faccaoService } from "../../services/faccaoService";
+import { stepService } from "../../services/stepService";
 import { Users, Layers, Package, Building2 } from "lucide-react";
 import "./Cadastros.css";
 import { CompanyForm } from "../../components/company/CompanyForm";
@@ -9,6 +13,34 @@ interface CadastrosTabProps {
 
 export const CadastrosTab: React.FC<CadastrosTabProps> = ({ onTabChange }) => {
   const [showCompanyForm, setShowCompanyForm] = React.useState(false);
+
+  const { user } = useAuth();
+  const [produtosCount, setProdutosCount] = useState(0);
+  const [faccoesCount, setFaccoesCount] = useState(0);
+  const [etapasCount, setEtapasCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadCounts = async () => {
+      if (!user) return;
+
+      try {
+        const [produtos, faccoes, etapas] = await Promise.all([
+          produtoService.getProdutos(user.uid),
+          faccaoService.getFaccoes(),
+          stepService.getStepsCount(),
+        ]);
+        setProdutosCount(produtos.length);
+        setFaccoesCount(faccoes.length);
+        setEtapasCount(etapas);
+      } catch (error) {
+        console.error("Erro ao buscar dados:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadCounts();
+  }, [user]);
 
   return (
     <div className="cadastros-container">
@@ -83,7 +115,13 @@ export const CadastrosTab: React.FC<CadastrosTabProps> = ({ onTabChange }) => {
                   <p className="card-description">
                     Gerencie seus parceiros de produção
                   </p>
-                  <span className="card-count">0 cadastrados</span>
+                  <span className="card-count">
+                    {loading
+                      ? "..."
+                      : `${faccoesCount} cadastrado${
+                          faccoesCount === 1 ? "" : "s"
+                        }`}{" "}
+                  </span>
                 </div>
                 <button
                   onClick={() => {
@@ -104,7 +142,11 @@ export const CadastrosTab: React.FC<CadastrosTabProps> = ({ onTabChange }) => {
                   <p className="card-description">
                     Configure as etapas do processo produtivo
                   </p>
-                  <span className="card-count">0 etapas</span>
+                  <span className="card-count">
+                    {loading
+                      ? "..."
+                      : `${etapasCount} etapa${etapasCount === 1 ? "" : "s"}`}
+                  </span>
                 </div>
                 <button
                   onClick={() => {
@@ -125,7 +167,13 @@ export const CadastrosTab: React.FC<CadastrosTabProps> = ({ onTabChange }) => {
                   <p className="card-description">
                     Catálogo de produtos e especificações
                   </p>
-                  <span className="card-count">0 produtos</span>
+                  <span className="card-count">
+                    {loading
+                      ? "..."
+                      : `${produtosCount} produto${
+                          produtosCount === 1 ? "" : "s"
+                        }`}
+                  </span>
                 </div>
                 <button
                   onClick={() => {

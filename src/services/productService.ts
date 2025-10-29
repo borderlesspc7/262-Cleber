@@ -211,11 +211,10 @@ export const produtoService = {
     try {
       const q = query(
         collection(db, "produtos"),
-        where("userId", "==", userId),
-        orderBy("createdAt", "desc")
+        where("userId", "==", userId)
       );
       const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map((doc) => {
+      const produtos = querySnapshot.docs.map((doc) => {
         const data = doc.data();
         return {
           id: doc.id,
@@ -233,6 +232,12 @@ export const produtoService = {
           updatedAt: data.updatedAt?.toDate() || new Date(),
         };
       }) as Produto[];
+
+      return produtos.sort((a, b) => {
+        const refA = parseInt(a.refCodigo) || 0;
+        const refB = parseInt(b.refCodigo) || 0;
+        return refA - refB;
+      });
     } catch (error) {
       console.error("Erro ao buscar produtos:", error);
       throw error;

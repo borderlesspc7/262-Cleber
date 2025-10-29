@@ -12,9 +12,11 @@ import {
   Menu,
   X,
 } from "lucide-react";
+import { authService } from "../../services/authService";
 import { companyService } from "../../services/companyService";
 import type { Company } from "../../types/company";
 import "./Layout.css";
+import { useNavigate } from "react-router-dom";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -29,7 +31,7 @@ export const Layout: React.FC<LayoutProps> = ({
 }) => {
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
   const [companyInfo, setCompanyInfo] = React.useState<Company | null>(null);
-
+  const navigate = useNavigate();
   React.useEffect(() => {
     loadCompanyInfo();
 
@@ -44,6 +46,15 @@ export const Layout: React.FC<LayoutProps> = ({
       window.removeEventListener("companyInfoUpdated", handleCompanyUpdate);
     };
   }, []);
+
+  const handleLogout = async () => {
+    try {
+      await authService.logOut();
+      navigate("/login");
+    } catch (error) {
+      console.error("Erro ao deslogar:", error);
+    }
+  };
 
   const loadCompanyInfo = async () => {
     try {
@@ -123,7 +134,7 @@ export const Layout: React.FC<LayoutProps> = ({
         </nav>
 
         <div className="sidebar-footer">
-          <button className="logout-btn">
+          <button className="logout-btn" onClick={handleLogout}>
             <LogOut size={20} />
             <span>Sair</span>
           </button>
