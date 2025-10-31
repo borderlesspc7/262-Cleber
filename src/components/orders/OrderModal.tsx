@@ -132,14 +132,18 @@ export const OrderModal: React.FC<OrderModalProps> = ({
       prioridade: form.prioridade as CreateProductionOrderPayload["prioridade"],
       dataInicio: form.dataInicio,
       dataPrevista: form.dataPrevista,
-      grade: gradeRows.map((row) => ({
-        corId: row.corId,
-        pp: row.pp,
-        p: row.p,
-        m: row.m,
-        g: row.g,
-        gg: row.gg,
-      })),
+      grade: gradeRows.map((row) => {
+        const corInfo = cores.find((cor) => cor.id === row.corId);
+        return {
+          corId: row.corId,
+          corNome: corInfo?.nome ?? "Cor removida",
+          pp: row.pp,
+          p: row.p,
+          m: row.m,
+          g: row.g,
+          gg: row.gg,
+        };
+      }),
     };
     await onSubmit(payload);
   };

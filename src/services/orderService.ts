@@ -47,9 +47,25 @@ export const orderService = {
     }) as ProductionOrder[];
   },
 
-  async createOrder(userId: string, payload: CreateProductionOrderPayload) {
+  async createOrder(
+    userId: string,
+    payload: CreateProductionOrderPayload,
+    produto: { descricao: string; refCodigo: string }
+  ) {
+    // Calcula o total de cada linha da grade
+    const gradeWithTotals = payload.grade.map((row) => ({
+      ...row,
+      total: row.pp + row.p + row.m + row.g + row.gg,
+    }));
+
     await addDoc(collection(db, COLLECTION), {
-      ...payload,
+      produtoId: payload.produtoId,
+      produtoDescricao: produto.descricao,
+      produtoRef: produto.refCodigo,
+      prioridade: payload.prioridade,
+      dataInicio: payload.dataInicio,
+      dataPrevista: payload.dataPrevista,
+      grade: gradeWithTotals,
       userId,
       status: "em_producao",
       codigo: `OP${Date.now()}`,

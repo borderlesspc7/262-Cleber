@@ -33,5 +33,5 @@ export interface CreateProductionOrderPayload {
   prioridade: OrderPriority;
   dataInicio: string;
   dataPrevista: string;
-  grade: Array<Omit<ProductionOrderGradeRow, "corNome" | "total">>;
+  grade: Array<Omit<ProductionOrderGradeRow, "total">>;
 }

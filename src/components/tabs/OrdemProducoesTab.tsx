@@ -74,9 +74,19 @@ export const OrdemProducoesTab: React.FC = () => {
   ) => {
     if (!user) return;
 
+    // Buscar informações do produto
+    const produto = produtos.find((p) => p.id === payload.produtoId);
+    if (!produto) {
+      alert("Produto não encontrado");
+      return;
+    }
+
     try {
       setIsSubmitting(true);
-      await orderService.createOrder(user.uid, payload);
+      await orderService.createOrder(user.uid, payload, {
+        descricao: produto.descricao,
+        refCodigo: produto.refCodigo,
+      });
       await loadData();
       setIsModalOpen(false);
     } finally {
@@ -113,80 +123,111 @@ export const OrdemProducoesTab: React.FC = () => {
           return (
             <article key={order.id} className="ordem-card">
               <div className="ordem-card__header">
-                <div className="ordem-card__icon">
-                  <ClipboardList size={26} />
+                <div className="ordem-card__header-left">
+                  <div className="ordem-card__icon">
+                    <ClipboardList size={24} />
+                  </div>
+                  <div className="ordem-card__info-main">
+                    <div className="ordem-card__code">{order.codigo}</div>
+                    <h3 className="ordem-card__title">
+                      {produto?.descricao ?? "Produto removido"}
+                    </h3>
+                    <div className="ordem-card__meta">
+                      <div className="ordem-card__meta-item">
+                        <span>REF:</span>
+                        <strong>{produto?.refCodigo ?? "--"}</strong>
+                      </div>
+                      <span className="badge badge-neutral">
+                        {produto?.categoria?.nome ?? "Categoria"}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="ordem-card__code">{order.codigo}</h3>
-                  <h3>{produto?.descricao ?? "Produto removido"}</h3>
-                  <div className="ordem-card__meta">
-                    <span>REF: {produto?.refCodigo ?? "--"}</span>
-                    <span className="badge badge-neutral">
-                      {produto?.categoria?.nome ?? "Categoria"}
+
+                <div className="ordem-card__header-right">
+                  <div className="ordem-card__status">
+                    <span
+                      className={PRIORITY_LABELS[order.prioridade].className}
+                    >
+                      {PRIORITY_LABELS[order.prioridade].label}
+                    </span>
+                    <span className={STATUS_LABELS[order.status].className}>
+                      {STATUS_LABELS[order.status].label}
                     </span>
                   </div>
-                </div>
-
-                <div className="ordem-card__status">
-                  <span className={PRIORITY_LABELS[order.prioridade].className}>
-                    {PRIORITY_LABELS[order.prioridade].label}
-                  </span>
-                  <span className={STATUS_LABELS[order.status].className}>
-                    {STATUS_LABELS[order.status].label}
-                  </span>
-                </div>
-                <div className="ordem-card__actions">
-                  <button className="icon-button">
-                    <Printer size={18} />
-                  </button>
-                  <button className="icon-button">
-                    <Pencil size={18} />
-                  </button>
-                </div>
-              </div>
-
-              <div className="order-card__info">
-                <div>
-                  <Clock size={16} />
-                  <span>
-                    Inicio: <strong>{order.dataInicio || "--"}</strong>
-                  </span>
-                </div>
-                <div>
-                  <Calendar size={16} />
-                  <span>
-                    Previsão: <strong>{order.dataPrevista || "--"}</strong>
-                  </span>
-                </div>
-                <div>
-                  <CircleDot size={16} />
-                  <span>
-                    Total: <strong>{totalPiecesByOrder(order)}</strong>
-                  </span>
-                </div>
-              </div>
-
-              <div className="order-card__table">
-                <div className="order-card__table-header">
-                  <span>Cor</span>
-                  <span>PP</span>
-                  <span>P</span>
-                  <span>M</span>
-                  <span>G</span>
-                  <span>GG</span>
-                  <span>Total</span>
-                </div>
-                {order.grade.map((row) => (
-                  <div key={row.corId} className="order-card__table-row">
-                    <span>{row.corNome}</span>
-                    <span>{row.pp}</span>
-                    <span>{row.p}</span>
-                    <span>{row.m}</span>
-                    <span>{row.g}</span>
-                    <span>{row.gg}</span>
-                    <span>{row.total}</span>
+                  <div className="ordem-card__actions">
+                    <button className="icon-button">
+                      <Printer size={16} />
+                    </button>
+                    <button className="icon-button">
+                      <Pencil size={16} />
+                    </button>
                   </div>
-                ))}
+                </div>
+              </div>
+
+              <div className="ordem-card__body">
+                <div className="ordem-card__dates">
+                  <div className="ordem-card__date-item">
+                    <div className="ordem-card__date-icon">
+                      <Clock size={18} />
+                    </div>
+                    <div className="ordem-card__date-content">
+                      <span className="ordem-card__date-label">Início</span>
+                      <span className="ordem-card__date-value">
+                        {order.dataInicio || "--"}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="ordem-card__date-item">
+                    <div className="ordem-card__date-icon">
+                      <Calendar size={18} />
+                    </div>
+                    <div className="ordem-card__date-content">
+                      <span className="ordem-card__date-label">Previsão</span>
+                      <span className="ordem-card__date-value">
+                        {order.dataPrevista || "--"}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="ordem-card__date-item">
+                    <div className="ordem-card__date-icon">
+                      <CircleDot size={18} />
+                    </div>
+                    <div className="ordem-card__date-content">
+                      <span className="ordem-card__date-label">Total</span>
+                      <span className="ordem-card__date-value">
+                        {totalPiecesByOrder(order)} peças
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="ordem-card__grade-section">
+                  <h4 className="ordem-card__grade-title">Grade de Produção</h4>
+                  <div className="ordem-card__table">
+                    <div className="ordem-card__table-header">
+                      <span>Cor</span>
+                      <span>PP</span>
+                      <span>P</span>
+                      <span>M</span>
+                      <span>G</span>
+                      <span>GG</span>
+                      <span>Total</span>
+                    </div>
+                    {order.grade.map((row) => (
+                      <div key={row.corId} className="ordem-card__table-row">
+                        <span>{row.corNome}</span>
+                        <span>{row.pp}</span>
+                        <span>{row.p}</span>
+                        <span>{row.m}</span>
+                        <span>{row.g}</span>
+                        <span>{row.gg}</span>
+                        <span>{row.total}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             </article>
           );
