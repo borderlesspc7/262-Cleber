@@ -39,6 +39,8 @@ export const orderService = {
         status: data.status,
         dataInicio: data.dataInicio,
         dataPrevista: data.dataPrevista,
+        responsavelId: data.responsavelId || undefined,
+        responsavelNome: data.responsavelNome || undefined,
         createdAt: data.createdAt?.toDate() ?? new Date(),
         updatedAt: data.updatedAt?.toDate() ?? new Date(),
         userId: data.userId,
@@ -50,7 +52,8 @@ export const orderService = {
   async createOrder(
     userId: string,
     payload: CreateProductionOrderPayload,
-    produto: { descricao: string; refCodigo: string }
+    produto: { descricao: string; refCodigo: string },
+    responsavelNome?: string
   ) {
     // Calcula o total de cada linha da grade
     const gradeWithTotals = payload.grade.map((row) => ({
@@ -65,6 +68,8 @@ export const orderService = {
       prioridade: payload.prioridade,
       dataInicio: payload.dataInicio,
       dataPrevista: payload.dataPrevista,
+      responsavelId: payload.responsavelId || null,
+      responsavelNome: responsavelNome || null,
       grade: gradeWithTotals,
       userId,
       status: "em_producao",

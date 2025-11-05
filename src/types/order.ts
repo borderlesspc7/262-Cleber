@@ -22,6 +22,8 @@ export interface ProductionOrder {
   status: OrderStatus;
   dataInicio: string;
   dataPrevista: string;
+  responsavelId?: string;
+  responsavelNome?: string;
   createdAt: Date;
   updatedAt: Date;
   userId: string;
@@ -33,5 +35,6 @@ export interface CreateProductionOrderPayload {
   prioridade: OrderPriority;
   dataInicio: string;
   dataPrevista: string;
+  responsavelId?: string;
   grade: Array<Omit<ProductionOrderGradeRow, "total">>;
 }

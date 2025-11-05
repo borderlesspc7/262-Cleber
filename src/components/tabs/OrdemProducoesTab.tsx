@@ -83,10 +83,25 @@ export const OrdemProducoesTab: React.FC = () => {
 
     try {
       setIsSubmitting(true);
-      await orderService.createOrder(user.uid, payload, {
-        descricao: produto.descricao,
-        refCodigo: produto.refCodigo,
-      });
+      
+      // Buscar nome do responsável se houver
+      let responsavelNome: string | undefined;
+      if (payload.responsavelId) {
+        const { faccaoService } = await import("../../services/faccaoService");
+        const faccoes = await faccaoService.getFaccoes();
+        const faccao = faccoes.find((f) => f.id === payload.responsavelId);
+        responsavelNome = faccao?.nome;
+      }
+      
+      await orderService.createOrder(
+        user.uid, 
+        payload, 
+        {
+          descricao: produto.descricao,
+          refCodigo: produto.refCodigo,
+        },
+        responsavelNome
+      );
       await loadData();
       setIsModalOpen(false);
     } finally {

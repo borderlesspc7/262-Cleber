@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { X, Plus, Trash2 } from "lucide-react";
 import { produtoService, corService } from "../../services/productService";
+import { faccaoService } from "../../services/faccaoService";
 import { useAuth } from "../../hooks/useAuth";
 import type { Produto, Cor } from "../../types/product";
+import type { Faccao } from "../../types/faccao";
 import type { CreateProductionOrderPayload } from "../../types/order";
 import "./OrderModal.css";
 
@@ -37,24 +39,28 @@ export const OrderModal: React.FC<OrderModalProps> = ({
   const { user } = useAuth();
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [cores, setCores] = useState<Cor[]>([]);
+  const [faccoes, setFaccoes] = useState<Faccao[]>([]);
   const [selectedColorId, setSelectedColorId] = useState("");
   const [form, setForm] = useState({
     produtoId: "",
     prioridade: "",
     dataInicio: "",
     dataPrevista: "",
+    responsavelId: "",
   });
   const [gradeRows, setGradeRows] = useState<GradeRowForm[]>([]);
   useEffect(() => {
     if (!user || !isOpen) return;
 
     (async () => {
-      const [prodList, coresList] = await Promise.all([
+      const [prodList, coresList, faccoesList] = await Promise.all([
         produtoService.getProdutos(user.uid),
         corService.getCores(user.uid),
+        faccaoService.getFaccoes(),
       ]);
       setProdutos(prodList);
       setCores(coresList);
+      setFaccoes(faccoesList.filter(f => f.ativo));
       setSelectedColorId(coresList[0]?.id || "");
     })();
   }, [user, isOpen]);
@@ -66,6 +72,7 @@ export const OrderModal: React.FC<OrderModalProps> = ({
         prioridade: "",
         dataInicio: "",
         dataPrevista: "",
+        responsavelId: "",
       });
       setGradeRows([]);
     }
@@ -132,6 +139,7 @@ export const OrderModal: React.FC<OrderModalProps> = ({
       prioridade: form.prioridade as CreateProductionOrderPayload["prioridade"],
       dataInicio: form.dataInicio,
       dataPrevista: form.dataPrevista,
+      responsavelId: form.responsavelId || undefined,
       grade: gradeRows.map((row) => {
         const corInfo = cores.find((cor) => cor.id === row.corId);
         return {
@@ -202,6 +210,26 @@ export const OrderModal: React.FC<OrderModalProps> = ({
                 {PRIORITY_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="order-modal__field">
+              <span>Responsável (Facção)</span>
+              <select
+                value={form.responsavelId}
+                onChange={(event) =>
+                  setForm((state) => ({
+                    ...state,
+                    responsavelId: event.target.value,
+                  }))
+                }
+              >
+                <option value="">Nenhum responsável</option>
+                {faccoes.map((faccao) => (
+                  <option key={faccao.id} value={faccao.id}>
+                    {faccao.nome}
                   </option>
                 ))}
               </select>
