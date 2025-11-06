@@ -11,6 +11,7 @@ import {
 import { faccaoService } from "../../services/faccaoService";
 import type { Faccao } from "../../types/faccao";
 import { FaccaoModal } from "../faccoes/FaccaoModal";
+import toast from "react-hot-toast";
 import "./FaccoesTab.css";
 
 export const FaccoesTab: React.FC = () => {
@@ -57,14 +58,25 @@ export const FaccoesTab: React.FC = () => {
     try {
       if (faccaoToEdit?.id) {
         await faccaoService.updateFaccao(faccaoToEdit.id, faccaoData);
+        toast.success("Facção atualizada com sucesso!", {
+          icon: "✅",
+        });
       } else {
         await faccaoService.createFaccao(faccaoData);
+        toast.success("Facção criada com sucesso!", {
+          icon: "🎉",
+        });
       }
       await loadFaccoes();
       setIsModalOpen(false);
       setFaccaoToEdit(null);
     } catch (error) {
       console.error("Erro ao salvar facção:", error);
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Erro ao salvar facção. Tente novamente.";
+      toast.error(errorMessage);
       throw error;
     }
   };

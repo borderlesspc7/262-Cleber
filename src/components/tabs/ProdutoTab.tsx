@@ -22,6 +22,7 @@ import type {
   TamanhoForm,
   ProdutoForm,
 } from "../../types/product";
+import toast from "react-hot-toast";
 
 type ProductTabType = "produtos" | "categorias" | "cores" | "tamanhos";
 
@@ -206,9 +207,16 @@ export const ProdutoTab: React.FC = () => {
     try {
       await produtoService.createProduto(user.uid, produtoForm);
       await loadAllData(); // Recarregar dados
+      toast.success("Produto criado com sucesso!", {
+        icon: "🎉",
+      });
     } catch (error) {
       console.error("Erro ao adicionar produto:", error);
-      alert("Erro ao adicionar produto");
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Erro ao criar produto. Tente novamente.";
+      toast.error(errorMessage);
     }
   };
 

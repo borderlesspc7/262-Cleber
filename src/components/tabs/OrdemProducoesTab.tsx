@@ -15,6 +15,7 @@ import { produtoService } from "../../services/productService";
 import type { ProductionOrder } from "../../types/order";
 import type { Produto } from "../../types/product";
 import { OrderModal } from "../orders/OrderModal";
+import toast from "react-hot-toast";
 import "./OrdemProducoesTab.css";
 
 const PRIORITY_LABELS = {
@@ -77,7 +78,7 @@ export const OrdemProducoesTab: React.FC = () => {
     // Buscar informações do produto
     const produto = produtos.find((p) => p.id === payload.produtoId);
     if (!produto) {
-      alert("Produto não encontrado");
+      toast.error("Produto não encontrado");
       return;
     }
 
@@ -104,6 +105,16 @@ export const OrdemProducoesTab: React.FC = () => {
       );
       await loadData();
       setIsModalOpen(false);
+      toast.success("Ordem de produção criada com sucesso!", {
+        icon: "🎉",
+      });
+    } catch (error) {
+      console.error("Erro ao criar ordem de produção:", error);
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Erro ao criar ordem de produção. Tente novamente.";
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }

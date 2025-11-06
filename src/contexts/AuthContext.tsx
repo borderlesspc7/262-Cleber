@@ -8,6 +8,7 @@ import type {
 import type { ReactNode } from "react";
 import type { FirebaseError } from "firebase/app";
 import getFirebaseErrorMessage from "../components/ui/ErrorMessage";
+import toast from "react-hot-toast";
 
 interface AuthContextType {
   user: User | null;
@@ -39,11 +40,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const user = await authService.login(credentials);
       setUser(user);
       setLoading(false);
+      toast.success(`Bem-vindo, ${user.name || user.email}!`, {
+        icon: "👋",
+      });
     } catch (error) {
       const message = getFirebaseErrorMessage(error as string | FirebaseError);
       setError(message);
       setLoading(false);
       setUser(null);
+      toast.error(message);
     }
   };
 
@@ -54,11 +59,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const user = await authService.register(credentials);
       setUser(user);
       setLoading(false);
+      toast.success("Conta criada com sucesso! Bem-vindo!", {
+        icon: "🎉",
+      });
     } catch (error) {
       const message = getFirebaseErrorMessage(error as string | FirebaseError);
       setError(message);
       setLoading(false);
       setUser(null);
+      toast.error(message);
     }
   };
 
@@ -69,10 +78,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await authService.logOut();
       setUser(null);
       setLoading(false);
+      toast.success("Logout realizado com sucesso!", {
+        icon: "👋",
+      });
     } catch (error) {
       const message = getFirebaseErrorMessage(error as string | FirebaseError);
       setError(message);
       setLoading(false);
+      toast.error(message);
     }
   };
 

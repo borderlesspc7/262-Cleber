@@ -4,6 +4,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { stepService } from "../../services/stepService";
 import { StepModal } from "../steps/StepModal";
 import type { ProductionStep, CreateStepData } from "../../types/step";
+import toast from "react-hot-toast";
 import "./EtapasTab.css";
 
 export const EtapasTab: React.FC = () => {
@@ -41,15 +42,26 @@ export const EtapasTab: React.FC = () => {
       if (stepToEdit) {
         // Editar etapa existente
         await stepService.updateStep(stepToEdit.id, stepData);
+        toast.success("Etapa atualizada com sucesso!", {
+          icon: "✅",
+        });
       } else {
         // Criar nova etapa
         await stepService.createStep(user.uid, stepData);
+        toast.success("Etapa criada com sucesso!", {
+          icon: "🎉",
+        });
       }
 
       await loadSteps(); // Recarregar a lista
       setStepToEdit(null); // Limpar etapa em edição
     } catch (error) {
       console.error("Erro ao salvar etapa:", error);
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Erro ao salvar etapa. Tente novamente.";
+      toast.error(errorMessage);
       throw error;
     } finally {
       setIsLoading(false);
