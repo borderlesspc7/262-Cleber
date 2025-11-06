@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { ErrorOutline } from "@mui/icons-material";
 import { useAuth } from "../../hooks/useAuth";
 import { Button } from "../../components/ui/Button/Button";
 import { paths } from "../../routes/paths";
@@ -55,7 +56,12 @@ export const LoginPage = () => {
             </p>
           </div>
           <form className="login-form" onSubmit={handleSubmit}>
-            {error && <div className="login-error">{error}</div>}
+            {error && (
+              <div className="login-error" role="alert">
+                <ErrorOutline className="login-error-icon" />
+                <span>{error}</span>
+              </div>
+            )}
             <div className="login-field">
               <label className="login-label" htmlFor="email">
                 Email
