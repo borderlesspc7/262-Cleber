@@ -9,6 +9,7 @@ import type { ReactNode } from "react";
 import type { FirebaseError } from "firebase/app";
 import getFirebaseErrorMessage from "../components/ui/ErrorMessage";
 import toast from "react-hot-toast";
+import { UserCheck, Sparkles, LogOut } from "lucide-react";
 
 interface AuthContextType {
   user: User | null;
@@ -41,7 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(user);
       setLoading(false);
       toast.success(`Bem-vindo, ${user.name || user.email}!`, {
-        icon: "👋",
+        icon: <UserCheck size={20} />,
       });
     } catch (error) {
       const message = getFirebaseErrorMessage(error as string | FirebaseError);
@@ -60,7 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(user);
       setLoading(false);
       toast.success("Conta criada com sucesso! Bem-vindo!", {
-        icon: "🎉",
+        icon: <Sparkles size={20} />,
       });
     } catch (error) {
       const message = getFirebaseErrorMessage(error as string | FirebaseError);
@@ -79,7 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(null);
       setLoading(false);
       toast.success("Logout realizado com sucesso!", {
-        icon: "👋",
+        icon: <LogOut size={20} />,
       });
     } catch (error) {
       const message = getFirebaseErrorMessage(error as string | FirebaseError);
