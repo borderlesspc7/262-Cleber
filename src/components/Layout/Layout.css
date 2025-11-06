@@ -188,6 +188,7 @@
 .header {
   background-color: white;
   border-bottom: 1px solid #e2e8f0;
+  height: 91.5px;
   padding: 1rem 1.5rem;
   display: flex;
   align-items: center;

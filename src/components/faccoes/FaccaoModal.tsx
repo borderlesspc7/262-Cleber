@@ -11,7 +11,6 @@ interface FaccaoModalProps {
   onClose: () => void;
   onSave: (faccao: Omit<Faccao, "id">) => Promise<void>;
   faccaoToEdit?: Faccao | null;
-  userId: string;
 }
 
 export const FaccaoModal: React.FC<FaccaoModalProps> = ({

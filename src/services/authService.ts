@@ -42,7 +42,7 @@ export const authService = {
       const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
 
       if (!userDoc.exists()) {
-        throw new Error("User not found");
+        throw new Error("Não existe um usuário cadastrado com este email. Verifique o email ou cadastre-se.");
       }
 
       const userData = userDoc.data() as User;
@@ -55,8 +55,13 @@ export const authService = {
       await setDoc(doc(db, "users", firebaseUser.uid), updateUserData);
 
       return updateUserData;
-    } catch (error) {
-      const message = getFirebaseErrorMessage(error as string | FirebaseError);
+    } catch (error: any) {
+      // Garante que o erro do Firebase seja capturado corretamente
+      const firebaseError: FirebaseError = {
+        code: error?.code || error?.error?.code,
+        message: error?.message || error?.error?.message || error?.toString(),
+      };
+      const message = getFirebaseErrorMessage(firebaseError);
       throw new Error(message);
     }
   },

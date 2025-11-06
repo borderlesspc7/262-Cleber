@@ -9,12 +9,10 @@ import {
   where,
   orderBy,
   serverTimestamp,
-  Timestamp,
 } from "firebase/firestore";
 import { db } from "../lib/firebaseconfig";
 import type {
   ProductionOrderProgress,
-  CreateProductionProgressPayload,
   UpdateStageProgressPayload,
   StageProgress,
   ProductionProgressStatus,

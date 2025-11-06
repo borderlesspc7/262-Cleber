@@ -24,9 +24,7 @@ export const DashboardTab: React.FC = () => {
             <h3>Financeiro</h3>
             <p>Resumo financeiro</p>
           </div>
-          <div className="dashboard-card agenda-card-container">
-            <AgendaCard />
-          </div>
+          <AgendaCard />
         </div>
       </div>
     </div>
