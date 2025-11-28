@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { X, Plus, Trash2 } from "lucide-react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
+import { X, Plus, Trash2, Search } from "lucide-react";
 import { produtoService, corService } from "../../services/productService";
 import { faccaoService } from "../../services/faccaoService";
 import { useAuth } from "../../hooks/useAuth";
@@ -49,6 +49,9 @@ export const OrderModal: React.FC<OrderModalProps> = ({
     responsavelId: "",
   });
   const [gradeRows, setGradeRows] = useState<GradeRowForm[]>([]);
+  const [produtoSearch, setProdutoSearch] = useState("");
+  const [showProdutoDropdown, setShowProdutoDropdown] = useState(false);
+  const produtoSearchRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!user || !isOpen) return;
 
@@ -60,7 +63,7 @@ export const OrderModal: React.FC<OrderModalProps> = ({
       ]);
       setProdutos(prodList);
       setCores(coresList);
-      setFaccoes(faccoesList.filter(f => f.ativo));
+      setFaccoes(faccoesList.filter((f) => f.ativo));
       setSelectedColorId(coresList[0]?.id || "");
     })();
   }, [user, isOpen]);
@@ -75,6 +78,8 @@ export const OrderModal: React.FC<OrderModalProps> = ({
         responsavelId: "",
       });
       setGradeRows([]);
+      setProdutoSearch("");
+      setShowProdutoDropdown(false);
     }
   }, [isOpen]);
 
@@ -82,6 +87,38 @@ export const OrderModal: React.FC<OrderModalProps> = ({
     () => produtos.find((produto) => produto.id === form.produtoId),
     [produtos, form.produtoId]
   );
+
+  const produtosFiltrados = useMemo(() => {
+    if (!produtoSearch.trim()) return produtos;
+    const searchLower = produtoSearch.toLowerCase();
+    return produtos.filter(
+      (produto) =>
+        produto.refCodigo.toLowerCase().includes(searchLower) ||
+        produto.descricao.toLowerCase().includes(searchLower)
+    );
+  }, [produtos, produtoSearch]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        produtoSearchRef.current &&
+        !produtoSearchRef.current.contains(event.target as Node)
+      ) {
+        setShowProdutoDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    if (produtoSelecionado) {
+      setProdutoSearch(produtoSelecionado.refCodigo);
+    } else {
+      setProdutoSearch("");
+    }
+  }, [produtoSelecionado]);
 
   const handleAddGradeRow = () => {
     if (!selectedColorId) return;
@@ -175,23 +212,71 @@ export const OrderModal: React.FC<OrderModalProps> = ({
           <div className="order-modal__grid">
             <label className="order-modal__field">
               <span>Produto*</span>
-              <select
-                value={form.produtoId}
-                onChange={(event) =>
-                  setForm((state) => ({
-                    ...state,
-                    produtoId: event.target.value,
-                  }))
-                }
-                required
+              <div
+                ref={produtoSearchRef}
+                className="order-modal__product-search"
               >
-                <option value="">Selecione um produto</option>
-                {produtos.map((produto) => (
-                  <option key={produto.id} value={produto.id}>
-                    {produto.descricao}
-                  </option>
-                ))}
-              </select>
+                <div className="order-modal__product-input-wrapper">
+                  <Search size={18} className="order-modal__search-icon" />
+                  <input
+                    type="text"
+                    value={produtoSearch}
+                    onChange={(e) => {
+                      setProdutoSearch(e.target.value);
+                      setShowProdutoDropdown(true);
+                      if (!e.target.value) {
+                        setForm((state) => ({ ...state, produtoId: "" }));
+                      }
+                    }}
+                    onFocus={() => setShowProdutoDropdown(true)}
+                    placeholder="Pesquisar por REF..."
+                  />
+                </div>
+                {showProdutoDropdown &&
+                  produtoSearch.trim() &&
+                  !produtoSelecionado && (
+                    <div className="order-modal__product-dropdown">
+                      {produtosFiltrados.length > 0 ? (
+                        produtosFiltrados.map((produto) => (
+                          <button
+                            key={produto.id}
+                            type="button"
+                            className="order-modal__product-option"
+                            onClick={() => {
+                              setForm((state) => ({
+                                ...state,
+                                produtoId: produto.id,
+                              }));
+                              setProdutoSearch(produto.refCodigo);
+                              setShowProdutoDropdown(false);
+                            }}
+                          >
+                            <div className="order-modal__product-option-ref">
+                              {produto.refCodigo}
+                            </div>
+                            <div className="order-modal__product-option-desc">
+                              {produto.descricao}
+                            </div>
+                          </button>
+                        ))
+                      ) : (
+                        <div className="order-modal__product-empty">
+                          Nenhum produto encontrado
+                        </div>
+                      )}
+                    </div>
+                  )}
+                {produtoSelecionado && (
+                  <div className="order-modal__product-selected">
+                    <span className="order-modal__product-selected-label">
+                      Descrição:
+                    </span>
+                    <span className="order-modal__product-selected-value">
+                      {produtoSelecionado.descricao}
+                    </span>
+                  </div>
+                )}
+              </div>
             </label>
 
             <label className="order-modal__field">

@@ -1,12 +1,13 @@
 import React, { useState } from "react";
 import { Plus, X, ChevronDown } from "lucide-react";
-import type { 
-  Produto, 
-  ProdutoForm, 
-  Categoria, 
-  Cor, 
-  Tamanho
+import type {
+  Produto,
+  ProdutoForm,
+  Categoria,
+  Cor,
+  Tamanho,
 } from "../../types/product";
+import "./products.css";
 
 interface ProdutoFormProps {
   produtos: Produto[];
@@ -40,7 +41,12 @@ export const ProdutoFormComponent: React.FC<ProdutoFormProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.refCodigo.trim() || !formData.descricao.trim() || !formData.categoriaId) return;
+    if (
+      !formData.refCodigo.trim() ||
+      !formData.descricao.trim() ||
+      !formData.categoriaId
+    )
+      return;
 
     if (editingId) {
       onEdit(editingId, formData);
@@ -69,8 +75,8 @@ export const ProdutoFormComponent: React.FC<ProdutoFormProps> = ({
       refCodigo: produto.refCodigo,
       descricao: produto.descricao,
       categoriaId: produto.categoria.id,
-      coresIds: produto.cores.map(c => c.id),
-      tamanhosIds: produto.tamanhos.map(t => t.id),
+      coresIds: produto.cores.map((c) => c.id),
+      tamanhosIds: produto.tamanhos.map((t) => t.id),
     });
     setEditingId(produto.id);
     setShowForm(true);
@@ -82,20 +88,21 @@ export const ProdutoFormComponent: React.FC<ProdutoFormProps> = ({
 
   const handleCorToggle = (corId: string) => {
     const coresIds = formData.coresIds.includes(corId)
-      ? formData.coresIds.filter(id => id !== corId)
+      ? formData.coresIds.filter((id) => id !== corId)
       : [...formData.coresIds, corId];
     setFormData({ ...formData, coresIds });
   };
 
   const handleTamanhoToggle = (tamanhoId: string) => {
     const tamanhosIds = formData.tamanhosIds.includes(tamanhoId)
-      ? formData.tamanhosIds.filter(id => id !== tamanhoId)
+      ? formData.tamanhosIds.filter((id) => id !== tamanhoId)
       : [...formData.tamanhosIds, tamanhoId];
     setFormData({ ...formData, tamanhosIds });
   };
 
-
-  const selectedCategoria = categorias.find(c => c.id === formData.categoriaId);
+  const selectedCategoria = categorias.find(
+    (c) => c.id === formData.categoriaId
+  );
 
   return (
     <div className="produto-form">
@@ -151,7 +158,9 @@ export const ProdutoFormComponent: React.FC<ProdutoFormProps> = ({
                 className="dropdown-button"
                 onClick={() => setShowCategorias(!showCategorias)}
               >
-                {selectedCategoria ? selectedCategoria.nome : "Selecione uma categoria"}
+                {selectedCategoria
+                  ? selectedCategoria.nome
+                  : "Selecione uma categoria"}
                 <ChevronDown size={16} />
               </button>
               {showCategorias && (
@@ -212,16 +221,11 @@ export const ProdutoFormComponent: React.FC<ProdutoFormProps> = ({
             </div>
           </div>
 
-
           <div className="form-actions">
             <button type="submit" className="save-button">
               {editingId ? "Atualizar" : "Salvar"}
             </button>
-            <button
-              type="button"
-              onClick={resetForm}
-              className="cancel-button"
-            >
+            <button type="button" onClick={resetForm} className="cancel-button">
               Cancelar
             </button>
           </div>
@@ -239,10 +243,12 @@ export const ProdutoFormComponent: React.FC<ProdutoFormProps> = ({
               <p className="descricao">{produto.descricao}</p>
               <div className="produto-details">
                 <div className="cores">
-                  <strong>Cores:</strong> {produto.cores.map(c => c.nome).join(", ")}
+                  <strong>Cores:</strong>{" "}
+                  {produto.cores.map((c) => c.nome).join(", ")}
                 </div>
                 <div className="tamanhos">
-                  <strong>Tamanhos:</strong> {produto.tamanhos.map(t => t.nome).join(", ")}
+                  <strong>Tamanhos:</strong>{" "}
+                  {produto.tamanhos.map((t) => t.nome).join(", ")}
                 </div>
               </div>
             </div>
