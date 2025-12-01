@@ -4,11 +4,7 @@ export type OrderStatus = "planejada" | "em_producao" | "concluida";
 export interface ProductionOrderGradeRow {
   corId: string;
   corNome: string;
-  pp: number;
-  p: number;
-  m: number;
-  g: number;
-  gg: number;
+  quantidades: Record<string, number>;
   total: number;
 }
 

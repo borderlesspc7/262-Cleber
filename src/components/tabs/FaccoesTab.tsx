@@ -7,6 +7,7 @@ import {
   Phone,
   Edit2,
   Trash2,
+  Check,
 } from "lucide-react";
 import { faccaoService } from "../../services/faccaoService";
 import type { Faccao } from "../../types/faccao";
@@ -59,12 +60,12 @@ export const FaccoesTab: React.FC = () => {
       if (faccaoToEdit?.id) {
         await faccaoService.updateFaccao(faccaoToEdit.id, faccaoData);
         toast.success("Facção atualizada com sucesso!", {
-          icon: "✅",
+          icon: <Check size={20} />,
         });
       } else {
         await faccaoService.createFaccao(faccaoData);
         toast.success("Facção criada com sucesso!", {
-          icon: "🎉",
+          icon: <Check size={20} />,
         });
       }
       await loadFaccoes();

@@ -9,6 +9,7 @@ import { OrdemProducoesTab } from "../../components/tabs/OrdemProducoesTab";
 import { GestaoProducoesTab } from "../../components/tabs/GestaoProducoesTab";
 import { FinanceiroTab } from "../../components/tabs/FinanceiroTab";
 import toast from "react-hot-toast";
+import { Check } from "lucide-react";
 import "./Dashboard.css";
 
 type TabType =
@@ -46,7 +47,7 @@ export const DashboardPage = () => {
     }
     if (activeTab) {
       toast.success(`Aba ${getTabName(activeTab)} aberta`, {
-        icon: "✅",
+        icon: <Check size={20} />,
         duration: 2000,
       });
     }

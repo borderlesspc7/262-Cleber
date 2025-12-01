@@ -273,7 +273,7 @@
 
 .order-modal__grade-row {
   display: grid;
-  grid-template-columns: 1.5fr repeat(5, 0.8fr) 1fr 0.4fr;
+  grid-template-columns: 1.5fr repeat(5, 1fr) 1.2fr 0.4fr;
   gap: 0.75rem;
   align-items: center;
 }
@@ -285,7 +285,7 @@
   text-align: center;
   font-size: 0.875rem;
   outline: none;
-  width: 60%;
+  width: 80%;
 }
 
 .order-modal__grade-total {

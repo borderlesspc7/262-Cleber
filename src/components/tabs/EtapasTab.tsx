@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Plus, Edit, Trash2 } from "lucide-react";
+import { Plus, Edit, Trash2, Check } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { stepService } from "../../services/stepService";
 import { StepModal } from "../steps/StepModal";
@@ -43,13 +43,13 @@ export const EtapasTab: React.FC = () => {
         // Editar etapa existente
         await stepService.updateStep(stepToEdit.id, stepData);
         toast.success("Etapa atualizada com sucesso!", {
-          icon: "✅",
+          icon: <Check size={20} />,
         });
       } else {
         // Criar nova etapa
         await stepService.createStep(user.uid, stepData);
         toast.success("Etapa criada com sucesso!", {
-          icon: "🎉",
+          icon: <Check size={20} />,
         });
       }
 

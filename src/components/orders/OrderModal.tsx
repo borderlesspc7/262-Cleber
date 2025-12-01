@@ -1,9 +1,13 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { X, Plus, Trash2, Search } from "lucide-react";
-import { produtoService, corService } from "../../services/productService";
+import {
+  produtoService,
+  corService,
+  tamanhoService,
+} from "../../services/productService";
 import { faccaoService } from "../../services/faccaoService";
 import { useAuth } from "../../hooks/useAuth";
-import type { Produto, Cor } from "../../types/product";
+import type { Produto, Cor, Tamanho } from "../../types/product";
 import type { Faccao } from "../../types/faccao";
 import type { CreateProductionOrderPayload } from "../../types/order";
 import "./OrderModal.css";
@@ -17,11 +21,7 @@ interface OrderModalProps {
 
 interface GradeRowForm {
   corId: string;
-  pp: number;
-  p: number;
-  m: number;
-  g: number;
-  gg: number;
+  quantidades: Record<string, number>;
 }
 
 const PRIORITY_OPTIONS = [
@@ -39,6 +39,7 @@ export const OrderModal: React.FC<OrderModalProps> = ({
   const { user } = useAuth();
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [cores, setCores] = useState<Cor[]>([]);
+  const [tamanhos, setTamanhos] = useState<Tamanho[]>([]);
   const [faccoes, setFaccoes] = useState<Faccao[]>([]);
   const [selectedColorId, setSelectedColorId] = useState("");
   const [form, setForm] = useState({
@@ -56,15 +57,30 @@ export const OrderModal: React.FC<OrderModalProps> = ({
     if (!user || !isOpen) return;
 
     (async () => {
-      const [prodList, coresList, faccoesList] = await Promise.all([
-        produtoService.getProdutos(user.uid),
-        corService.getCores(user.uid),
-        faccaoService.getFaccoes(),
-      ]);
-      setProdutos(prodList);
+      const [prodList, coresList, tamanhosList, faccoesList] =
+        await Promise.all([
+          produtoService.getProdutos(user.uid),
+          corService.getCores(user.uid),
+          tamanhoService.getTamanhos(user.uid),
+          faccaoService.getFaccoes(),
+        ]);
+      setTamanhos(tamanhosList);
       setCores(coresList);
       setFaccoes(faccoesList.filter((f) => f.ativo));
       setSelectedColorId(coresList[0]?.id || "");
+
+      const produtosCompletos = prodList.map((produto) => {
+        const tamanhosProduto = tamanhosList.filter((t) =>
+          produto.tamanhosIds?.includes(t.id || "")
+        );
+
+        return {
+          ...produto,
+          tamanhos: tamanhosProduto.length > 0 ? tamanhosProduto : [],
+        };
+      });
+
+      setProdutos(produtosCompletos);
     })();
   }, [user, isOpen]);
 
@@ -88,6 +104,14 @@ export const OrderModal: React.FC<OrderModalProps> = ({
     [produtos, form.produtoId]
   );
 
+  const tamanhosProdutoSelecionado = useMemo(() => {
+    if (!produtoSelecionado || !produtoSelecionado.tamanhosIds) {
+      return [];
+    }
+
+    return [...produtoSelecionado.tamanhos].sort((a, b) => a.ordem - b.ordem);
+  }, [produtoSelecionado]);
+
   const produtosFiltrados = useMemo(() => {
     if (!produtoSearch.trim()) return produtos;
     const searchLower = produtoSearch.toLowerCase();
@@ -97,6 +121,11 @@ export const OrderModal: React.FC<OrderModalProps> = ({
         produto.descricao.toLowerCase().includes(searchLower)
     );
   }, [produtos, produtoSearch]);
+
+  const gradeGridColumns = useMemo(() => {
+    const numTamanhos = tamanhosProdutoSelecionado.length;
+    return `1.5 fr repeat(${numTamanhos}, 0.8fr) 1fr 0.4fr`;
+  }, [tamanhosProdutoSelecionado]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -124,9 +153,14 @@ export const OrderModal: React.FC<OrderModalProps> = ({
     if (!selectedColorId) return;
     if (gradeRows.some((row) => row.corId === selectedColorId)) return;
 
+    const quantidadesIniciais: Record<string, number> = {};
+    tamanhosProdutoSelecionado.forEach((tamanho) => {
+      quantidadesIniciais[tamanho.id] = 0;
+    });
+
     setGradeRows((rows) => [
       ...rows,
-      { corId: selectedColorId, pp: 0, p: 0, m: 0, g: 0, gg: 0 },
+      { corId: selectedColorId, quantidades: quantidadesIniciais },
     ]);
   };
 
@@ -136,7 +170,7 @@ export const OrderModal: React.FC<OrderModalProps> = ({
 
   const handleGradeChange = (
     corId: string,
-    field: keyof GradeRowForm,
+    tamanhoId: string,
     value: number
   ) => {
     setGradeRows((rows) =>
@@ -144,15 +178,21 @@ export const OrderModal: React.FC<OrderModalProps> = ({
         row.corId === corId
           ? {
               ...row,
-              [field]: Number.isNaN(value) ? 0 : Math.max(0, Math.floor(value)),
+              quantidades: {
+                ...row.quantidades,
+                [tamanhoId]: Number.isNaN(value)
+                  ? 0
+                  : Math.max(0, Math.floor(value)),
+              },
             }
           : row
       )
     );
   };
 
-  const computeRowTotal = (row: GradeRowForm) =>
-    row.pp + row.p + row.m + row.g + row.gg;
+  const computeRowTotal = (row: GradeRowForm) => {
+    return Object.values(row.quantidades).reduce((acc, qty) => acc + qty, 0);
+  };
 
   const totalPieces = gradeRows.reduce(
     (acc, row) => acc + computeRowTotal(row),
@@ -182,11 +222,7 @@ export const OrderModal: React.FC<OrderModalProps> = ({
         return {
           corId: row.corId,
           corNome: corInfo?.nome ?? "Cor removida",
-          pp: row.pp,
-          p: row.p,
-          m: row.m,
-          g: row.g,
-          gg: row.gg,
+          quantidades: row.quantidades,
         };
       }),
     };
@@ -375,13 +411,14 @@ export const OrderModal: React.FC<OrderModalProps> = ({
             </div>
 
             <div className="order-modal__grade-table">
-              <div className="order-modal__grade-header-row">
+              <div
+                className="order-modal__grade-header-row"
+                style={{ gridTemplateColumns: gradeGridColumns }}
+              >
                 <span>Cor</span>
-                <span>PP</span>
-                <span>P</span>
-                <span>M</span>
-                <span>G</span>
-                <span>GG</span>
+                {tamanhosProdutoSelecionado.map((tamanho) => (
+                  <span key={tamanho.id}>{tamanho.nome}</span>
+                ))}
                 <span>Total</span>
                 <span />
               </div>
@@ -389,23 +426,28 @@ export const OrderModal: React.FC<OrderModalProps> = ({
               {gradeRows.map((row) => {
                 const corInfo = cores.find((cor) => cor.id === row.corId);
                 return (
-                  <div key={row.corId} className="order-modal__grade-row">
+                  <div
+                    key={row.corId}
+                    className="order-modal__grade-row"
+                    style={{ gridTemplateColumns: gradeGridColumns }}
+                  >
                     <span>{corInfo?.nome ?? "Cor removida"}</span>
-                    {(["pp", "p", "m", "g", "gg"] as const).map((field) => (
+                    {tamanhosProdutoSelecionado.map((tamanho) => (
                       <input
-                        key={field}
+                        key={tamanho.id}
                         type="number"
                         min={0}
-                        value={row[field]}
+                        value={row.quantidades[tamanho.id] || 0}
                         onChange={(event) =>
                           handleGradeChange(
                             row.corId,
-                            field,
+                            tamanho.id,
                             Number(event.target.value)
                           )
                         }
                       />
                     ))}
+
                     <span className="order-modal__grade-total">
                       {computeRowTotal(row)}
                     </span>

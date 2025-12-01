@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Package, Tag, Palette, Ruler } from "lucide-react";
+import { Package, Tag, Palette, Ruler, Check } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import {
   categoriaService,
@@ -208,7 +208,7 @@ export const ProdutoTab: React.FC = () => {
       await produtoService.createProduto(user.uid, produtoForm);
       await loadAllData(); // Recarregar dados
       toast.success("Produto criado com sucesso!", {
-        icon: "🎉",
+        icon: <Check size={20} />,
       });
     } catch (error) {
       console.error("Erro ao adicionar produto:", error);

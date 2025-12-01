@@ -8,6 +8,7 @@ import {
   Calendar,
   ClipboardList,
   CircleDot,
+  Check,
 } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { orderService } from "../../services/orderService";
@@ -106,7 +107,7 @@ export const OrdemProducoesTab: React.FC = () => {
       await loadData();
       setIsModalOpen(false);
       toast.success("Ordem de produção criada com sucesso!", {
-        icon: "🎉",
+        icon: <Check size={20} />,
       });
     } catch (error) {
       console.error("Erro ao criar ordem de produção:", error);
