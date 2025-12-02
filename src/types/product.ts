@@ -40,9 +40,11 @@ export interface Produto {
   categoria: Categoria;
   cores: Cor[];
   tamanhos: Tamanho[];
+  etapasProducao: EtapaProducaoItem[];
   categoriaId?: string;
   coresIds?: string[];
   tamanhosIds?: string[];
+  etapasProducaoIds?: EtapaProducaoItemForm[];
   userId?: string;
   ativo: boolean;
   createdAt: Date;
@@ -84,4 +86,11 @@ export interface ProdutoForm {
   categoriaId: string;
   coresIds: string[];
   tamanhosIds: string[];
+  etapasProducao?: EtapaProducaoItemForm[];
+}
+
+export interface EtapaProducaoItemForm {
+  etapaId: string;
+  custo: number;
+  ordem: number;
 }

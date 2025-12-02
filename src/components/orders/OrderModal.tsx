@@ -7,9 +7,12 @@ import {
 } from "../../services/productService";
 import { faccaoService } from "../../services/faccaoService";
 import { useAuth } from "../../hooks/useAuth";
-import type { Produto, Cor, Tamanho } from "../../types/product";
+import type { Produto, Cor } from "../../types/product";
 import type { Faccao } from "../../types/faccao";
-import type { CreateProductionOrderPayload } from "../../types/order";
+import type {
+  CreateProductionOrderPayload,
+  ProductionOrder,
+} from "../../types/order";
 import "./OrderModal.css";
 
 interface OrderModalProps {
@@ -17,11 +20,21 @@ interface OrderModalProps {
   onClose: () => void;
   onSubmit: (data: CreateProductionOrderPayload) => Promise<void>;
   isSubmitting: boolean;
+  orderToEdit?: ProductionOrder;
 }
 
 interface GradeRowForm {
   corId: string;
   quantidades: Record<string, number>;
+}
+
+// Interface para o formato antigo da grade (compatibilidade)
+interface OldGradeRow {
+  pp?: number;
+  p?: number;
+  m?: number;
+  g?: number;
+  gg?: number;
 }
 
 const PRIORITY_OPTIONS = [
@@ -35,11 +48,11 @@ export const OrderModal: React.FC<OrderModalProps> = ({
   onClose,
   onSubmit,
   isSubmitting,
+  orderToEdit,
 }) => {
   const { user } = useAuth();
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [cores, setCores] = useState<Cor[]>([]);
-  const [tamanhos, setTamanhos] = useState<Tamanho[]>([]);
   const [faccoes, setFaccoes] = useState<Faccao[]>([]);
   const [selectedColorId, setSelectedColorId] = useState("");
   const [form, setForm] = useState({
@@ -53,6 +66,7 @@ export const OrderModal: React.FC<OrderModalProps> = ({
   const [produtoSearch, setProdutoSearch] = useState("");
   const [showProdutoDropdown, setShowProdutoDropdown] = useState(false);
   const produtoSearchRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     if (!user || !isOpen) return;
 
@@ -64,7 +78,6 @@ export const OrderModal: React.FC<OrderModalProps> = ({
           tamanhoService.getTamanhos(user.uid),
           faccaoService.getFaccoes(),
         ]);
-      setTamanhos(tamanhosList);
       setCores(coresList);
       setFaccoes(faccoesList.filter((f) => f.ativo));
       setSelectedColorId(coresList[0]?.id || "");
@@ -98,6 +111,61 @@ export const OrderModal: React.FC<OrderModalProps> = ({
       setShowProdutoDropdown(false);
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    if (isOpen && orderToEdit) {
+      setForm({
+        produtoId: orderToEdit.produtoId,
+        prioridade: orderToEdit.prioridade,
+        dataInicio: orderToEdit.dataInicio,
+        dataPrevista: orderToEdit.dataPrevista,
+        responsavelId: orderToEdit.responsavelId || "",
+      });
+
+      const produto = produtos.find((p) => p.id === orderToEdit.produtoId);
+      if (produto) {
+        setProdutoSearch(produto.refCodigo);
+      }
+
+      const gradeRows: GradeRowForm[] = orderToEdit.grade.map((row) => {
+        if (row.quantidades) {
+          return {
+            corId: row.corId,
+            quantidades: row.quantidades,
+          };
+        } else {
+          const produto = produtos.find((p) => p.id === orderToEdit.produtoId);
+          if (produto && produto.tamanhos) {
+            const quantidades: Record<string, number> = {};
+            const tamanhosOrdenados = [...produto.tamanhos].sort(
+              (a, b) => a.ordem - b.ordem
+            );
+            const camposAntigos = ["pp", "p", "m", "g", "gg"] as const;
+
+            tamanhosOrdenados.forEach((tamanho, index) => {
+              if (index < camposAntigos.length) {
+                const campo = camposAntigos[index];
+                const oldRow = row as OldGradeRow;
+                quantidades[tamanho.id] = oldRow[campo] || 0;
+              }
+            });
+
+            return {
+              corId: row.corId,
+              quantidades,
+            };
+          }
+
+          return {
+            corId: row.corId,
+            quantidades: {},
+          };
+        }
+      });
+
+      setGradeRows(gradeRows);
+    }
+  }, [isOpen, orderToEdit, produtos]);
 
   const produtoSelecionado = useMemo(
     () => produtos.find((produto) => produto.id === form.produtoId),
@@ -236,8 +304,16 @@ export const OrderModal: React.FC<OrderModalProps> = ({
       <div className="order-modal">
         <header className="order-modal__header">
           <div>
-            <h2>Nova Ordem de Produção</h2>
-            <p>Crie uma nova ordem com todas as especificações.</p>
+            <h2>
+              {orderToEdit
+                ? "Editar Ordem de Produção"
+                : "Nova Ordem de Produção"}
+            </h2>
+            <p>
+              {orderToEdit
+                ? "Edite os dados da ordem de produção."
+                : "Crie uma nova ordem com todas as especificações."}
+            </p>
           </div>
           <button className="order-modal__close" onClick={onClose}>
             <X size={18} />
@@ -489,7 +565,13 @@ export const OrderModal: React.FC<OrderModalProps> = ({
               disabled={isSubmitting}
               className="order-modal__btn primary"
             >
-              {isSubmitting ? "Criando..." : "Criar Ordem"}
+              {isSubmitting
+                ? orderToEdit
+                  ? "Atualizando..."
+                  : "Criando..."
+                : orderToEdit
+                ? "Atualizar Ordem"
+                : "Criar Ordem"}
             </button>
           </footer>
         </form>

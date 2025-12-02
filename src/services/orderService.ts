@@ -58,7 +58,7 @@ export const orderService = {
     // Calcula o total de cada linha da grade
     const gradeWithTotals = payload.grade.map((row) => ({
       ...row,
-      total: row.pp + row.p + row.m + row.g + row.gg,
+      total: Object.values(row.quantidades).reduce((acc, qty) => acc + qty, 0),
     }));
 
     await addDoc(collection(db, COLLECTION), {
@@ -79,9 +79,27 @@ export const orderService = {
     });
   },
 
-  async updateOrder(id: string, data: Partial<CreateProductionOrderPayload>) {
+  async updateOrder(
+    id: string,
+    payload: CreateProductionOrderPayload,
+    produto: { descricao: string; refCodigo: string },
+    responsavelNome?: string
+  ) {
+    const gradeWithTotals = payload.grade.map((row) => ({
+      ...row,
+      total: Object.values(row.quantidades).reduce((acc, qty) => acc + qty, 0),
+    }));
+
     await updateDoc(doc(db, COLLECTION, id), {
-      ...data,
+      produtoId: payload.produtoId,
+      produtoDescricao: produto.descricao,
+      produtoRef: produto.refCodigo,
+      prioridade: payload.prioridade,
+      dataInicio: payload.dataInicio,
+      dataPrevista: payload.dataPrevista,
+      responsavelId: payload.responsavelId || null,
+      responsavelNome: responsavelNome || null,
+      grade: gradeWithTotals,
       updatedAt: serverTimestamp(),
     });
   },

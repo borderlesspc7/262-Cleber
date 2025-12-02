@@ -38,6 +38,7 @@ export const OrdemProducoesTab: React.FC = () => {
   const [search, setSearch] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [orderToEdit, setOrderToEdit] = useState<ProductionOrder | null>(null);
 
   const loadData = async () => {
     if (!user) return;
@@ -71,7 +72,7 @@ export const OrdemProducoesTab: React.FC = () => {
   const totalPiecesByOrder = (order: ProductionOrder) =>
     order.grade.reduce((acc, row) => acc + row.total, 0);
 
-  const handleCreateOrder = async (
+  const handleSubmit = async (
     payload: Parameters<typeof orderService.createOrder>[1]
   ) => {
     if (!user) return;
@@ -85,7 +86,7 @@ export const OrdemProducoesTab: React.FC = () => {
 
     try {
       setIsSubmitting(true);
-      
+
       // Buscar nome do responsável se houver
       let responsavelNome: string | undefined;
       if (payload.responsavelId) {
@@ -94,21 +95,37 @@ export const OrdemProducoesTab: React.FC = () => {
         const faccao = faccoes.find((f) => f.id === payload.responsavelId);
         responsavelNome = faccao?.nome;
       }
-      
-      await orderService.createOrder(
-        user.uid, 
-        payload, 
-        {
-          descricao: produto.descricao,
-          refCodigo: produto.refCodigo,
-        },
-        responsavelNome
-      );
+
+      if (orderToEdit) {
+        await orderService.updateOrder(
+          orderToEdit.id,
+          payload,
+          {
+            descricao: produto.descricao,
+            refCodigo: produto.refCodigo,
+          },
+          responsavelNome
+        );
+        toast.success("Ordem de produção atualizada com sucesso!", {
+          icon: <Check size={20} />,
+        });
+      } else {
+        await orderService.createOrder(
+          user.uid,
+          payload,
+          {
+            descricao: produto.descricao,
+            refCodigo: produto.refCodigo,
+          },
+          responsavelNome
+        );
+        toast.success("Ordem de produção criada com sucesso!", {
+          icon: <Check size={20} />,
+        });
+      }
       await loadData();
       setIsModalOpen(false);
-      toast.success("Ordem de produção criada com sucesso!", {
-        icon: <Check size={20} />,
-      });
+      setOrderToEdit(null);
     } catch (error) {
       console.error("Erro ao criar ordem de produção:", error);
       const errorMessage =
@@ -121,6 +138,16 @@ export const OrdemProducoesTab: React.FC = () => {
     }
   };
 
+  const handleEdit = (order: ProductionOrder) => {
+    setOrderToEdit(order);
+    setIsModalOpen(true);
+  };
+
+  const handleNewOrder = () => {
+    setOrderToEdit(null);
+    setIsModalOpen(true);
+  };
+
   return (
     <div className="ordens-container">
       <header className="ordens-header">
@@ -128,7 +155,7 @@ export const OrdemProducoesTab: React.FC = () => {
           <h2>Ordens de Produção</h2>
           <p>Programe e gerencie suas ordens de produção</p>
         </div>
-        <button className="ordens-new-btn" onClick={() => setIsModalOpen(true)}>
+        <button className="ordens-new-btn" onClick={handleNewOrder}>
           <Plus size={20} />
           Nova Ordem
         </button>
@@ -147,6 +174,9 @@ export const OrdemProducoesTab: React.FC = () => {
       <section className="ordens-list">
         {filteredOrders.map((order) => {
           const produto = produtos.find((p) => p.id === order.produtoId);
+          const tamanhosOrdenados = produto?.tamanhos
+            ? [...produto.tamanhos].sort((a, b) => a.ordem - b.ordem)
+            : [];
           return (
             <article key={order.id} className="ordem-card">
               <div className="ordem-card__header">
@@ -186,7 +216,10 @@ export const OrdemProducoesTab: React.FC = () => {
                     <button className="icon-button">
                       <Printer size={16} />
                     </button>
-                    <button className="icon-button">
+                    <button
+                      className="icon-button"
+                      onClick={() => handleEdit(order)}
+                    >
                       <Pencil size={16} />
                     </button>
                   </div>
@@ -235,21 +268,19 @@ export const OrdemProducoesTab: React.FC = () => {
                   <div className="ordem-card__table">
                     <div className="ordem-card__table-header">
                       <span>Cor</span>
-                      <span>PP</span>
-                      <span>P</span>
-                      <span>M</span>
-                      <span>G</span>
-                      <span>GG</span>
+                      {tamanhosOrdenados.map((tamanho) => (
+                        <span key={tamanho.id}>{tamanho.nome}</span>
+                      ))}
                       <span>Total</span>
                     </div>
                     {order.grade.map((row) => (
                       <div key={row.corId} className="ordem-card__table-row">
                         <span>{row.corNome}</span>
-                        <span>{row.pp}</span>
-                        <span>{row.p}</span>
-                        <span>{row.m}</span>
-                        <span>{row.g}</span>
-                        <span>{row.gg}</span>
+                        {tamanhosOrdenados.map((tamanho) => (
+                          <span key={tamanho.id}>
+                            {row.quantidades[tamanho.id] || 0}
+                          </span>
+                        ))}
                         <span>{row.total}</span>
                       </div>
                     ))}
@@ -270,9 +301,13 @@ export const OrdemProducoesTab: React.FC = () => {
 
       <OrderModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSubmit={handleCreateOrder}
+        onClose={() => {
+          setIsModalOpen(false);
+          setOrderToEdit(null);
+        }}
+        onSubmit={handleSubmit}
         isSubmitting={isSubmitting}
+        orderToEdit={orderToEdit ?? undefined}
       />
     </div>
   );

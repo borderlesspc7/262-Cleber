@@ -1,5 +1,7 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Plus, X, ChevronDown } from "lucide-react";
+import { stepService } from "../../services/stepService";
+import type { ProductionStep } from "../../types/step";
 import type {
   Produto,
   ProdutoForm,
@@ -7,6 +9,7 @@ import type {
   Cor,
   Tamanho,
 } from "../../types/product";
+import { useAuth } from "../../hooks/useAuth";
 import "./products.css";
 
 interface ProdutoFormProps {
@@ -31,13 +34,33 @@ export const ProdutoFormComponent: React.FC<ProdutoFormProps> = ({
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showCategorias, setShowCategorias] = useState(false);
+  const [etapasDisponiveis, setEtapasDisponiveis] = useState<ProductionStep[]>(
+    []
+  );
   const [formData, setFormData] = useState<ProdutoForm>({
     refCodigo: "",
     descricao: "",
     categoriaId: "",
     coresIds: [],
     tamanhosIds: [],
+    etapasProducao: [],
   });
+
+  const { user } = useAuth();
+
+  useEffect(() => {
+    const loadEtapas = async () => {
+      if (user) {
+        try {
+          const etapas = await stepService.getStepsByUser(user.uid);
+          setEtapasDisponiveis(etapas);
+        } catch (error) {
+          console.error("Erro ao carregar etapas:", error);
+        }
+      }
+    };
+    loadEtapas();
+  }, [user]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,6 +87,7 @@ export const ProdutoFormComponent: React.FC<ProdutoFormProps> = ({
       categoriaId: "",
       coresIds: [],
       tamanhosIds: [],
+      etapasProducao: [],
     });
     setShowForm(false);
     setEditingId(null);
@@ -77,6 +101,12 @@ export const ProdutoFormComponent: React.FC<ProdutoFormProps> = ({
       categoriaId: produto.categoria.id,
       coresIds: produto.cores.map((c) => c.id),
       tamanhosIds: produto.tamanhos.map((t) => t.id),
+      etapasProducao:
+        produto.etapasProducao?.map((etapa) => ({
+          etapaId: etapa.etapa.id,
+          custo: etapa.custo,
+          ordem: etapa.ordem,
+        })) || [],
     });
     setEditingId(produto.id);
     setShowForm(true);
@@ -98,6 +128,45 @@ export const ProdutoFormComponent: React.FC<ProdutoFormProps> = ({
       ? formData.tamanhosIds.filter((id) => id !== tamanhoId)
       : [...formData.tamanhosIds, tamanhoId];
     setFormData({ ...formData, tamanhosIds });
+  };
+
+  const handleEtapaToggle = (etapaId: string) => {
+    const etapasAtuais = formData.etapasProducao || [];
+    const etapaExiste = etapasAtuais.some((e) => e.etapaId === etapaId);
+
+    if (etapaExiste) {
+      setFormData({
+        ...formData,
+        etapasProducao: etapasAtuais.filter((e) => e.etapaId !== etapaId),
+      });
+    } else {
+      const etapa = etapasDisponiveis.find((e) => e.id === etapaId);
+      if (etapa) {
+        setFormData({
+          ...formData,
+          etapasProducao: [
+            ...etapasAtuais,
+            {
+              etapaId: etapa.id,
+              custo: 0,
+              ordem: etapa.order,
+            },
+          ],
+        });
+      }
+    }
+  };
+
+  const handleEtapaCustoChange = (etapaId: string, custo: number) => {
+    const etapasAtuais = formData.etapasProducao || [];
+    setFormData({
+      ...formData,
+      etapasProducao: etapasAtuais.map((etapa) =>
+        etapa.etapaId === etapaId
+          ? { ...etapa, custo: Math.max(0, custo) }
+          : etapa
+      ),
+    });
   };
 
   const selectedCategoria = categorias.find(
@@ -218,6 +287,85 @@ export const ProdutoFormComponent: React.FC<ProdutoFormProps> = ({
                     <span>{tamanho.nome}</span>
                   </label>
                 ))}
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label>Etapas de Produção e Custos</label>
+            <div className="etapas-container-simple">
+              {etapasDisponiveis.length > 0 ? (
+                <div className="etapas-grid">
+                  {etapasDisponiveis.map((etapa) => {
+                    const etapaSelecionada = formData.etapasProducao?.find(
+                      (e) => e.etapaId === etapa.id
+                    );
+                    const estaSelecionada = !!etapaSelecionada;
+
+                    return (
+                      <div
+                        key={etapa.id}
+                        className={`etapa-card ${
+                          estaSelecionada ? "active" : ""
+                        }`}
+                      >
+                        <div className="etapa-card-header">
+                          <label className="etapa-card-checkbox">
+                            <input
+                              type="checkbox"
+                              checked={estaSelecionada}
+                              onChange={() => handleEtapaToggle(etapa.id)}
+                            />
+                            <div className="etapa-card-info">
+                              <span className="etapa-card-nome">
+                                {etapa.name}
+                              </span>
+                              {etapa.description && (
+                                <span className="etapa-card-desc">
+                                  {etapa.description}
+                                </span>
+                              )}
+                            </div>
+                          </label>
+                        </div>
+
+                        {estaSelecionada && (
+                          <div className="etapa-card-custo">
+                            <label>Custo</label>
+                            <div className="currency-input">
+                              <span className="currency-symbol">R$</span>
+                              <input
+                                type="text"
+                                value={
+                                  etapaSelecionada?.custo
+                                    ? etapaSelecionada.custo
+                                        .toFixed(2)
+                                        .replace(".", ",")
+                                    : "0,00"
+                                }
+                                onChange={(e) => {
+                                  const value = e.target.value
+                                    .replace(/\D/g, "")
+                                    .padStart(3, "0");
+                                  const numValue =
+                                    parseInt(value.slice(0, -2)) +
+                                    parseInt(value.slice(-2)) / 100;
+                                  handleEtapaCustoChange(etapa.id, numValue);
+                                }}
+                                placeholder="0,00"
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="etapas-empty">
+                  <p>Nenhuma etapa cadastrada ainda.</p>
+                  <span>Cadastre etapas na aba "Etapas" primeiro.</span>
+                </div>
+              )}
             </div>
           </div>
 
