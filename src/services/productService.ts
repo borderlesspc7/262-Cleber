@@ -223,9 +223,11 @@ export const produtoService = {
           categoria: { id: "", nome: "", ativo: true, createdAt: new Date() },
           cores: [],
           tamanhos: [],
+          etapasProducao: [],
           categoriaId: data.categoriaId || "",
           coresIds: data.coresIds || [],
           tamanhosIds: data.tamanhosIds || [],
+          etapasProducaoIds: data.etapasProducaoIds || [],
           ativo: data.ativo !== false,
           userId: data.userId,
           createdAt: data.createdAt?.toDate() || new Date(),
@@ -255,6 +257,7 @@ export const produtoService = {
         categoriaId: produtoForm.categoriaId,
         coresIds: produtoForm.coresIds,
         tamanhosIds: produtoForm.tamanhosIds,
+        etapasProducaoIds: produtoForm.etapasProducao || [],
         userId,
         ativo: true,
         createdAt: serverTimestamp(),
@@ -275,6 +278,7 @@ export const produtoService = {
         categoriaId: produtoForm.categoriaId,
         coresIds: produtoForm.coresIds,
         tamanhosIds: produtoForm.tamanhosIds,
+        etapasProducaoIds: produtoForm.etapasProducao || [],
         updatedAt: serverTimestamp(),
       });
     } catch (error) {

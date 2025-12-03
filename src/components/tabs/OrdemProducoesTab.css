@@ -227,6 +227,16 @@
   background: #e2e8f0;
 }
 
+.icon-button-danger {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.icon-button-danger:hover {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
 .ordem-card__body {
   padding: 1.5rem;
   display: flex;

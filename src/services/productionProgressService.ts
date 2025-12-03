@@ -4,6 +4,7 @@ import {
   getDocs,
   getDoc,
   updateDoc,
+  deleteDoc,
   doc,
   query,
   where,
@@ -20,6 +21,30 @@ import type {
 import type { ProductionStep } from "../types/step";
 
 const COLLECTION = "producaoProgresso";
+
+// Função auxiliar para remover campos undefined de objetos StageProgress
+const removeUndefinedFields = (etapa: StageProgress): StageProgress => {
+  const cleaned: Partial<StageProgress> = {};
+
+  // Campos obrigatórios
+  cleaned.etapaId = etapa.etapaId;
+  cleaned.etapaNome = etapa.etapaNome;
+  cleaned.ordem = etapa.ordem;
+  cleaned.finalizadas = etapa.finalizadas ?? 0;
+  cleaned.defeituosas = etapa.defeituosas ?? 0;
+  cleaned.status = etapa.status;
+
+  // Campos opcionais (apenas se existirem)
+  if (etapa.responsavelId) cleaned.responsavelId = etapa.responsavelId;
+  if (etapa.responsavelNome) cleaned.responsavelNome = etapa.responsavelNome;
+  if (etapa.dataInicio) cleaned.dataInicio = etapa.dataInicio;
+  if (etapa.dataFim) cleaned.dataFim = etapa.dataFim;
+  if (etapa.observacoes && etapa.observacoes.length > 0) {
+    cleaned.observacoes = etapa.observacoes;
+  }
+
+  return cleaned as StageProgress;
+};
 
 export const productionProgressService = {
   async getProgressByOrderId(
@@ -78,18 +103,32 @@ export const productionProgressService = {
     // Criar progresso inicial com todas as etapas
     const etapas: StageProgress[] = steps
       .sort((a, b) => a.order - b.order)
-      .map((step, index) => ({
-        etapaId: step.id,
-        etapaNome: step.name,
-        ordem: step.order,
-        finalizadas: 0,
-        defeituosas: 0,
-        status: (index === 0 ? "em_andamento" : "pausada") as ProductionProgressStatus,
-      }));
+      .map((step, index) => {
+        const etapa: StageProgress = {
+          etapaId: step.id,
+          etapaNome: step.name,
+          ordem: step.order,
+          finalizadas: 0,
+          defeituosas: 0,
+          status: (index === 0
+            ? "em_andamento"
+            : "pausada") as ProductionProgressStatus,
+        };
+
+        // Adicionar dataInicio apenas para a primeira etapa
+        if (index === 0) {
+          etapa.dataInicio = new Date().toISOString().split("T")[0];
+        }
+
+        return etapa;
+      });
+
+    // Limpar campos undefined das etapas antes de salvar
+    const etapasLimpas = etapas.map((etapa) => removeUndefinedFields(etapa));
 
     await addDoc(collection(db, COLLECTION), {
       ordemProducaoId,
-      etapas,
+      etapas: etapasLimpas,
       userId,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
@@ -101,7 +140,7 @@ export const productionProgressService = {
     payload: UpdateStageProgressPayload
   ): Promise<void> {
     const progressRef = doc(db, COLLECTION, progressId);
-    
+
     // Buscar o documento atual para obter as etapas
     const progressDoc = await getDoc(progressRef);
 
@@ -112,25 +151,51 @@ export const productionProgressService = {
     const data = progressDoc.data();
     const etapas: StageProgress[] = data.etapas ?? [];
 
-    const etapaIndex = etapas.findIndex(
-      (e) => e.etapaId === payload.etapaId
-    );
+    const etapaIndex = etapas.findIndex((e) => e.etapaId === payload.etapaId);
 
     if (etapaIndex === -1) {
       throw new Error("Etapa não encontrada no progresso");
     }
 
-    // Atualizar a etapa
+    // Atualizar a etapa (removendo campos undefined do payload)
+    const etapaAtual = etapas[etapaIndex];
+    const payloadLimpo: Partial<StageProgress> = {};
+
+    if (payload.finalizadas !== undefined)
+      payloadLimpo.finalizadas = payload.finalizadas;
+    if (payload.defeituosas !== undefined)
+      payloadLimpo.defeituosas = payload.defeituosas;
+    if (payload.responsavelId !== undefined)
+      payloadLimpo.responsavelId = payload.responsavelId;
+    if (payload.status !== undefined) payloadLimpo.status = payload.status;
+    if (payload.dataFim !== undefined) payloadLimpo.dataFim = payload.dataFim;
+
     etapas[etapaIndex] = {
-      ...etapas[etapaIndex],
-      ...payload,
-      etapaNome: etapas[etapaIndex].etapaNome,
-      etapaId: etapas[etapaIndex].etapaId,
-      ordem: etapas[etapaIndex].ordem,
+      etapaId: etapaAtual.etapaId,
+      etapaNome: etapaAtual.etapaNome,
+      ordem: etapaAtual.ordem,
+      finalizadas: payloadLimpo.finalizadas ?? etapaAtual.finalizadas ?? 0,
+      defeituosas: payloadLimpo.defeituosas ?? etapaAtual.defeituosas ?? 0,
+      status: payloadLimpo.status ?? etapaAtual.status,
+      ...payloadLimpo,
     };
 
+    // Manter campos opcionais existentes
+    if (etapaAtual.responsavelId)
+      etapas[etapaIndex].responsavelId = etapaAtual.responsavelId;
+    if (etapaAtual.responsavelNome)
+      etapas[etapaIndex].responsavelNome = etapaAtual.responsavelNome;
+    if (etapaAtual.dataInicio)
+      etapas[etapaIndex].dataInicio = etapaAtual.dataInicio;
+    if (etapaAtual.observacoes && etapaAtual.observacoes.length > 0) {
+      etapas[etapaIndex].observacoes = etapaAtual.observacoes;
+    }
+
+    // Limpar campos undefined antes de salvar
+    const etapasLimpas = etapas.map((etapa) => removeUndefinedFields(etapa));
+
     await updateDoc(progressRef, {
-      etapas,
+      etapas: etapasLimpas,
       updatedAt: serverTimestamp(),
     });
   },
@@ -163,5 +228,159 @@ export const productionProgressService = {
       status: "em_andamento",
     });
   },
-};
 
+  async finalizeStageWithDetails(
+    progressId: string,
+    etapaId: string,
+    finalizadas: number,
+    defeituosas: number,
+    observacoes?: string
+  ): Promise<void> {
+    try {
+      const progressRef = doc(db, COLLECTION, progressId);
+      const progressDoc = await getDoc(progressRef);
+
+      if (!progressDoc.exists()) {
+        throw new Error("Progresso não encontrado");
+      }
+
+      const data = progressDoc.data();
+      const etapas = data.etapas || [];
+
+      const updatedEtapas = etapas.map((etapa: StageProgress) => {
+        if (etapa.etapaId === etapaId) {
+          const etapaAtualizada: StageProgress = {
+            etapaId: etapa.etapaId,
+            etapaNome: etapa.etapaNome,
+            ordem: etapa.ordem,
+            finalizadas,
+            defeituosas,
+            status: "finalizada",
+            dataFim: new Date().toISOString().split("T")[0],
+          };
+
+          // Adicionar campos opcionais apenas se existirem
+          if (etapa.responsavelId)
+            etapaAtualizada.responsavelId = etapa.responsavelId;
+          if (etapa.responsavelNome)
+            etapaAtualizada.responsavelNome = etapa.responsavelNome;
+          if (etapa.dataInicio) etapaAtualizada.dataInicio = etapa.dataInicio;
+          if (observacoes) {
+            etapaAtualizada.observacoes = [observacoes];
+          } else if (etapa.observacoes && etapa.observacoes.length > 0) {
+            etapaAtualizada.observacoes = etapa.observacoes;
+          }
+
+          return etapaAtualizada;
+        }
+        // Limpar campos undefined das outras etapas
+        const etapaLimpa: StageProgress = {
+          etapaId: etapa.etapaId,
+          etapaNome: etapa.etapaNome,
+          ordem: etapa.ordem,
+          finalizadas: etapa.finalizadas || 0,
+          defeituosas: etapa.defeituosas || 0,
+          status: etapa.status,
+        };
+        if (etapa.responsavelId) etapaLimpa.responsavelId = etapa.responsavelId;
+        if (etapa.responsavelNome)
+          etapaLimpa.responsavelNome = etapa.responsavelNome;
+        if (etapa.dataInicio) etapaLimpa.dataInicio = etapa.dataInicio;
+        if (etapa.dataFim) etapaLimpa.dataFim = etapa.dataFim;
+        if (etapa.observacoes && etapa.observacoes.length > 0) {
+          etapaLimpa.observacoes = etapa.observacoes;
+        }
+        return etapaLimpa;
+      });
+
+      // Limpar campos undefined antes de salvar
+      const etapasLimpas = updatedEtapas.map((etapa: StageProgress) =>
+        removeUndefinedFields(etapa)
+      );
+
+      await updateDoc(progressRef, {
+        etapas: etapasLimpas,
+        updatedAt: serverTimestamp(),
+      });
+    } catch (error) {
+      console.error("Erro ao finalizar etapa:", error);
+      throw error;
+    }
+  },
+
+  async startNextStage(
+    progressId: string,
+    etapaId: string,
+    responsavelId: string,
+    responsavelNome: string
+  ): Promise<void> {
+    try {
+      const progressRef = doc(db, COLLECTION, progressId);
+      const progressDoc = await getDoc(progressRef);
+
+      if (!progressDoc.exists()) {
+        throw new Error("Progresso não encontrado");
+      }
+
+      const data = progressDoc.data();
+      const etapas = data.etapas || [];
+
+      const updatedEtapas = etapas.map((etapa: StageProgress) => {
+        if (etapa.etapaId === etapaId) {
+          const etapaAtualizada: StageProgress = {
+            etapaId: etapa.etapaId,
+            etapaNome: etapa.etapaNome,
+            ordem: etapa.ordem,
+            status: "em_andamento",
+            responsavelId,
+            responsavelNome,
+            dataInicio: new Date().toISOString().split("T")[0],
+            finalizadas: 0,
+            defeituosas: 0,
+          };
+          return etapaAtualizada;
+        }
+        // Limpar campos undefined das outras etapas
+        const etapaLimpa: StageProgress = {
+          etapaId: etapa.etapaId,
+          etapaNome: etapa.etapaNome,
+          ordem: etapa.ordem,
+          finalizadas: etapa.finalizadas || 0,
+          defeituosas: etapa.defeituosas || 0,
+          status: etapa.status,
+        };
+        if (etapa.responsavelId) etapaLimpa.responsavelId = etapa.responsavelId;
+        if (etapa.responsavelNome)
+          etapaLimpa.responsavelNome = etapa.responsavelNome;
+        if (etapa.dataInicio) etapaLimpa.dataInicio = etapa.dataInicio;
+        if (etapa.dataFim) etapaLimpa.dataFim = etapa.dataFim;
+        if (etapa.observacoes && etapa.observacoes.length > 0) {
+          etapaLimpa.observacoes = etapa.observacoes;
+        }
+        return etapaLimpa;
+      });
+
+      // Limpar campos undefined antes de salvar
+      const etapasLimpas = updatedEtapas.map((etapa: StageProgress) =>
+        removeUndefinedFields(etapa)
+      );
+
+      await updateDoc(progressRef, {
+        etapas: etapasLimpas,
+        updatedAt: serverTimestamp(),
+      });
+    } catch (error) {
+      console.error("Erro ao iniciar próxima etapa:", error);
+      throw error;
+    }
+  },
+
+  async deleteProgress(progressId: string): Promise<void> {
+    try {
+      await deleteDoc(doc(db, COLLECTION, progressId));
+    } catch (error) {
+      console.error("Erro ao deletar progresso:", error);
+      throw error;
+    }
+  },
+};

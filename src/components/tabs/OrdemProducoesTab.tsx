@@ -9,10 +9,12 @@ import {
   ClipboardList,
   CircleDot,
   Check,
+  Trash2,
 } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { orderService } from "../../services/orderService";
 import { produtoService } from "../../services/productService";
+import { productionProgressService } from "../../services/productionProgressService";
 import type { ProductionOrder } from "../../types/order";
 import type { Produto } from "../../types/product";
 import { OrderModal } from "../orders/OrderModal";
@@ -148,6 +150,37 @@ export const OrdemProducoesTab: React.FC = () => {
     setIsModalOpen(true);
   };
 
+  const handleDeleteOrder = async (orderId: string) => {
+    const order = orders.find((o) => o.id === orderId);
+    if (!order) return;
+
+    const confirmMessage = `Tem certeza que deseja excluir a ordem ${order.codigo}?\n\nEsta ação não pode ser desfeita.`;
+    if (!window.confirm(confirmMessage)) return;
+
+    try {
+      // Deletar progresso associado se existir
+      try {
+        const progress = await productionProgressService.getProgressByOrderId(orderId);
+        if (progress) {
+          await productionProgressService.deleteProgress(progress.id);
+        }
+      } catch (error) {
+        console.error("Erro ao deletar progresso:", error);
+        // Continua mesmo se não conseguir deletar o progresso
+      }
+
+      // Deletar ordem
+      await orderService.deleteOrder(orderId);
+      await loadData();
+      toast.success("Ordem de produção excluída com sucesso!", {
+        icon: <Check size={20} />,
+      });
+    } catch (error) {
+      console.error("Erro ao excluir ordem:", error);
+      toast.error("Erro ao excluir ordem de produção. Tente novamente.");
+    }
+  };
+
   return (
     <div className="ordens-container">
       <header className="ordens-header">
@@ -221,6 +254,13 @@ export const OrdemProducoesTab: React.FC = () => {
                       onClick={() => handleEdit(order)}
                     >
                       <Pencil size={16} />
+                    </button>
+                    <button
+                      className="icon-button icon-button-danger"
+                      onClick={() => handleDeleteOrder(order.id)}
+                      title="Excluir ordem"
+                    >
+                      <Trash2 size={16} />
                     </button>
                   </div>
                 </div>

@@ -1,4 +1,7 @@
-export type ProductionProgressStatus = "em_andamento" | "pausada" | "finalizada";
+export type ProductionProgressStatus =
+  | "em_andamento"
+  | "pausada"
+  | "finalizada";
 
 export interface StageProgress {
   etapaId: string;
@@ -11,6 +14,7 @@ export interface StageProgress {
   dataInicio?: string;
   dataFim?: string;
   status: ProductionProgressStatus;
+  observacoes?: string[];
 }
 
 export interface ProductionOrderProgress {
@@ -37,4 +41,3 @@ export interface UpdateStageProgressPayload {
   status?: ProductionProgressStatus;
   dataFim?: string;
 }
-

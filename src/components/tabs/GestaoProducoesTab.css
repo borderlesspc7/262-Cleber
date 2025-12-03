@@ -334,6 +334,22 @@
   color: #ffffff;
 }
 
+.gestao-action-delete {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #dc2626;
+}
+
+.gestao-action-delete:hover:not(:disabled) {
+  background: #dc2626;
+  color: #ffffff;
+  border-color: #dc2626;
+}
+
+.gestao-action-delete:hover:not(:disabled) .gestao-action-icon {
+  color: #ffffff;
+}
+
 .gestao-producoes-empty {
   display: flex;
   flex-direction: column;

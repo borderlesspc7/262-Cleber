@@ -7,6 +7,7 @@ import {
   tamanhoService,
   produtoService,
 } from "../../services/productService";
+import { stepService } from "../../services/stepService";
 import "../products/products.css";
 import { CategoriaFormComponent } from "../products/CategoriaForm";
 import { CorFormComponent } from "../products/CorForm";
@@ -49,11 +50,12 @@ export const ProdutoTab: React.FC = () => {
 
     try {
       setLoading(true);
-      const [categoriasData, coresData, tamanhosData, produtosData] =
+      const [categoriasData, coresData, tamanhosData, etapasData, produtosData] =
         await Promise.all([
           categoriaService.getCategorias(user.uid),
           corService.getCores(user.uid),
           tamanhoService.getTamanhos(user.uid),
+          stepService.getStepsByUser(user.uid),
           produtoService.getProdutos(user.uid),
         ]);
 
@@ -72,6 +74,26 @@ export const ProdutoTab: React.FC = () => {
         const tamanhosProduto = tamanhosData.filter((t) =>
           produto.tamanhosIds?.includes(t.id)
         );
+        
+        // Reconstruir etapas de produção
+        const etapasProduto = (produto.etapasProducaoIds || []).map((etapaForm) => {
+          const etapa = etapasData.find((e) => e.id === etapaForm.etapaId);
+          if (etapa) {
+            return {
+              etapa: {
+                id: etapa.id,
+                nome: etapa.name,
+                descricao: etapa.description || undefined,
+                custo: etapaForm.custo,
+                ativo: true,
+                createdAt: etapa.createdAt,
+              },
+              custo: etapaForm.custo,
+              ordem: etapaForm.ordem,
+            };
+          }
+          return null;
+        }).filter((item): item is NonNullable<typeof item> => item !== null);
 
         return {
           ...produto,
@@ -81,6 +103,7 @@ export const ProdutoTab: React.FC = () => {
             tamanhosProduto.length > 0
               ? tamanhosProduto
               : produto.tamanhos || [],
+          etapasProducao: etapasProduto,
         };
       });
 

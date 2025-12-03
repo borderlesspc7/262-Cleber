@@ -10,37 +10,88 @@ import {
   ArrowRight,
   Shirt,
   Play,
+  Trash2,
 } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { orderService } from "../../services/orderService";
 import { stepService } from "../../services/stepService";
+import { produtoService } from "../../services/productService";
 import { productionProgressService } from "../../services/productionProgressService";
 import type { ProductionOrder } from "../../types/order";
 import type { ProductionStep } from "../../types/step";
 import type { ProductionOrderProgress } from "../../types/productionProgress";
+import type { Produto } from "../../types/product";
+import {
+  FinalizeStageModal,
+  type FinalizeStageData,
+} from "../production/FinalizeStageModal";
+import { faccaoService } from "../../services/faccaoService";
+import type { Faccao } from "../../types/faccao";
+import toast from "react-hot-toast";
 import "./GestaoProducoesTab.css";
 
 export const GestaoProducoesTab: React.FC = () => {
   const { user } = useAuth();
   const [orders, setOrders] = useState<ProductionOrder[]>([]);
   const [steps, setSteps] = useState<ProductionStep[]>([]);
+  const [produtos, setProdutos] = useState<Produto[]>([]);
   const [progressData, setProgressData] = useState<
     Map<string, ProductionOrderProgress>
   >(new Map());
   const [search, setSearch] = useState("");
   const [selectedStage, setSelectedStage] = useState<string>("all");
 
+  const [faccoes, setFaccoes] = useState<Faccao[]>([]);
+  const [showFinalizeModal, setShowFinalizeModal] = useState(false);
+  const [orderToFinalize, setOrderToFinalize] = useState<string | null>(null);
+  const [isSubmittingFinalize, setIsSubmittingFinalize] = useState(false);
+
   const loadData = useCallback(async () => {
     if (!user) return;
 
     try {
-      const [ordersData, stepsData] = await Promise.all([
-        orderService.getOrders(user.uid),
-        stepService.getStepsByUser(user.uid),
-      ]);
+      const [ordersData, stepsData, faccoesData, produtosData] =
+        await Promise.all([
+          orderService.getOrders(user.uid),
+          stepService.getStepsByUser(user.uid),
+          faccaoService.getFaccoes(),
+          produtoService.getProdutos(user.uid),
+        ]);
 
       setOrders(ordersData);
       setSteps(stepsData);
+      setFaccoes(faccoesData);
+
+      // Reconstruir produtos com etapas completas
+      const produtosCompletos = produtosData.map((produto) => {
+        const etapasProduto = (produto.etapasProducaoIds || [])
+          .map((etapaForm) => {
+            const etapa = stepsData.find((e) => e.id === etapaForm.etapaId);
+            if (etapa) {
+              return {
+                etapa: {
+                  id: etapa.id,
+                  nome: etapa.name,
+                  descricao: etapa.description || undefined,
+                  custo: etapaForm.custo,
+                  ativo: true,
+                  createdAt: etapa.createdAt,
+                },
+                custo: etapaForm.custo,
+                ordem: etapaForm.ordem,
+              };
+            }
+            return null;
+          })
+          .filter((item): item is NonNullable<typeof item> => item !== null);
+
+        return {
+          ...produto,
+          etapasProducao: etapasProduto,
+        };
+      });
+
+      setProdutos(produtosCompletos);
 
       // Carregar progresso para cada ordem
       const progressMap = new Map<string, ProductionOrderProgress>();
@@ -49,16 +100,44 @@ export const GestaoProducoesTab: React.FC = () => {
           order.id
         );
 
-        // Se não existe progresso, inicializar
-        if (!progress && stepsData.length > 0) {
-          await productionProgressService.initializeProgress(
-            user.uid,
-            order.id,
-            stepsData
+        // Se não existe progresso, inicializar com etapas do produto
+        if (!progress) {
+          const produto = produtosCompletos.find(
+            (p) => p.id === order.produtoId
           );
-          progress = await productionProgressService.getProgressByOrderId(
-            order.id
-          );
+          if (
+            produto &&
+            produto.etapasProducao &&
+            produto.etapasProducao.length > 0
+          ) {
+            // Converter etapas do produto para ProductionStep
+            const etapasProduto = produto.etapasProducao
+              .map((etapaProduto) => {
+                const step = stepsData.find(
+                  (s) => s.id === etapaProduto.etapa.id
+                );
+                if (step) {
+                  return {
+                    ...step,
+                    order: etapaProduto.ordem,
+                  };
+                }
+                return null;
+              })
+              .filter((s): s is ProductionStep => s !== null)
+              .sort((a, b) => a.order - b.order);
+
+            if (etapasProduto.length > 0) {
+              await productionProgressService.initializeProgress(
+                user.uid,
+                order.id,
+                etapasProduto
+              );
+              progress = await productionProgressService.getProgressByOrderId(
+                order.id
+              );
+            }
+          }
         }
 
         if (progress) {
@@ -121,10 +200,15 @@ export const GestaoProducoesTab: React.FC = () => {
     if (!progress) return null;
 
     const currentStage = getCurrentStage(orderId);
-    if (!currentStage) return null;
+    if (!currentStage) {
+      // Se não há etapa em andamento, buscar a primeira não finalizada
+      return progress.etapas.find((etapa) => etapa.status !== "finalizada");
+    }
 
+    // Buscar próxima etapa não finalizada após a atual
     return progress.etapas.find(
-      (etapa) => etapa.ordem === currentStage.ordem + 1
+      (etapa) =>
+        etapa.ordem > currentStage.ordem && etapa.status !== "finalizada"
     );
   };
 
@@ -162,49 +246,75 @@ export const GestaoProducoesTab: React.FC = () => {
     if (!order)
       return { percent: 0, finalizadas: 0, defeituosas: 0, restantes: 0 };
 
+    // Buscar produto para ter total de etapas
+    const produto = produtos.find((p) => p.id === order.produtoId);
+    const totalEtapas =
+      produto?.etapasProducao?.length || progress.etapas.length;
+
+    // Calcular progresso baseado em etapas finalizadas
+    const etapasFinalizadas = progress.etapas.filter(
+      (e) => e.status === "finalizada"
+    ).length;
+    const percent =
+      totalEtapas > 0 ? Math.round((etapasFinalizadas / totalEtapas) * 100) : 0;
+
+    // Progresso da etapa atual (peças)
     const total = totalPiecesByOrder(order);
     const finalizadas = currentStage.finalizadas || 0;
     const defeituosas = currentStage.defeituosas || 0;
     const restantes = total - finalizadas;
-    const percent = total > 0 ? Math.round((finalizadas / total) * 100) : 0;
 
     return { percent, finalizadas, defeituosas, restantes };
   };
 
-  const handleFinalizeStage = async (orderId: string) => {
-    if (!user) return;
-    const progress = progressData.get(orderId);
+  const handleFinalizeStage = (orderId: string) => {
+    setOrderToFinalize(orderId);
+    setShowFinalizeModal(true);
+  };
+
+  const handleSubmitFinalize = async (data: FinalizeStageData) => {
+    if (!user || !orderToFinalize) return;
+
+    const progress = progressData.get(orderToFinalize);
     if (!progress) return;
 
-    const currentStage = getCurrentStage(orderId);
+    const currentStage = getCurrentStage(orderToFinalize);
     if (!currentStage) return;
 
-    const order = orders.find((o) => o.id === orderId);
-    if (!order) return;
-
-    const total = totalPiecesByOrder(order);
-
     try {
-      await productionProgressService.finalizeStage(
+      setIsSubmittingFinalize(true);
+
+      await productionProgressService.finalizeStageWithDetails(
         progress.id,
         currentStage.etapaId,
-        total,
-        0
+        data.finalizadas,
+        data.defeituosas,
+        data.observacoes
       );
 
-      // Ativar próxima etapa
-      const nextStage = getNextStage(orderId);
-      if (nextStage) {
-        await productionProgressService.resumeStage(
+      const proximaEtapa = steps.find(
+        (etapa) => etapa.id === data.proximaEtapaId
+      );
+      const responsavel = faccoes.find(
+        (faccao) => faccao.id === data.responsavelProximaEtapaId
+      );
+
+      if (proximaEtapa && responsavel) {
+        await productionProgressService.startNextStage(
           progress.id,
-          nextStage.etapaId
+          data.proximaEtapaId,
+          data.responsavelProximaEtapaId,
+          responsavel.nome
         );
       }
-
       await loadData();
+      setShowFinalizeModal(false);
+      setOrderToFinalize(null);
     } catch (error) {
       console.error("Erro ao finalizar etapa:", error);
       alert("Erro ao finalizar etapa");
+    } finally {
+      setIsSubmittingFinalize(false);
     }
   };
 
@@ -245,6 +355,38 @@ export const GestaoProducoesTab: React.FC = () => {
     } catch (error) {
       console.error("Erro ao retomar etapa:", error);
       alert("Erro ao retomar etapa");
+    }
+  };
+
+  const handleDeleteOrder = async (orderId: string) => {
+    const order = orders.find((o) => o.id === orderId);
+    if (!order) return;
+
+    const confirmMessage = `Tem certeza que deseja excluir a ordem ${order.codigo}?\n\nEsta ação não pode ser desfeita e também excluirá todo o progresso associado.`;
+    if (!window.confirm(confirmMessage)) return;
+
+    try {
+      // Deletar progresso associado se existir
+      const progress = progressData.get(orderId);
+      if (progress) {
+        try {
+          await productionProgressService.deleteProgress(progress.id);
+        } catch (error) {
+          console.error("Erro ao deletar progresso:", error);
+          // Continua mesmo se não conseguir deletar o progresso
+        }
+      }
+
+      // Deletar ordem
+      await orderService.deleteOrder(orderId);
+      await loadData();
+
+      toast.success("Ordem de produção excluída com sucesso!", {
+        icon: <Check size={20} />,
+      });
+    } catch (error) {
+      console.error("Erro ao excluir ordem:", error);
+      toast.error("Erro ao excluir ordem de produção. Tente novamente.");
     }
   };
 
@@ -335,7 +477,7 @@ export const GestaoProducoesTab: React.FC = () => {
               {activeStage && (
                 <div className="gestao-card-progress">
                   <div className="progress-header">
-                    <span className="progress-title">Progresso da Etapa</span>
+                    <span className="progress-title">Progresso Geral</span>
                     <span className="progress-percent">
                       {progressInfo.percent}%
                     </span>
@@ -348,7 +490,7 @@ export const GestaoProducoesTab: React.FC = () => {
                   </div>
                   <div className="progress-stats">
                     <span className="progress-stat">
-                      {progressInfo.finalizadas} finalizadas
+                      {progressInfo.finalizadas} peças finalizadas
                     </span>
                     <span className="progress-stat">
                       {progressInfo.defeituosas} defeituosas
@@ -367,7 +509,9 @@ export const GestaoProducoesTab: React.FC = () => {
                   <div className="detail-content">
                     <span className="detail-label">Responsável</span>
                     <span className="detail-value">
-                      {order.responsavelNome || "Não atribuído"}
+                      {activeStage?.responsavelNome ||
+                        order.responsavelNome ||
+                        "Não atribuído"}
                     </span>
                   </div>
                 </div>
@@ -429,6 +573,14 @@ export const GestaoProducoesTab: React.FC = () => {
                   <AlertTriangle size={16} className="gestao-action-icon" />
                   Reportar Problema
                 </button>
+                <button
+                  className="gestao-action-btn gestao-action-delete"
+                  onClick={() => handleDeleteOrder(order.id)}
+                  title="Excluir ordem"
+                >
+                  <Trash2 size={16} className="gestao-action-icon" />
+                  Excluir
+                </button>
               </div>
             </article>
           );
@@ -441,6 +593,70 @@ export const GestaoProducoesTab: React.FC = () => {
           </div>
         )}
       </section>
+
+      {showFinalizeModal &&
+        orderToFinalize &&
+        (() => {
+          const order = orders.find((o) => o.id === orderToFinalize);
+          const currentStage = getCurrentStage(orderToFinalize);
+          const progress = progressData.get(orderToFinalize);
+
+          if (!order || !currentStage || !progress) return null;
+
+          // Buscar produto para obter etapas cadastradas
+          const produto = produtos.find((p) => p.id === order.produtoId);
+
+          // Usar etapas do produto (não todas do sistema)
+          const etapasDoProduto = produto?.etapasProducao || [];
+
+          // Filtrar próximas etapas disponíveis (apenas as que estão após a etapa atual)
+          // Manter todas as etapas visíveis, mesmo as finalizadas
+          const availableStages = etapasDoProduto
+            .filter((etapaProduto) => {
+              const etapaProgress = progress.etapas.find(
+                (e) => e.etapaId === etapaProduto.etapa.id
+              );
+              if (!etapaProgress) return false;
+              return etapaProgress.ordem > currentStage.ordem;
+            })
+            .map((etapaProduto) => {
+              // Converter EtapaProducao para ProductionStep
+              const step = steps.find((s) => s.id === etapaProduto.etapa.id);
+              if (step) {
+                return {
+                  ...step,
+                  name: etapaProduto.etapa.nome,
+                  description: etapaProduto.etapa.descricao || "",
+                };
+              }
+              return null;
+            })
+            .filter((s): s is ProductionStep => s !== null)
+            .sort((a, b) => {
+              const ordemA =
+                progress.etapas.find((e) => e.etapaId === a.id)?.ordem || 0;
+              const ordemB =
+                progress.etapas.find((e) => e.etapaId === b.id)?.ordem || 0;
+              return ordemA - ordemB;
+            });
+
+          return (
+            <FinalizeStageModal
+              isOpen={showFinalizeModal}
+              onClose={() => {
+                setShowFinalizeModal(false);
+                setOrderToFinalize(null);
+              }}
+              order={order}
+              currentStage={currentStage}
+              availableStages={availableStages}
+              faccoes={faccoes.filter((f) => f.ativo)}
+              totalPecas={totalPiecesByOrder(order)}
+              onSubmit={handleSubmitFinalize}
+              isSubmitting={isSubmittingFinalize}
+            />
+          );
+        })()}
     </div>
   );
 };
