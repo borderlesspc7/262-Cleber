@@ -321,6 +321,10 @@
   color: black;
 }
 
+.gestao-action-btn:hover:not(:disabled) .gestao-action-icon {
+  color: #ffffff;
+}
+
 .gestao-action-resume {
   border-color: #e2e8f0;
 }

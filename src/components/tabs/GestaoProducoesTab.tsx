@@ -238,31 +238,31 @@ export const GestaoProducoesTab: React.FC = () => {
     if (!progress)
       return { percent: 0, finalizadas: 0, defeituosas: 0, restantes: 0 };
 
-    const currentStage = getCurrentStage(orderId);
-    if (!currentStage)
-      return { percent: 0, finalizadas: 0, defeituosas: 0, restantes: 0 };
-
     const order = orders.find((o) => o.id === orderId);
     if (!order)
       return { percent: 0, finalizadas: 0, defeituosas: 0, restantes: 0 };
 
-    // Buscar produto para ter total de etapas
     const produto = produtos.find((p) => p.id === order.produtoId);
     const totalEtapas =
       produto?.etapasProducao?.length || progress.etapas.length;
 
-    // Calcular progresso baseado em etapas finalizadas
     const etapasFinalizadas = progress.etapas.filter(
       (e) => e.status === "finalizada"
     ).length;
     const percent =
       totalEtapas > 0 ? Math.round((etapasFinalizadas / totalEtapas) * 100) : 0;
 
-    // Progresso da etapa atual (peças)
     const total = totalPiecesByOrder(order);
-    const finalizadas = currentStage.finalizadas || 0;
-    const defeituosas = currentStage.defeituosas || 0;
-    const restantes = total - finalizadas;
+
+    const finalizadas = progress.etapas
+      .filter((e) => e.status === "finalizada")
+      .reduce((acc, etapa) => acc + (etapa.finalizadas || 0), 0);
+
+    const defeituosas = progress.etapas
+      .filter((e) => e.status === "finalizada")
+      .reduce((acc, etapa) => acc + (etapa.defeituosas || 0), 0);
+
+    const restantes = total - (finalizadas + defeituosas);
 
     return { percent, finalizadas, defeituosas, restantes };
   };
@@ -366,18 +366,15 @@ export const GestaoProducoesTab: React.FC = () => {
     if (!window.confirm(confirmMessage)) return;
 
     try {
-      // Deletar progresso associado se existir
       const progress = progressData.get(orderId);
       if (progress) {
         try {
           await productionProgressService.deleteProgress(progress.id);
         } catch (error) {
           console.error("Erro ao deletar progresso:", error);
-          // Continua mesmo se não conseguir deletar o progresso
         }
       }
 
-      // Deletar ordem
       await orderService.deleteOrder(orderId);
       await loadData();
 
