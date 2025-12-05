@@ -27,6 +27,7 @@ import {
 } from "../production/FinalizeStageModal";
 import { faccaoService } from "../../services/faccaoService";
 import type { Faccao } from "../../types/faccao";
+import { financeiroService } from "../../services/financeiroService";
 import toast from "react-hot-toast";
 import "./GestaoProducoesTab.css";
 
@@ -281,9 +282,13 @@ export const GestaoProducoesTab: React.FC = () => {
     const currentStage = getCurrentStage(orderToFinalize);
     if (!currentStage) return;
 
+    const order = orders.find((o) => o.id === orderToFinalize);
+    if (!order) return;
+
     try {
       setIsSubmittingFinalize(true);
 
+      // Finalizar etapa atual
       await productionProgressService.finalizeStageWithDetails(
         progress.id,
         currentStage.etapaId,
@@ -292,6 +297,39 @@ export const GestaoProducoesTab: React.FC = () => {
         data.observacoes
       );
 
+      // Buscar informações da etapa finalizada para criar lançamento financeiro
+      const produto = produtos.find((p) => p.id === order.produtoId);
+      const etapaFinalizada = produto?.etapasProducao?.find(
+        (e) => e.etapa.id === currentStage.etapaId
+      );
+      const responsavelAtual = faccoes.find(
+        (f) => f.id === currentStage.responsavelId
+      );
+
+      // Criar lançamento financeiro para a etapa finalizada
+      if (etapaFinalizada && responsavelAtual) {
+        const dataVencimento = new Date();
+        dataVencimento.setDate(dataVencimento.getDate() + 30); // Vencimento em 30 dias
+
+        await financeiroService.createLancamento(
+          {
+            ordemProducaoId: order.id,
+            ordemCodigo: order.codigo,
+            produtoId: order.produtoId,
+            produtoDescricao: produto?.descricao || "Produto",
+            etapaId: currentStage.etapaId,
+            etapaNome: currentStage.etapaNome,
+            faccaoId: responsavelAtual.id,
+            faccaoNome: responsavelAtual.nome,
+            valor: etapaFinalizada.custo,
+            dataVencimento,
+            observacoes: data.observacoes || undefined,
+          },
+          user.uid
+        );
+      }
+
+      // Iniciar próxima etapa
       const proximaEtapa = steps.find(
         (etapa) => etapa.id === data.proximaEtapaId
       );
@@ -307,12 +345,17 @@ export const GestaoProducoesTab: React.FC = () => {
           responsavel.nome
         );
       }
+
       await loadData();
       setShowFinalizeModal(false);
       setOrderToFinalize(null);
+      
+      toast.success("Etapa finalizada e lançamento financeiro criado!", {
+        icon: <Check size={20} />,
+      });
     } catch (error) {
       console.error("Erro ao finalizar etapa:", error);
-      alert("Erro ao finalizar etapa");
+      toast.error("Erro ao finalizar etapa");
     } finally {
       setIsSubmittingFinalize(false);
     }
@@ -362,7 +405,7 @@ export const GestaoProducoesTab: React.FC = () => {
     const order = orders.find((o) => o.id === orderId);
     if (!order) return;
 
-    const confirmMessage = `Tem certeza que deseja excluir a ordem ${order.codigo}?\n\nEsta ação não pode ser desfeita e também excluirá todo o progresso associado.`;
+    const confirmMessage = `Tem certeza que deseja excluir a ordem ${order.codigo}?\n\nEsta ação não pode ser desfeita e também excluirá todo o progresso e lançamentos financeiros associados.`;
     if (!window.confirm(confirmMessage)) return;
 
     try {
@@ -373,6 +416,13 @@ export const GestaoProducoesTab: React.FC = () => {
         } catch (error) {
           console.error("Erro ao deletar progresso:", error);
         }
+      }
+
+      // Deletar lançamentos financeiros associados
+      try {
+        await financeiroService.deleteLancamentosByOrdem(orderId);
+      } catch (error) {
+        console.error("Erro ao deletar lançamentos financeiros:", error);
       }
 
       await orderService.deleteOrder(orderId);

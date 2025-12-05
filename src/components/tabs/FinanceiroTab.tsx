@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Download,
   Search,
@@ -9,59 +9,50 @@ import {
   TrendingUp,
   CreditCard,
 } from "lucide-react";
+import { useAuth } from "../../hooks/useAuth";
+import { financeiroService } from "../../services/financeiroService";
+import type { LancamentoFinanceiro } from "../../types/financeiro";
+import toast from "react-hot-toast";
 import "./FinanceiroTab.css";
 
 export const FinanceiroTab: React.FC = () => {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<"pendencias" | "pagamentos">(
     "pendencias"
   );
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("todos");
+  const [lancamentosPendentes, setLancamentosPendentes] = useState<
+    LancamentoFinanceiro[]
+  >([]);
+  const [lancamentosPagos, setLancamentosPagos] = useState<
+    LancamentoFinanceiro[]
+  >([]);
+  const [loading, setLoading] = useState(true);
 
-  // Mock data - replace with actual data from your backend
-  const summaryData = {
-    totalPendente: 5050.0,
-    totalAtrasado: 540.0,
-    totalPagoMes: 3450.0,
-    metaMensal: 15000.0,
-    lancamentosPendentes: 3,
-    pagamentosMes: 2,
-    variacaoMeta: 12,
-  };
+  const loadData = useCallback(async () => {
+    if (!user) return;
 
-  const pendingData = [
-    {
-      id: "FIN001",
-      ordem: "OP001",
-      faccao: "Facção Silva",
-      etapa: "Costura",
-      produto: "Camiseta Básica ...",
-      valor: 3280.0,
-      vencimento: "24/01/2024",
-      status: "pendente" as const,
-    },
-    {
-      id: "FIN002",
-      ordem: "OP002",
-      faccao: "Ateliê Maria",
-      etapa: "Corte",
-      produto: "Regata Fitness Fe...",
-      valor: 540.0,
-      vencimento: "19/01/2024",
-      status: "atrasado" as const,
-      diasAtraso: 3,
-    },
-    {
-      id: "FIN003",
-      ordem: "OP001",
-      faccao: "Silk Express",
-      etapa: "Silk",
-      produto: "Camiseta Básica ...",
-      valor: 1230.0,
-      vencimento: "27/01/2024",
-      status: "pendente" as const,
-    },
-  ];
+    try {
+      setLoading(true);
+      const [pendentes, pagos] = await Promise.all([
+        financeiroService.getLancamentosPendentes(user.uid),
+        financeiroService.getLancamentosPagos(user.uid),
+      ]);
+
+      setLancamentosPendentes(pendentes);
+      setLancamentosPagos(pagos);
+    } catch (error) {
+      console.error("Erro ao carregar lançamentos:", error);
+      toast.error("Erro ao carregar dados financeiros");
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
@@ -70,17 +61,97 @@ export const FinanceiroTab: React.FC = () => {
     }).format(value);
   };
 
-  const filteredPendencies = pendingData.filter((item) => {
+  const formatDate = (date: Date) => {
+    return new Intl.DateTimeFormat("pt-BR").format(new Date(date));
+  };
+
+  const getDiasAtraso = (dataVencimento: Date): number => {
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+    const vencimento = new Date(dataVencimento);
+    vencimento.setHours(0, 0, 0, 0);
+    const diff = hoje.getTime() - vencimento.getTime();
+    return Math.floor(diff / (1000 * 60 * 60 * 24));
+  };
+
+  // Calcular dados do resumo
+  const summaryData = {
+    totalPendente: lancamentosPendentes
+      .filter((l) => l.status === "pendente")
+      .reduce((acc, l) => acc + l.valor, 0),
+    totalAtrasado: lancamentosPendentes
+      .filter((l) => l.status === "atrasado")
+      .reduce((acc, l) => acc + l.valor, 0),
+    totalPagoMes: lancamentosPagos
+      .filter((l) => {
+        const dataPagamento = new Date(l.dataPagamento!);
+        const mesAtual = new Date().getMonth();
+        const anoAtual = new Date().getFullYear();
+        return (
+          dataPagamento.getMonth() === mesAtual &&
+          dataPagamento.getFullYear() === anoAtual
+        );
+      })
+      .reduce((acc, l) => acc + l.valor, 0),
+    lancamentosPendentes: lancamentosPendentes.filter(
+      (l) => l.status === "pendente"
+    ).length,
+    lancamentosAtrasados: lancamentosPendentes.filter(
+      (l) => l.status === "atrasado"
+    ).length,
+    pagamentosMes: lancamentosPagos.filter((l) => {
+      const dataPagamento = new Date(l.dataPagamento!);
+      const mesAtual = new Date().getMonth();
+      const anoAtual = new Date().getFullYear();
+      return (
+        dataPagamento.getMonth() === mesAtual &&
+        dataPagamento.getFullYear() === anoAtual
+      );
+    }).length,
+  };
+
+  const filteredPendencies = lancamentosPendentes.filter((item) => {
     const matchesSearch =
-      item.ordem.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.faccao.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.produto.toLowerCase().includes(searchQuery.toLowerCase());
+      item.ordemCodigo.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.faccaoNome.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.produtoDescricao.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesStatus =
       statusFilter === "todos" || item.status === statusFilter;
 
     return matchesSearch && matchesStatus;
   });
+
+  const filteredPagamentos = lancamentosPagos.filter((item) => {
+    return (
+      item.ordemCodigo.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.faccaoNome.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.produtoDescricao.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  });
+
+  const handlePagar = async (lancamentoId: string) => {
+    if (!window.confirm("Confirmar pagamento deste lançamento?")) return;
+
+    try {
+      await financeiroService.marcarComoPago(lancamentoId);
+      await loadData();
+      toast.success("Pagamento registrado com sucesso!", {
+        icon: <CheckCircle size={20} />,
+      });
+    } catch (error) {
+      console.error("Erro ao registrar pagamento:", error);
+      toast.error("Erro ao registrar pagamento");
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="financeiro-container">
+        <div className="financeiro-loading">Carregando...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="financeiro-container">
@@ -125,7 +196,9 @@ export const FinanceiroTab: React.FC = () => {
           <div className="financeiro-card-value financeiro-value-red">
             {formatCurrency(summaryData.totalAtrasado)}
           </div>
-          <div className="financeiro-card-sub">1 em atraso</div>
+          <div className="financeiro-card-sub">
+            {summaryData.lancamentosAtrasados} em atraso
+          </div>
         </div>
 
         <div className="financeiro-card">
@@ -145,16 +218,20 @@ export const FinanceiroTab: React.FC = () => {
 
         <div className="financeiro-card">
           <div className="financeiro-card-header">
-            <span className="financeiro-card-title">Meta Mensal</span>
+            <span className="financeiro-card-title">Total Geral</span>
             <div className="financeiro-card-icon financeiro-icon-blue">
               <TrendingUp size={20} />
             </div>
           </div>
           <div className="financeiro-card-value financeiro-value-gray">
-            {formatCurrency(summaryData.metaMensal)}
+            {formatCurrency(
+              summaryData.totalPendente + summaryData.totalAtrasado
+            )}
           </div>
-          <div className="financeiro-card-sub financeiro-card-sub-success">
-            ↑ +{summaryData.variacaoMeta}% vs mês anterior
+          <div className="financeiro-card-sub">
+            {summaryData.lancamentosPendentes +
+              summaryData.lancamentosAtrasados}{" "}
+            pendentes
           </div>
         </div>
       </div>
@@ -171,17 +248,19 @@ export const FinanceiroTab: React.FC = () => {
             className="financeiro-search-input"
           />
         </div>
-        <div className="financeiro-status-filter">
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="financeiro-status-select"
-          >
-            <option value="todos">Todos os Status</option>
-            <option value="pendente">Pendente</option>
-            <option value="atrasado">Atrasado</option>
-          </select>
-        </div>
+        {activeTab === "pendencias" && (
+          <div className="financeiro-status-filter">
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="financeiro-status-select"
+            >
+              <option value="todos">Todos os Status</option>
+              <option value="pendente">Pendente</option>
+              <option value="atrasado">Atrasado</option>
+            </select>
+          </div>
+        )}
       </div>
 
       {/* Navigation Tabs */}
@@ -230,7 +309,6 @@ export const FinanceiroTab: React.FC = () => {
             <table className="financeiro-table">
               <thead>
                 <tr>
-                  <th>ID</th>
                   <th>Ordem</th>
                   <th>Facção</th>
                   <th>Etapa</th>
@@ -244,26 +322,25 @@ export const FinanceiroTab: React.FC = () => {
               <tbody>
                 {filteredPendencies.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="financeiro-empty-state">
+                    <td colSpan={8} className="financeiro-empty-state">
                       Nenhuma pendência encontrada
                     </td>
                   </tr>
                 ) : (
                   filteredPendencies.map((item) => (
                     <tr key={item.id}>
-                      <td className="financeiro-cell-id">{item.id}</td>
-                      <td>{item.ordem}</td>
-                      <td>{item.faccao}</td>
+                      <td>{item.ordemCodigo}</td>
+                      <td>{item.faccaoNome}</td>
                       <td>
                         <span className="financeiro-badge financeiro-badge-default">
-                          {item.etapa}
+                          {item.etapaNome}
                         </span>
                       </td>
-                      <td>{item.produto}</td>
+                      <td>{item.produtoDescricao}</td>
                       <td className="financeiro-cell-value">
                         {formatCurrency(item.valor)}
                       </td>
-                      <td>{item.vencimento}</td>
+                      <td>{formatDate(item.dataVencimento)}</td>
                       <td>
                         <span
                           className={`financeiro-badge ${
@@ -275,7 +352,7 @@ export const FinanceiroTab: React.FC = () => {
                           {item.status === "atrasado" ? (
                             <>
                               <AlertCircle size={14} />
-                              Atrasado ({item.diasAtraso}d)
+                              Atrasado ({getDiasAtraso(item.dataVencimento)}d)
                             </>
                           ) : (
                             <>
@@ -286,7 +363,10 @@ export const FinanceiroTab: React.FC = () => {
                         </span>
                       </td>
                       <td>
-                        <button className="financeiro-action-btn">
+                        <button
+                          className="financeiro-action-btn"
+                          onClick={() => handlePagar(item.id)}
+                        >
                           <CreditCard size={14} />
                           Pagar
                         </button>
@@ -297,13 +377,61 @@ export const FinanceiroTab: React.FC = () => {
               </tbody>
             </table>
           ) : (
-            <div className="financeiro-empty-state-large">
-              <CheckCircle size={48} className="financeiro-empty-icon" />
-              <p>Nenhum pagamento realizado ainda</p>
-              <p className="financeiro-empty-subtitle">
-                Os pagamentos realizados aparecerão aqui
-              </p>
-            </div>
+            <>
+              {filteredPagamentos.length === 0 ? (
+                <div className="financeiro-empty-state-large">
+                  <CheckCircle size={48} className="financeiro-empty-icon" />
+                  <p>Nenhum pagamento realizado ainda</p>
+                  <p className="financeiro-empty-subtitle">
+                    Os pagamentos realizados aparecerão aqui
+                  </p>
+                </div>
+              ) : (
+                <table className="financeiro-table">
+                  <thead>
+                    <tr>
+                      <th>Ordem</th>
+                      <th>Facção</th>
+                      <th>Etapa</th>
+                      <th>Produto</th>
+                      <th>Valor</th>
+                      <th>Vencimento</th>
+                      <th>Data Pagamento</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredPagamentos.map((item) => (
+                      <tr key={item.id}>
+                        <td>{item.ordemCodigo}</td>
+                        <td>{item.faccaoNome}</td>
+                        <td>
+                          <span className="financeiro-badge financeiro-badge-default">
+                            {item.etapaNome}
+                          </span>
+                        </td>
+                        <td>{item.produtoDescricao}</td>
+                        <td className="financeiro-cell-value">
+                          {formatCurrency(item.valor)}
+                        </td>
+                        <td>{formatDate(item.dataVencimento)}</td>
+                        <td>
+                          {item.dataPagamento
+                            ? formatDate(item.dataPagamento)
+                            : "-"}
+                        </td>
+                        <td>
+                          <span className="financeiro-badge financeiro-badge-success">
+                            <CheckCircle size={14} />
+                            Pago
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </>
           )}
         </div>
       </div>

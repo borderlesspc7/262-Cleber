@@ -15,6 +15,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { orderService } from "../../services/orderService";
 import { produtoService } from "../../services/productService";
 import { productionProgressService } from "../../services/productionProgressService";
+import { financeiroService } from "../../services/financeiroService";
 import type { ProductionOrder } from "../../types/order";
 import type { Produto } from "../../types/product";
 import { OrderModal } from "../orders/OrderModal";
@@ -154,7 +155,7 @@ export const OrdemProducoesTab: React.FC = () => {
     const order = orders.find((o) => o.id === orderId);
     if (!order) return;
 
-    const confirmMessage = `Tem certeza que deseja excluir a ordem ${order.codigo}?\n\nEsta ação não pode ser desfeita.`;
+    const confirmMessage = `Tem certeza que deseja excluir a ordem ${order.codigo}?\n\nEsta ação não pode ser desfeita e também excluirá os lançamentos financeiros associados.`;
     if (!window.confirm(confirmMessage)) return;
 
     try {
@@ -167,6 +168,14 @@ export const OrdemProducoesTab: React.FC = () => {
       } catch (error) {
         console.error("Erro ao deletar progresso:", error);
         // Continua mesmo se não conseguir deletar o progresso
+      }
+
+      // Deletar lançamentos financeiros associados
+      try {
+        await financeiroService.deleteLancamentosByOrdem(orderId);
+      } catch (error) {
+        console.error("Erro ao deletar lançamentos financeiros:", error);
+        // Continua mesmo se não conseguir deletar os lançamentos
       }
 
       // Deletar ordem

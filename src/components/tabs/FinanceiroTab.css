@@ -364,6 +364,21 @@
   color: #991b1b;
 }
 
+.financeiro-badge-success {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+/* Loading */
+.financeiro-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 4rem;
+  font-size: 1.125rem;
+  color: #64748b;
+}
+
 /* Action Button */
 .financeiro-action-btn {
   display: flex;
