@@ -39,4 +39,3 @@ export interface UpdateLancamentoPayload {
   dataPagamento?: Date;
   observacoes?: string;
 }
-

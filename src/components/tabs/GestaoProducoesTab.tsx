@@ -349,7 +349,7 @@ export const GestaoProducoesTab: React.FC = () => {
             produtoDescricao: produto?.descricao || "Produto",
             etapaId: currentStage.etapaId,
             etapaNome: currentStage.etapaNome,
-            faccaoId: responsavelAtual.id,
+            faccaoId: responsavelAtual.id || "",
             faccaoNome: responsavelAtual.nome,
             valor: etapaFinalizada.custo,
             dataVencimento,
