@@ -56,14 +56,17 @@ export const FinalizeStageModal: React.FC<FinalizeStageModalProps> = ({
       return;
     }
 
-    if (!formData.proximaEtapaId) {
-      alert("Selecione a próxima etapa");
-      return;
-    }
+    // Só validar próxima etapa e responsável se não for a última etapa
+    if (!isLastStage) {
+      if (!formData.proximaEtapaId) {
+        alert("Selecione a próxima etapa");
+        return;
+      }
 
-    if (!formData.responsavelProximaEtapaId) {
-      alert("Selecione o responsável pela próxima etapa");
-      return;
+      if (!formData.responsavelProximaEtapaId) {
+        alert("Selecione o responsável pela próxima etapa");
+        return;
+      }
     }
 
     await onSubmit(formData);
@@ -81,6 +84,9 @@ export const FinalizeStageModal: React.FC<FinalizeStageModalProps> = ({
       onClose();
     }
   };
+
+  // Se não há próximas etapas disponíveis, então esta é a última etapa
+  const isLastStage = availableStages.length === 0;
 
   if (!isOpen) return null;
 
@@ -159,52 +165,67 @@ export const FinalizeStageModal: React.FC<FinalizeStageModalProps> = ({
 
           <div className="finalize-form-section">
             <h3 className="finalize-section-title">Próxima Etapa</h3>
-            <div className="finalize-form-field">
-              <label>Etapa*</label>
-              <div className="finalize-select-wrapper">
-                <select
-                  value={formData.proximaEtapaId}
-                  onChange={(e) =>
-                    setFormData({ ...formData, proximaEtapaId: e.target.value })
-                  }
-                  required
-                  disabled={isSubmitting}
-                >
-                  <option value="">Selecione a etapa</option>
-                  {availableStages.map((stage) => (
-                    <option key={stage.id} value={stage.id}>
-                      {stage.name}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown size={18} className="select-icon" />
+            {isLastStage ? (
+              <div className="finalize-alert">
+                <AlertCircle size={20} />
+                <span>
+                  Esta é a última etapa da produção. Ao finalizar, a ordem será
+                  concluída.
+                </span>
               </div>
-            </div>
+            ) : (
+              <>
+                <div className="finalize-form-field">
+                  <label>Etapa*</label>
+                  <div className="finalize-select-wrapper">
+                    <select
+                      value={formData.proximaEtapaId}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          proximaEtapaId: e.target.value,
+                        })
+                      }
+                      required={!isLastStage}
+                      disabled={isSubmitting || isLastStage}
+                    >
+                      <option value="">Selecione a etapa</option>
+                      {availableStages.map((stage) => (
+                        <option key={stage.id} value={stage.id}>
+                          {stage.name}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown size={18} className="select-icon" />
+                  </div>
+                </div>
 
-            <div className="finalize-form-field">
-              <label>Responsável*</label>
-              <div className="finalize-select-wrapper">
-                <select
-                  value={formData.responsavelProximaEtapaId}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      responsavelProximaEtapaId: e.target.value,
-                    })
-                  }
-                  required
-                  disabled={isSubmitting}
-                >
-                  <option value="">Selecione o responsável</option>
-                  {faccoes.map((faccao) => (
-                    <option key={faccao.id} value={faccao.id}>
-                      {faccao.nome}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown size={18} className="select-icon" />
-              </div>
-            </div>
+                <div className="finalize-form-field">
+                  <label>Responsável*</label>
+                  <div className="finalize-select-wrapper">
+                    <select
+                      value={formData.responsavelProximaEtapaId}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          responsavelProximaEtapaId: e.target.value,
+                        })
+                      }
+                      required={!isLastStage}
+                      disabled={isSubmitting || isLastStage}
+                    >
+                      <option value="">Selecione o responsável</option>
+                      {faccoes.map((faccao) => (
+                        <option key={faccao.id} value={faccao.id}>
+                          {faccao.nome}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown size={18} className="select-icon" />
+                  </div>
+                </div>
+              </>
+            )}
           </div>
 
           <div className="finalize-form-section">

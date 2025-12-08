@@ -112,10 +112,7 @@ export const financeiroService = {
         const vencimento = new Date(lancamento.dataVencimento);
         vencimento.setHours(0, 0, 0, 0);
 
-        if (
-          lancamento.status === "pendente" &&
-          vencimento < hoje
-        ) {
+        if (lancamento.status === "pendente" && vencimento < hoje) {
           await this.updateLancamento(lancamento.id, { status: "atrasado" });
           lancamento.status = "atrasado";
         }
@@ -216,4 +213,3 @@ export const financeiroService = {
     }
   },
 };
-

@@ -255,15 +255,45 @@ export const GestaoProducoesTab: React.FC = () => {
 
     const total = totalPiecesByOrder(order);
 
-    const finalizadas = progress.etapas
-      .filter((e) => e.status === "finalizada")
-      .reduce((acc, etapa) => acc + (etapa.finalizadas || 0), 0);
+    // Encontrar a etapa atual (em andamento)
+    const currentStage = progress.etapas.find(
+      (e) => e.status === "em_andamento"
+    );
 
-    const defeituosas = progress.etapas
-      .filter((e) => e.status === "finalizada")
-      .reduce((acc, etapa) => acc + (etapa.defeituosas || 0), 0);
+    // Se não há etapa em andamento, verificar se todas foram finalizadas
+    if (!currentStage) {
+      const todasFinalizadas = progress.etapas.every(
+        (e) => e.status === "finalizada"
+      );
 
-    const restantes = total - (finalizadas + defeituosas);
+      if (todasFinalizadas) {
+        // Todas as etapas finalizadas - pegar dados da última etapa
+        const ultimaEtapa = progress.etapas[progress.etapas.length - 1];
+        const finalizadas = ultimaEtapa?.finalizadas || 0;
+        const defeituosas = progress.etapas.reduce(
+          (acc, etapa) => acc + (etapa.defeituosas || 0),
+          0
+        );
+        const restantes = total - finalizadas - defeituosas;
+
+        return { percent, finalizadas, defeituosas, restantes };
+      }
+
+      // Nenhuma etapa em andamento e nem todas finalizadas
+      return { percent, finalizadas: 0, defeituosas: 0, restantes: total };
+    }
+
+    // Pegar dados da etapa atual
+    const finalizadas = currentStage.finalizadas || 0;
+
+    // Defeituosas acumuladas de todas as etapas
+    const defeituosas = progress.etapas.reduce(
+      (acc, etapa) => acc + (etapa.defeituosas || 0),
+      0
+    );
+
+    // Restantes = Total - (Finalizadas na etapa atual + Defeituosas acumuladas)
+    const restantes = total - finalizadas - defeituosas;
 
     return { percent, finalizadas, defeituosas, restantes };
   };
@@ -349,7 +379,7 @@ export const GestaoProducoesTab: React.FC = () => {
       await loadData();
       setShowFinalizeModal(false);
       setOrderToFinalize(null);
-      
+
       toast.success("Etapa finalizada e lançamento financeiro criado!", {
         icon: <Check size={20} />,
       });
