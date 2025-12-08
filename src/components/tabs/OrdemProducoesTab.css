@@ -316,7 +316,7 @@
 .ordem-card__table-header,
 .ordem-card__table-row {
   display: grid;
-  grid-template-columns: 1.5fr repeat(5, 0.8fr) 1fr;
+  grid-template-columns: 1.5fr repeat(var(--tamanhos-count, 5), 0.8fr) 1fr;
   padding: 0.75rem 1rem;
   font-size: 0.875rem;
   align-items: center;

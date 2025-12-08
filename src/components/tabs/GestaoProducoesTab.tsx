@@ -337,7 +337,7 @@ export const GestaoProducoesTab: React.FC = () => {
       );
 
       // Criar lançamento financeiro para a etapa finalizada
-      if (etapaFinalizada && responsavelAtual) {
+      if (etapaFinalizada && responsavelAtual && responsavelAtual.id) {
         const dataVencimento = new Date();
         dataVencimento.setDate(dataVencimento.getDate() + 30); // Vencimento em 30 dias
 
@@ -349,7 +349,7 @@ export const GestaoProducoesTab: React.FC = () => {
             produtoDescricao: produto?.descricao || "Produto",
             etapaId: currentStage.etapaId,
             etapaNome: currentStage.etapaNome,
-            faccaoId: responsavelAtual.id || "",
+            faccaoId: responsavelAtual.id,
             faccaoNome: responsavelAtual.nome,
             valor: etapaFinalizada.custo,
             dataVencimento,

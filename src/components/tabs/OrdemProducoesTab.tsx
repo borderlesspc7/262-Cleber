@@ -13,11 +13,11 @@ import {
 } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { orderService } from "../../services/orderService";
-import { produtoService } from "../../services/productService";
+import { produtoService, tamanhoService } from "../../services/productService";
 import { productionProgressService } from "../../services/productionProgressService";
 import { financeiroService } from "../../services/financeiroService";
 import type { ProductionOrder } from "../../types/order";
-import type { Produto } from "../../types/product";
+import type { Produto, Tamanho } from "../../types/product";
 import { OrderModal } from "../orders/OrderModal";
 import toast from "react-hot-toast";
 import "./OrdemProducoesTab.css";
@@ -38,6 +38,7 @@ export const OrdemProducoesTab: React.FC = () => {
   const { user } = useAuth();
   const [orders, setOrders] = useState<ProductionOrder[]>([]);
   const [produtos, setProdutos] = useState<Produto[]>([]);
+  const [todosTamanhos, setTodosTamanhos] = useState<Tamanho[]>([]);
   const [search, setSearch] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -46,12 +47,30 @@ export const OrdemProducoesTab: React.FC = () => {
   const loadData = async () => {
     if (!user) return;
 
-    const [ordersData, produtosData] = await Promise.all([
+    const [ordersData, produtosData, tamanhosData] = await Promise.all([
       orderService.getOrders(user.uid),
       produtoService.getProdutos(user.uid),
+      tamanhoService.getTamanhos(user.uid),
     ]);
+
+    // Reconstruir produtos com tamanhos completos
+    const produtosCompletos = produtosData.map((produto) => {
+      const tamanhosProduto = tamanhosData.filter((t) =>
+        produto.tamanhosIds?.includes(t.id)
+      );
+
+      return {
+        ...produto,
+        tamanhos:
+          tamanhosProduto.length > 0
+            ? tamanhosProduto
+            : produto.tamanhos || [],
+      };
+    });
+
     setOrders(ordersData);
-    setProdutos(produtosData);
+    setProdutos(produtosCompletos);
+    setTodosTamanhos(tamanhosData);
   };
 
   useEffect(() => {
@@ -216,9 +235,25 @@ export const OrdemProducoesTab: React.FC = () => {
       <section className="ordens-list">
         {filteredOrders.map((order) => {
           const produto = produtos.find((p) => p.id === order.produtoId);
-          const tamanhosOrdenados = produto?.tamanhos
+          
+          // Primeiro, tentar usar os tamanhos do produto
+          let tamanhosOrdenados = produto?.tamanhos
             ? [...produto.tamanhos].sort((a, b) => a.ordem - b.ordem)
             : [];
+          
+          // Se não houver tamanhos no produto, mas a grade tem dados, 
+          // extrair as chaves da grade e buscar os tamanhos correspondentes
+          if (tamanhosOrdenados.length === 0 && order.grade.length > 0) {
+            const primeiraLinha = order.grade[0];
+            if (primeiraLinha.quantidades) {
+              const chavesGrade = Object.keys(primeiraLinha.quantidades);
+              // Buscar os tamanhos que estão na grade
+              tamanhosOrdenados = todosTamanhos
+                .filter((t) => chavesGrade.includes(t.id))
+                .sort((a, b) => a.ordem - b.ordem);
+            }
+          }
+          
           return (
             <article key={order.id} className="ordem-card">
               <div className="ordem-card__header">
@@ -314,7 +349,12 @@ export const OrdemProducoesTab: React.FC = () => {
 
                 <div className="ordem-card__grade-section">
                   <h4 className="ordem-card__grade-title">Grade de Produção</h4>
-                  <div className="ordem-card__table">
+                  <div 
+                    className="ordem-card__table"
+                    style={{
+                      '--tamanhos-count': tamanhosOrdenados.length
+                    } as React.CSSProperties}
+                  >
                     <div className="ordem-card__table-header">
                       <span>Cor</span>
                       {tamanhosOrdenados.map((tamanho) => (
@@ -322,17 +362,22 @@ export const OrdemProducoesTab: React.FC = () => {
                       ))}
                       <span>Total</span>
                     </div>
-                    {order.grade.map((row) => (
-                      <div key={row.corId} className="ordem-card__table-row">
-                        <span>{row.corNome}</span>
-                        {tamanhosOrdenados.map((tamanho) => (
-                          <span key={tamanho.id}>
-                            {row.quantidades[tamanho.id] || 0}
-                          </span>
-                        ))}
-                        <span>{row.total}</span>
-                      </div>
-                    ))}
+                    {order.grade.map((row) => {
+                      // Garantir que quantidades existe e é um objeto
+                      const quantidades = row.quantidades || {};
+                      
+                      return (
+                        <div key={row.corId} className="ordem-card__table-row">
+                          <span>{row.corNome}</span>
+                          {tamanhosOrdenados.map((tamanho) => (
+                            <span key={tamanho.id}>
+                              {quantidades[tamanho.id] || 0}
+                            </span>
+                          ))}
+                          <span>{row.total}</span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
