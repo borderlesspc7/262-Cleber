@@ -4,6 +4,7 @@ import { ProtectedRoute } from "./ProtectedRoutes";
 import { LoginPage } from "../pages/Login/Login";
 import { RegisterPage } from "../pages/Register/Register";
 import { DashboardPage } from "../pages/Dashboard/Dashboard";
+import { ForgotPasswordPage } from "../pages/ForgotPassword/ForgotPassword";
 
 export const AppRoutes = () => {
   return (
@@ -12,7 +13,7 @@ export const AppRoutes = () => {
         <Route path={paths.home} element={<LoginPage />} />
         <Route path={paths.login} element={<LoginPage />} />
         <Route path={paths.register} element={<RegisterPage />} />
-
+        <Route path={paths.forgotPassword} element={<ForgotPasswordPage />} />
         <Route
           path={paths.dashboard}
           element={

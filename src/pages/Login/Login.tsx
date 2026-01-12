@@ -110,10 +110,9 @@ export const LoginPage = () => {
                   Lembrar-me
                 </label>
               </div>
-
-              <a href="#" className="login-link">
+              <Link to={paths.forgotPassword} className="login-link">
                 Esqueceu sua senha?
-              </a>
+              </Link>{" "}
             </div>
 
             <div className="login-buttons">

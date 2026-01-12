@@ -5,6 +5,7 @@ import {
   signOut,
   type Unsubscribe,
   onAuthStateChanged,
+  sendPasswordResetEmail,
 } from "firebase/auth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 import type {
@@ -42,7 +43,9 @@ export const authService = {
       const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
 
       if (!userDoc.exists()) {
-        throw new Error("Não existe um usuário cadastrado com este email. Verifique o email ou cadastre-se.");
+        throw new Error(
+          "Não existe um usuário cadastrado com este email. Verifique o email ou cadastre-se."
+        );
       }
 
       const userData = userDoc.data() as User;
@@ -55,13 +58,9 @@ export const authService = {
       await setDoc(doc(db, "users", firebaseUser.uid), updateUserData);
 
       return updateUserData;
-    } catch (error: any) {
+    } catch (error) {
       // Garante que o erro do Firebase seja capturado corretamente
-      const firebaseError: FirebaseError = {
-        code: error?.code || error?.error?.code,
-        message: error?.message || error?.error?.message || error?.toString(),
-      };
-      const message = getFirebaseErrorMessage(firebaseError);
+      const message = getFirebaseErrorMessage(error as string | FirebaseError);
       throw new Error(message);
     }
   },
@@ -96,6 +95,15 @@ export const authService = {
 
       await setDoc(doc(db, "users", firebaseUser.uid), userData);
       return userData;
+    } catch (error) {
+      const message = getFirebaseErrorMessage(error as string | FirebaseError);
+      throw new Error(message);
+    }
+  },
+
+  async resetPassword(email: string): Promise<void> {
+    try {
+      await sendPasswordResetEmail(auth, email);
     } catch (error) {
       const message = getFirebaseErrorMessage(error as string | FirebaseError);
       throw new Error(message);
