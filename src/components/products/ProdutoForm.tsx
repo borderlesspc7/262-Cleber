@@ -346,12 +346,11 @@ export const ProdutoFormComponent: React.FC<ProdutoFormProps> = ({
                                   const value = e.target.value
                                     .replace(/\D/g, "")
                                     .padStart(3, "0");
-                                  const numValue =
-                                    parseInt(value.slice(0, -2)) +
-                                    parseInt(value.slice(-2)) / 100;
+                                  const numValue = currencyToNumber(value);
                                   handleEtapaCustoChange(etapa.id, numValue);
                                 }}
                                 placeholder="0,00"
+                                maxLength={15}
                               />
                             </div>
                           </div>

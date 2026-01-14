@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
 import { Layout } from "../../components/Layout/Layout";
 import { DashboardTab } from "../../components/tabs/DashboardTab";
 import { CadastrosTab } from "../Cadastros/CadastrosTab";
@@ -8,8 +8,6 @@ import { ProdutoTab } from "../../components/tabs/ProdutoTab";
 import { OrdemProducoesTab } from "../../components/tabs/OrdemProducoesTab";
 import { GestaoProducoesTab } from "../../components/tabs/GestaoProducoesTab";
 import { FinanceiroTab } from "../../components/tabs/FinanceiroTab";
-import toast from "react-hot-toast";
-import { Check } from "lucide-react";
 import "./Dashboard.css";
 
 type TabType =
@@ -24,34 +22,6 @@ type TabType =
 
 export const DashboardPage = () => {
   const [activeTab, setActiveTab] = useState<TabType>("dashboard");
-  const [isFirstRender, setIsFirstRender] = useState(true);
-
-  const getTabName = useCallback((tab: TabType): string => {
-    const tabNames: Record<TabType, string> = {
-      dashboard: "Dashboard",
-      cadastros: "Cadastros",
-      faccoes: "Faccoes",
-      etapas: "Etapas",
-      produto: "Produto",
-      ordemProducoes: "Ordem de Produções",
-      gestaoProducoes: "Gestão de Produções",
-      financeiro: "Financeiro",
-    };
-    return tabNames[tab] || "Dashboard";
-  }, []);
-
-  useEffect(() => {
-    if (isFirstRender) {
-      setIsFirstRender(false);
-      return;
-    }
-    if (activeTab) {
-      toast.success(`Aba ${getTabName(activeTab)} aberta`, {
-        icon: <Check size={20} />,
-        duration: 2000,
-      });
-    }
-  }, [activeTab, isFirstRender, getTabName]);
 
   const renderTabContent = () => {
     switch (activeTab) {

@@ -4,6 +4,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { Button } from "../../components/ui/Button/Button";
 import { paths } from "../../routes/paths";
 import type { RegisterCredentials } from "../../types/user";
+import { phoneMask } from "../../utils/masks";
 import "./Register.css";
 
 export const RegisterPage = () => {
@@ -24,7 +25,10 @@ export const RegisterPage = () => {
   ) => {
     const { name, value } = e.target;
 
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    // Aplica máscara para telefone
+    const maskedValue = name === "phone" ? phoneMask(value) : value;
+
+    setFormData((prev) => ({ ...prev, [name]: maskedValue }));
 
     if (error) clearError();
   };
@@ -130,7 +134,8 @@ export const RegisterPage = () => {
                 value={formData.phone}
                 onChange={handleInputChange}
                 className="register-input"
-                placeholder="Digite seu telefone"
+                placeholder="(11) 99999-9999"
+                maxLength={15}
               />
             </div>
 

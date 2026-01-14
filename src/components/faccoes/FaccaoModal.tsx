@@ -5,6 +5,7 @@ import { stepService } from "../../services/stepService";
 import type { ProductionStep } from "../../types/step";
 import "./FaccaoModal.css";
 import { useAuth } from "../../hooks/useAuth";
+import { phoneMask } from "../../utils/masks";
 
 interface FaccaoModalProps {
   isOpen: boolean;
@@ -193,8 +194,9 @@ export const FaccaoModal: React.FC<FaccaoModalProps> = ({
                 placeholder="(11) 99999-9999"
                 value={formData.telefone}
                 onChange={(e) =>
-                  setFormData({ ...formData, telefone: e.target.value })
+                  setFormData({ ...formData, telefone: phoneMask(e.target.value) })
                 }
+                maxLength={15}
               />
             </div>
 

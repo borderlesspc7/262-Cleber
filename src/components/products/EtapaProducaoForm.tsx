@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Plus, X } from "lucide-react";
 import type { EtapaProducao, EtapaProducaoForm } from "../../types/product";
+import { currencyMask, currencyToNumber } from "../../utils/masks";
 
 interface EtapaProducaoFormProps {
   etapas: EtapaProducao[];
@@ -22,6 +23,7 @@ export const EtapaProducaoFormComponent: React.FC<EtapaProducaoFormProps> = ({
     descricao: "",
     custo: 0,
   });
+  const [custoDisplay, setCustoDisplay] = useState<string>("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,6 +36,7 @@ export const EtapaProducaoFormComponent: React.FC<EtapaProducaoFormProps> = ({
     }
 
     setFormData({ nome: "", descricao: "", custo: 0 });
+    setCustoDisplay("");
     setShowForm(false);
     setEditingId(null);
   };
@@ -44,14 +47,21 @@ export const EtapaProducaoFormComponent: React.FC<EtapaProducaoFormProps> = ({
       descricao: etapa.descricao || "",
       custo: etapa.custo,
     });
+    setCustoDisplay(currencyMask(etapa.custo));
     setEditingId(etapa.id);
     setShowForm(true);
   };
 
   const handleCancel = () => {
     setFormData({ nome: "", descricao: "", custo: 0 });
+    setCustoDisplay("");
     setShowForm(false);
     setEditingId(null);
+  };
+
+  const handleCustoChange = (value: string) => {
+    setCustoDisplay(currencyMask(value));
+    setFormData({ ...formData, custo: currencyToNumber(value) });
   };
 
   return (
@@ -98,17 +108,13 @@ export const EtapaProducaoFormComponent: React.FC<EtapaProducaoFormProps> = ({
           </div>
 
           <div className="form-group">
-            <label htmlFor="custo">Custo Padrão (R$)</label>
+            <label htmlFor="custo">Custo Padrão</label>
             <input
-              type="number"
+              type="text"
               id="custo"
-              value={formData.custo}
-              onChange={(e) =>
-                setFormData({ ...formData, custo: parseFloat(e.target.value) || 0 })
-              }
-              min="0"
-              step="0.01"
-              placeholder="0.00"
+              value={custoDisplay}
+              onChange={(e) => handleCustoChange(e.target.value)}
+              placeholder="R$ 0,00"
             />
             <small>Custo padrão para esta etapa (pode ser alterado por produto)</small>
           </div>
@@ -137,7 +143,7 @@ export const EtapaProducaoFormComponent: React.FC<EtapaProducaoFormProps> = ({
                 <p className="descricao">{etapa.descricao}</p>
               )}
               <div className="custo">
-                <strong>R$ {etapa.custo.toFixed(2)}</strong>
+                <strong>{etapa.custo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</strong>
               </div>
             </div>
             <div className="etapa-actions">
