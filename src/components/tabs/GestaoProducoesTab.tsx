@@ -29,6 +29,7 @@ import { faccaoService } from "../../services/faccaoService";
 import type { Faccao } from "../../types/faccao";
 import { financeiroService } from "../../services/financeiroService";
 import toast from "react-hot-toast";
+import { DeleteConfirmModal } from "../../components/ui/DeleteConfirmModal/DeleteConfirmModal";
 import "./GestaoProducoesTab.css";
 
 export const GestaoProducoesTab: React.FC = () => {
@@ -46,6 +47,9 @@ export const GestaoProducoesTab: React.FC = () => {
   const [showFinalizeModal, setShowFinalizeModal] = useState(false);
   const [orderToFinalize, setOrderToFinalize] = useState<string | null>(null);
   const [isSubmittingFinalize, setIsSubmittingFinalize] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [orderToDelete, setOrderToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const loadData = useCallback(async () => {
     if (!user) return;
@@ -431,15 +435,18 @@ export const GestaoProducoesTab: React.FC = () => {
     }
   };
 
-  const handleDeleteOrder = async (orderId: string) => {
-    const order = orders.find((o) => o.id === orderId);
-    if (!order) return;
+  const handleDeleteClick = (id: string) => {
+    setOrderToDelete(id);
+    setIsDeleteModalOpen(true);
+  };
 
-    const confirmMessage = `Tem certeza que deseja excluir a ordem ${order.codigo}?\n\nEsta ação não pode ser desfeita e também excluirá todo o progresso e lançamentos financeiros associados.`;
-    if (!window.confirm(confirmMessage)) return;
+  const handleConfirmDelete = async () => {
+    const order = orders.find((o) => o.id === orderToDelete);
+    if (!order || !orderToDelete) return;
 
     try {
-      const progress = progressData.get(orderId);
+      setIsDeleting(true);
+      const progress = progressData.get(orderToDelete);
       if (progress) {
         try {
           await productionProgressService.deleteProgress(progress.id);
@@ -450,12 +457,12 @@ export const GestaoProducoesTab: React.FC = () => {
 
       // Deletar lançamentos financeiros associados
       try {
-        await financeiroService.deleteLancamentosByOrdem(orderId);
+        await financeiroService.deleteLancamentosByOrdem(orderToDelete);
       } catch (error) {
         console.error("Erro ao deletar lançamentos financeiros:", error);
       }
 
-      await orderService.deleteOrder(orderId);
+      await orderService.deleteOrder(orderToDelete);
       await loadData();
 
       toast.success("Ordem de produção excluída com sucesso!", {
@@ -652,7 +659,7 @@ export const GestaoProducoesTab: React.FC = () => {
                 </button>
                 <button
                   className="gestao-action-btn gestao-action-delete"
-                  onClick={() => handleDeleteOrder(order.id)}
+                  onClick={() => handleDeleteClick(order.id)}
                   title="Excluir ordem"
                 >
                   <Trash2 size={16} className="gestao-action-icon" />
@@ -734,6 +741,21 @@ export const GestaoProducoesTab: React.FC = () => {
             />
           );
         })()}
+
+      <DeleteConfirmModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setOrderToDelete(null);
+        }}
+        onConfirm={handleConfirmDelete}
+        itemName={orders.find((o) => o.id === orderToDelete)?.codigo || ""}
+        loading={isDeleting}
+        title="Confirmar Exclusão"
+        message="Tem certeza que deseja excluir esta ordem de produção?"
+        confirmText="Excluir"
+        cancelText="Cancelar"
+      />
     </div>
   );
 };

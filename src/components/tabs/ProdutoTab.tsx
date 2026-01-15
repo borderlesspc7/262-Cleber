@@ -23,8 +23,9 @@ import type {
   TamanhoForm,
   ProdutoForm,
 } from "../../types/product";
-import toast from "react-hot-toast";
 
+import toast from "react-hot-toast";
+import { DeleteConfirmModal } from "../../components/ui/DeleteConfirmModal/DeleteConfirmModal";
 type ProductTabType = "produtos" | "categorias" | "cores" | "tamanhos";
 
 export const ProdutoTab: React.FC = () => {
@@ -38,6 +39,102 @@ export const ProdutoTab: React.FC = () => {
   const [tamanhos, setTamanhos] = useState<Tamanho[]>([]);
   const [produtos, setProdutos] = useState<Produto[]>([]);
 
+  type DeleteItemType = "produto" | "categoria" | "cor" | "tamanho";
+
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<string | null>(null);
+  const [deleteItemType, setDeleteItemType] = useState<DeleteItemType | null>(
+    null
+  );
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDeleteClick = (id: string, type: DeleteItemType) => {
+    setItemToDelete(id);
+    setDeleteItemType(type);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!itemToDelete || !deleteItemType) return;
+
+    try {
+      setIsDeleting(true);
+
+      switch (deleteItemType) {
+        case "produto":
+          await produtoService.deleteProduto(itemToDelete);
+          toast.success("Produto excluído com sucesso!", {
+            icon: <Check size={20} />,
+          });
+          break;
+        case "categoria":
+          await categoriaService.deleteCategoria(itemToDelete);
+          toast.success("Categoria excluída com sucesso!", {
+            icon: <Check size={20} />,
+          });
+          break;
+        case "cor":
+          await corService.deleteCor(itemToDelete);
+          toast.success("Cor excluída com sucesso!", {
+            icon: <Check size={20} />,
+          });
+          break;
+        case "tamanho":
+          await tamanhoService.deleteTamanho(itemToDelete);
+          toast.success("Tamanho excluído com sucesso!", {
+            icon: <Check size={20} />,
+          });
+          break;
+      }
+
+      await loadAllData();
+      setIsDeleteModalOpen(false);
+      setItemToDelete(null);
+      setDeleteItemType(null);
+    } catch (error) {
+      console.error(`Erro ao deletar ${deleteItemType}:`, error);
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : `Erro ao excluir ${deleteItemType}. Tente novamente.`;
+      toast.error(errorMessage);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const getItemName = (): string | undefined => {
+    if (!itemToDelete || !deleteItemType) return undefined;
+
+    switch (deleteItemType) {
+      case "produto":
+        return (
+          produtos.find((p) => p.id === itemToDelete)?.descricao || undefined
+        );
+      case "categoria":
+        return categorias.find((c) => c.id === itemToDelete)?.nome || undefined;
+      case "cor":
+        return cores.find((c) => c.id === itemToDelete)?.nome || undefined;
+      case "tamanho":
+        return tamanhos.find((t) => t.id === itemToDelete)?.nome || undefined;
+    }
+  };
+
+  const getDeleteMessage = (): string => {
+    switch (deleteItemType) {
+      case "produto":
+        return "Tem certeza que deseja excluir este produto?";
+      case "categoria":
+        return "Tem certeza que deseja excluir esta categoria?";
+      case "cor":
+        return "Tem certeza que deseja excluir esta cor?";
+      case "tamanho":
+        return "Tem certeza que deseja excluir este tamanho?";
+      default:
+        return "Tem certeza que deseja excluir este item?";
+    }
+  };
+
   // Carregar dados do Firebase
   useEffect(() => {
     if (user) {
@@ -50,14 +147,19 @@ export const ProdutoTab: React.FC = () => {
 
     try {
       setLoading(true);
-      const [categoriasData, coresData, tamanhosData, etapasData, produtosData] =
-        await Promise.all([
-          categoriaService.getCategorias(user.uid),
-          corService.getCores(user.uid),
-          tamanhoService.getTamanhos(user.uid),
-          stepService.getStepsByUser(user.uid),
-          produtoService.getProdutos(user.uid),
-        ]);
+      const [
+        categoriasData,
+        coresData,
+        tamanhosData,
+        etapasData,
+        produtosData,
+      ] = await Promise.all([
+        categoriaService.getCategorias(user.uid),
+        corService.getCores(user.uid),
+        tamanhoService.getTamanhos(user.uid),
+        stepService.getStepsByUser(user.uid),
+        produtoService.getProdutos(user.uid),
+      ]);
 
       setCategorias(categoriasData);
       setCores(coresData);
@@ -74,26 +176,28 @@ export const ProdutoTab: React.FC = () => {
         const tamanhosProduto = tamanhosData.filter((t) =>
           produto.tamanhosIds?.includes(t.id)
         );
-        
+
         // Reconstruir etapas de produção
-        const etapasProduto = (produto.etapasProducaoIds || []).map((etapaForm) => {
-          const etapa = etapasData.find((e) => e.id === etapaForm.etapaId);
-          if (etapa) {
-            return {
-              etapa: {
-                id: etapa.id,
-                nome: etapa.name,
-                descricao: etapa.description || undefined,
+        const etapasProduto = (produto.etapasProducaoIds || [])
+          .map((etapaForm) => {
+            const etapa = etapasData.find((e) => e.id === etapaForm.etapaId);
+            if (etapa) {
+              return {
+                etapa: {
+                  id: etapa.id,
+                  nome: etapa.name,
+                  descricao: etapa.description || undefined,
+                  custo: etapaForm.custo,
+                  ativo: true,
+                  createdAt: etapa.createdAt,
+                },
                 custo: etapaForm.custo,
-                ativo: true,
-                createdAt: etapa.createdAt,
-              },
-              custo: etapaForm.custo,
-              ordem: etapaForm.ordem,
-            };
-          }
-          return null;
-        }).filter((item): item is NonNullable<typeof item> => item !== null);
+                ordem: etapaForm.ordem,
+              };
+            }
+            return null;
+          })
+          .filter((item): item is NonNullable<typeof item> => item !== null);
 
         return {
           ...produto,
@@ -141,18 +245,6 @@ export const ProdutoTab: React.FC = () => {
     }
   };
 
-  const handleDeleteCategoria = async (id: string) => {
-    if (!confirm("Tem certeza que deseja excluir esta categoria?")) return;
-
-    try {
-      await categoriaService.deleteCategoria(id);
-      await loadAllData(); // Recarregar dados
-    } catch (error) {
-      console.error("Erro ao excluir categoria:", error);
-      alert("Erro ao excluir categoria");
-    }
-  };
-
   // Funções para gerenciar cores
   const handleAddCor = async (corForm: CorForm) => {
     if (!user) return;
@@ -176,18 +268,6 @@ export const ProdutoTab: React.FC = () => {
     }
   };
 
-  const handleDeleteCor = async (id: string) => {
-    if (!confirm("Tem certeza que deseja excluir esta cor?")) return;
-
-    try {
-      await corService.deleteCor(id);
-      await loadAllData(); // Recarregar dados
-    } catch (error) {
-      console.error("Erro ao excluir cor:", error);
-      alert("Erro ao excluir cor");
-    }
-  };
-
   // Funções para gerenciar tamanhos
   const handleAddTamanho = async (tamanhoForm: TamanhoForm) => {
     if (!user) return;
@@ -208,18 +288,6 @@ export const ProdutoTab: React.FC = () => {
     } catch (error) {
       console.error("Erro ao editar tamanho:", error);
       alert("Erro ao editar tamanho");
-    }
-  };
-
-  const handleDeleteTamanho = async (id: string) => {
-    if (!confirm("Tem certeza que deseja excluir este tamanho?")) return;
-
-    try {
-      await tamanhoService.deleteTamanho(id);
-      await loadAllData(); // Recarregar dados
-    } catch (error) {
-      console.error("Erro ao excluir tamanho:", error);
-      alert("Erro ao excluir tamanho");
     }
   };
 
@@ -253,18 +321,6 @@ export const ProdutoTab: React.FC = () => {
     }
   };
 
-  const handleDeleteProduto = async (id: string) => {
-    if (!confirm("Tem certeza que deseja excluir este produto?")) return;
-
-    try {
-      await produtoService.deleteProduto(id);
-      await loadAllData(); // Recarregar dados
-    } catch (error) {
-      console.error("Erro ao excluir produto:", error);
-      alert("Erro ao excluir produto");
-    }
-  };
-
   const tabs = [
     { key: "produtos", label: "Produtos", icon: Package },
     { key: "categorias", label: "Categorias", icon: Tag },
@@ -283,7 +339,7 @@ export const ProdutoTab: React.FC = () => {
             tamanhos={tamanhos}
             onAdd={handleAddProduto}
             onEdit={handleEditProduto}
-            onDelete={handleDeleteProduto}
+            onDelete={(id) => handleDeleteClick(id, "produto")}
           />
         );
       case "categorias":
@@ -292,7 +348,7 @@ export const ProdutoTab: React.FC = () => {
             categorias={categorias}
             onAdd={handleAddCategoria}
             onEdit={handleEditCategoria}
-            onDelete={handleDeleteCategoria}
+            onDelete={(id) => handleDeleteClick(id, "categoria")}
           />
         );
       case "cores":
@@ -301,7 +357,7 @@ export const ProdutoTab: React.FC = () => {
             cores={cores}
             onAdd={handleAddCor}
             onEdit={handleEditCor}
-            onDelete={handleDeleteCor}
+            onDelete={(id) => handleDeleteClick(id, "cor")}
           />
         );
       case "tamanhos":
@@ -310,7 +366,7 @@ export const ProdutoTab: React.FC = () => {
             tamanhos={tamanhos}
             onAdd={handleAddTamanho}
             onEdit={handleEditTamanho}
-            onDelete={handleDeleteTamanho}
+            onDelete={(id) => handleDeleteClick(id, "tamanho")}
           />
         );
       default:
@@ -351,6 +407,22 @@ export const ProdutoTab: React.FC = () => {
           <div className="product-tab-content">{renderTabContent()}</div>
         </div>
       )}
+
+      <DeleteConfirmModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setItemToDelete(null);
+          setDeleteItemType(null);
+        }}
+        onConfirm={handleConfirmDelete}
+        itemName={getItemName() || ""}
+        message={getDeleteMessage()}
+        loading={isDeleting}
+        title="Confirmar Exclusão"
+        confirmText="Excluir"
+        cancelText="Cancelar"
+      />
     </div>
   );
 };

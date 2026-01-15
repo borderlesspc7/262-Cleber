@@ -5,6 +5,7 @@ import { stepService } from "../../services/stepService";
 import { StepModal } from "../steps/StepModal";
 import type { ProductionStep, CreateStepData } from "../../types/step";
 import toast from "react-hot-toast";
+import { DeleteConfirmModal } from "../../components/ui/DeleteConfirmModal/DeleteConfirmModal";
 import "./EtapasTab.css";
 
 export const EtapasTab: React.FC = () => {
@@ -14,6 +15,10 @@ export const EtapasTab: React.FC = () => {
   const [stepToEdit, setStepToEdit] = useState<ProductionStep | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingSteps, setIsLoadingSteps] = useState(true);
+
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const loadSteps = async () => {
     if (!user) return;
@@ -78,14 +83,28 @@ export const EtapasTab: React.FC = () => {
     setStepToEdit(null);
   };
 
-  const handleDeleteStep = async (stepId: string) => {
-    if (!confirm("Tem certeza que deseja excluir esta etapa?")) return;
+  const handleDeleteClick = (id: string) => {
+    setItemToDelete(id);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!itemToDelete) return;
 
     try {
-      await stepService.deleteStep(stepId);
-      await loadSteps(); // Recarregar a lista
+      setIsDeleting(true);
+      await stepService.deleteStep(itemToDelete);
+      await loadSteps();
+      setIsDeleteModalOpen(false);
+      setItemToDelete(null);
+      toast.success("Etapa excluída com sucesso!", {
+        icon: <Check size={20} />,
+      });
     } catch (error) {
-      console.error("Erro ao excluir etapa:", error);
+      console.error("Erro ao deletar etapa:", error);
+      toast.error("Erro ao deletar etapa. Tente novamente.");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -159,7 +178,7 @@ export const EtapasTab: React.FC = () => {
                           </button>
                           <button
                             className="etapas-action etapas-delete"
-                            onClick={() => handleDeleteStep(step.id)}
+                            onClick={() => handleDeleteClick(step.id)}
                             title="Excluir etapa"
                           >
                             <Trash2 size={14} />
@@ -181,6 +200,21 @@ export const EtapasTab: React.FC = () => {
         onSubmit={handleCreateStep}
         stepToEdit={stepToEdit}
         isLoading={isLoading}
+      />
+
+      <DeleteConfirmModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setItemToDelete(null);
+        }}
+        onConfirm={handleConfirmDelete}
+        itemName={steps.find((s) => s.id === itemToDelete)?.name || ""}
+        loading={isDeleting}
+        title="Confirmar Exclusão"
+        message="Tem certeza que deseja excluir esta etapa?"
+        confirmText="Excluir"
+        cancelText="Cancelar"
       />
     </div>
   );

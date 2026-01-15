@@ -20,6 +20,7 @@ import type { ProductionOrder } from "../../types/order";
 import type { Produto, Tamanho } from "../../types/product";
 import { OrderModal } from "../orders/OrderModal";
 import toast from "react-hot-toast";
+import { DeleteConfirmModal } from "../../components/ui/DeleteConfirmModal/DeleteConfirmModal";
 import "./OrdemProducoesTab.css";
 
 const PRIORITY_LABELS = {
@@ -44,6 +45,51 @@ export const OrdemProducoesTab: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderToEdit, setOrderToEdit] = useState<ProductionOrder | null>(null);
 
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [orderToDelete, setOrderToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDeleteClick = (id: string) => {
+    setOrderToDelete(id);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!orderToDelete) return;
+
+    try {
+      try {
+        const progress = await productionProgressService.getProgressByOrderId(
+          orderToDelete
+        );
+        if (progress) {
+          await productionProgressService.deleteProgress(progress.id);
+        }
+      } catch (error) {
+        console.error("Erro ao deletar progresso:", error);
+      }
+
+      try {
+        await financeiroService.deleteLancamentosByOrdem(orderToDelete);
+      } catch (error) {
+        console.error("Erro ao deletar lançamentos financeiros:", error);
+      }
+
+      await orderService.deleteOrder(orderToDelete);
+      await loadData();
+      setIsDeleteModalOpen(false);
+      setOrderToDelete(null);
+      toast.success("Ordem de produção excluída com sucesso!", {
+        icon: <Check size={20} />,
+      });
+    } catch (error) {
+      console.error("Erro ao deletar ordem de produção:", error);
+      toast.error("Erro ao deletar ordem de produção. Tente novamente.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const loadData = async () => {
     if (!user) return;
 
@@ -62,9 +108,7 @@ export const OrdemProducoesTab: React.FC = () => {
       return {
         ...produto,
         tamanhos:
-          tamanhosProduto.length > 0
-            ? tamanhosProduto
-            : produto.tamanhos || [],
+          tamanhosProduto.length > 0 ? tamanhosProduto : produto.tamanhos || [],
       };
     });
 
@@ -170,45 +214,6 @@ export const OrdemProducoesTab: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const handleDeleteOrder = async (orderId: string) => {
-    const order = orders.find((o) => o.id === orderId);
-    if (!order) return;
-
-    const confirmMessage = `Tem certeza que deseja excluir a ordem ${order.codigo}?\n\nEsta ação não pode ser desfeita e também excluirá os lançamentos financeiros associados.`;
-    if (!window.confirm(confirmMessage)) return;
-
-    try {
-      // Deletar progresso associado se existir
-      try {
-        const progress = await productionProgressService.getProgressByOrderId(orderId);
-        if (progress) {
-          await productionProgressService.deleteProgress(progress.id);
-        }
-      } catch (error) {
-        console.error("Erro ao deletar progresso:", error);
-        // Continua mesmo se não conseguir deletar o progresso
-      }
-
-      // Deletar lançamentos financeiros associados
-      try {
-        await financeiroService.deleteLancamentosByOrdem(orderId);
-      } catch (error) {
-        console.error("Erro ao deletar lançamentos financeiros:", error);
-        // Continua mesmo se não conseguir deletar os lançamentos
-      }
-
-      // Deletar ordem
-      await orderService.deleteOrder(orderId);
-      await loadData();
-      toast.success("Ordem de produção excluída com sucesso!", {
-        icon: <Check size={20} />,
-      });
-    } catch (error) {
-      console.error("Erro ao excluir ordem:", error);
-      toast.error("Erro ao excluir ordem de produção. Tente novamente.");
-    }
-  };
-
   return (
     <div className="ordens-container">
       <header className="ordens-header">
@@ -235,13 +240,13 @@ export const OrdemProducoesTab: React.FC = () => {
       <section className="ordens-list">
         {filteredOrders.map((order) => {
           const produto = produtos.find((p) => p.id === order.produtoId);
-          
+
           // Primeiro, tentar usar os tamanhos do produto
           let tamanhosOrdenados = produto?.tamanhos
             ? [...produto.tamanhos].sort((a, b) => a.ordem - b.ordem)
             : [];
-          
-          // Se não houver tamanhos no produto, mas a grade tem dados, 
+
+          // Se não houver tamanhos no produto, mas a grade tem dados,
           // extrair as chaves da grade e buscar os tamanhos correspondentes
           if (tamanhosOrdenados.length === 0 && order.grade.length > 0) {
             const primeiraLinha = order.grade[0];
@@ -253,7 +258,7 @@ export const OrdemProducoesTab: React.FC = () => {
                 .sort((a, b) => a.ordem - b.ordem);
             }
           }
-          
+
           return (
             <article key={order.id} className="ordem-card">
               <div className="ordem-card__header">
@@ -301,7 +306,7 @@ export const OrdemProducoesTab: React.FC = () => {
                     </button>
                     <button
                       className="icon-button icon-button-danger"
-                      onClick={() => handleDeleteOrder(order.id)}
+                      onClick={() => handleDeleteClick(order.id)}
                       title="Excluir ordem"
                     >
                       <Trash2 size={16} />
@@ -349,11 +354,13 @@ export const OrdemProducoesTab: React.FC = () => {
 
                 <div className="ordem-card__grade-section">
                   <h4 className="ordem-card__grade-title">Grade de Produção</h4>
-                  <div 
+                  <div
                     className="ordem-card__table"
-                    style={{
-                      '--tamanhos-count': tamanhosOrdenados.length
-                    } as React.CSSProperties}
+                    style={
+                      {
+                        "--tamanhos-count": tamanhosOrdenados.length,
+                      } as React.CSSProperties
+                    }
                   >
                     <div className="ordem-card__table-header">
                       <span>Cor</span>
@@ -365,7 +372,7 @@ export const OrdemProducoesTab: React.FC = () => {
                     {order.grade.map((row) => {
                       // Garantir que quantidades existe e é um objeto
                       const quantidades = row.quantidades || {};
-                      
+
                       return (
                         <div key={row.corId} className="ordem-card__table-row">
                           <span>{row.corNome}</span>
@@ -402,6 +409,21 @@ export const OrdemProducoesTab: React.FC = () => {
         onSubmit={handleSubmit}
         isSubmitting={isSubmitting}
         orderToEdit={orderToEdit ?? undefined}
+      />
+
+      <DeleteConfirmModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setOrderToDelete(null);
+        }}
+        onConfirm={handleConfirmDelete}
+        itemName={orders.find((o) => o.id === orderToDelete)?.codigo || ""}
+        loading={isDeleting}
+        title="Confirmar Exclusão"
+        message="Tem certeza que deseja excluir esta ordem de produção?"
+        confirmText="Excluir"
+        cancelText="Cancelar"
       />
     </div>
   );

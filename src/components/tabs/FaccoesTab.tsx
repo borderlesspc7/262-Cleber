@@ -13,6 +13,7 @@ import { faccaoService } from "../../services/faccaoService";
 import type { Faccao } from "../../types/faccao";
 import { FaccaoModal } from "../faccoes/FaccaoModal";
 import toast from "react-hot-toast";
+import { DeleteConfirmModal } from "../../components/ui/DeleteConfirmModal/DeleteConfirmModal";
 import "./FaccoesTab.css";
 
 export const FaccoesTab: React.FC = () => {
@@ -22,6 +23,35 @@ export const FaccoesTab: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [faccaoToEdit, setFaccaoToEdit] = useState<Faccao | null>(null);
+
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDeleteClick = (id: string) => {
+    setItemToDelete(id);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!itemToDelete) return;
+
+    try {
+      setIsDeleting(true);
+      await faccaoService.deleteFaccao(itemToDelete);
+      await loadFaccoes();
+      setIsDeleteModalOpen(false);
+      setItemToDelete(null);
+      toast.success("Facção excluída com sucesso!", {
+        icon: <Check size={20} />,
+      });
+    } catch (error) {
+      console.error("Erro ao deletar facção:", error);
+      toast.error("Erro ao deletar facção. Tente novamente.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   useEffect(() => {
     loadFaccoes();
@@ -87,147 +117,161 @@ export const FaccoesTab: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (id: string) => {
-    if (window.confirm("Tem certeza que deseja excluir esta facção?")) {
-      try {
-        await faccaoService.deleteFaccao(id);
-        await loadFaccoes();
-      } catch (error) {
-        console.error("Erro ao deletar facção:", error);
-        alert("Erro ao deletar facção. Tente novamente.");
-      }
-    }
-  };
-
   const handleNewFaccao = () => {
     setFaccaoToEdit(null);
     setIsModalOpen(true);
   };
 
   return (
-    <div className="faccoes-container">
-      <div className="faccoes-header">
-        <div className="faccoes-title-section">
-          <h1 className="faccoes-title">Facções / Terceirizados</h1>
-          <p className="faccoes-subtitle">
-            Gerencie seus parceiros de produção
-          </p>
-        </div>
-        <button className="faccoes-add-button" onClick={handleNewFaccao}>
-          <span className="faccoes-add-icon">+</span>
-          <span className="faccoes-add-text">Nova Facção</span>
-        </button>
+    <>
+      <div className="header-container">
+        <h2 className="header-title-faccoes">Facções / Terceirizados</h2>
+        <p className="header-subtitle-faccoes">
+          Gerencie seus parceiros de produção
+        </p>
       </div>
 
-      <div className="faccoes-search-container">
-        <div className="faccoes-search-box">
-          <Search size={20} className="faccoes-search-icon" />
-          <input
-            type="text"
-            className="faccoes-search-input"
-            placeholder="Buscar por nome ou serviço..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-      </div>
-
-      <div className="faccoes-content">
-        {loading ? (
-          <div className="faccoes-loading">
-            <p>Carregando facções...</p>
-          </div>
-        ) : filteredFaccoes.length === 0 ? (
-          <div className="faccoes-empty">
-            <Users size={48} />
-            <p>
-              {searchTerm
-                ? "Nenhuma facção encontrada com esse termo"
-                : "Nenhuma facção cadastrada"}
+      <div className="faccoes-container">
+        <div className="faccoes-header">
+          <div className="faccoes-title-section">
+            <h1 className="faccoes-title">Facções / Terceirizados</h1>
+            <p className="faccoes-subtitle">
+              Gerencie seus parceiros de produção
             </p>
-            {!searchTerm && (
-              <p className="faccoes-empty-subtitle">
-                Clique em "Nova Facção" para adicionar um parceiro
+          </div>
+          <button className="faccoes-add-button" onClick={handleNewFaccao}>
+            <span className="faccoes-add-icon">+</span>
+            <span className="faccoes-add-text">Nova Facção</span>
+          </button>
+        </div>
+
+        <div className="faccoes-search-container">
+          <div className="faccoes-search-box">
+            <Search size={20} className="faccoes-search-icon" />
+            <input
+              type="text"
+              className="faccoes-search-input"
+              placeholder="Buscar por nome ou serviço..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div className="faccoes-content">
+          {loading ? (
+            <div className="faccoes-loading">
+              <p>Carregando facções...</p>
+            </div>
+          ) : filteredFaccoes.length === 0 ? (
+            <div className="faccoes-empty">
+              <Users size={48} />
+              <p>
+                {searchTerm
+                  ? "Nenhuma facção encontrada com esse termo"
+                  : "Nenhuma facção cadastrada"}
               </p>
-            )}
-          </div>
-        ) : (
-          <div className="faccoes-grid">
-            {filteredFaccoes.map((faccao) => (
-              <div key={faccao.id} className="faccao-card">
-                <div className="faccao-card-header">
-                  <div className="faccao-avatar">
-                    <Users size={24} />
+              {!searchTerm && (
+                <p className="faccoes-empty-subtitle">
+                  Clique em "Nova Facção" para adicionar um parceiro
+                </p>
+              )}
+            </div>
+          ) : (
+            <div className="faccoes-grid">
+              {filteredFaccoes.map((faccao) => (
+                <div key={faccao.id} className="faccao-card">
+                  <div className="faccao-card-header">
+                    <div className="faccao-avatar">
+                      <Users size={24} />
+                    </div>
+                    <div className="faccao-header-info">
+                      <h3 className="faccao-name">{faccao.nome}</h3>
+                      {faccao.ativo && (
+                        <span className="faccao-status">Ativo</span>
+                      )}
+                    </div>
+                    <div className="faccao-actions">
+                      <button
+                        className="faccao-action-btn faccao-edit-btn"
+                        onClick={() => handleEdit(faccao)}
+                        title="Editar"
+                      >
+                        <Edit2 size={16} />
+                      </button>
+                      <button
+                        className="faccao-action-btn faccao-delete-btn"
+                        onClick={() =>
+                          faccao.id && handleDeleteClick(faccao.id)
+                        }
+                        title="Excluir"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                   </div>
-                  <div className="faccao-header-info">
-                    <h3 className="faccao-name">{faccao.nome}</h3>
-                    {faccao.ativo && (
-                      <span className="faccao-status">Ativo</span>
-                    )}
-                  </div>
-                  <div className="faccao-actions">
-                    <button
-                      className="faccao-action-btn faccao-edit-btn"
-                      onClick={() => handleEdit(faccao)}
-                      title="Editar"
-                    >
-                      <Edit2 size={16} />
-                    </button>
-                    <button
-                      className="faccao-action-btn faccao-delete-btn"
-                      onClick={() => faccao.id && handleDelete(faccao.id)}
-                      title="Excluir"
-                    >
-                      <Trash2 size={16} />
-                    </button>
+
+                  <div className="faccao-card-body">
+                    <div className="faccao-info-row">
+                      <MapPin size={16} className="faccao-icon" />
+                      <span className="faccao-info-text">
+                        {faccao.enderecoCompleto}
+                      </span>
+                    </div>
+
+                    <div className="faccao-servicos">
+                      <span className="faccao-servicos-label">Serviço:</span>
+                      <span className="faccao-servico-tag">
+                        {faccao.servicoPrestado}
+                      </span>
+                    </div>
+
+                    <div className="faccao-contact">
+                      {faccao.telefone && (
+                        <div className="faccao-contact-item">
+                          <Phone size={14} className="faccao-contact-icon" />
+                          <span>Telefone: {faccao.telefone}</span>
+                        </div>
+                      )}
+                      {faccao.email && (
+                        <div className="faccao-contact-item">
+                          <Mail size={14} className="faccao-contact-icon" />
+                          <span>E-mail: {faccao.email}</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
+              ))}
+            </div>
+          )}
+        </div>
 
-                <div className="faccao-card-body">
-                  <div className="faccao-info-row">
-                    <MapPin size={16} className="faccao-icon" />
-                    <span className="faccao-info-text">
-                      {faccao.enderecoCompleto}
-                    </span>
-                  </div>
+        <FaccaoModal
+          isOpen={isModalOpen}
+          onClose={() => {
+            setIsModalOpen(false);
+            setFaccaoToEdit(null);
+          }}
+          onSave={handleSave}
+          faccaoToEdit={faccaoToEdit}
+        />
 
-                  <div className="faccao-servicos">
-                    <span className="faccao-servicos-label">Serviço:</span>
-                    <span className="faccao-servico-tag">
-                      {faccao.servicoPrestado}
-                    </span>
-                  </div>
-
-                  <div className="faccao-contact">
-                    {faccao.telefone && (
-                      <div className="faccao-contact-item">
-                        <Phone size={14} className="faccao-contact-icon" />
-                        <span>Telefone: {faccao.telefone}</span>
-                      </div>
-                    )}
-                    {faccao.email && (
-                      <div className="faccao-contact-item">
-                        <Mail size={14} className="faccao-contact-icon" />
-                        <span>E-mail: {faccao.email}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+        <DeleteConfirmModal
+          isOpen={isDeleteModalOpen}
+          onClose={() => {
+            setIsDeleteModalOpen(false);
+            setItemToDelete(null);
+          }}
+          onConfirm={handleConfirmDelete}
+          itemName={faccoes.find((f) => f.id === itemToDelete)?.nome || ""}
+          loading={isDeleting}
+          title="Confirmar Exclusão"
+          message="Tem certeza que deseja excluir esta facção?"
+          confirmText="Excluir"
+          cancelText="Cancelar"
+        />
       </div>
-
-      <FaccaoModal
-        isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false);
-          setFaccaoToEdit(null);
-        }}
-        onSave={handleSave}
-        faccaoToEdit={faccaoToEdit}
-      />
-    </div>
+    </>
   );
 };
