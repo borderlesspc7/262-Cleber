@@ -8,6 +8,7 @@ import { ProdutoTab } from "../../components/tabs/ProdutoTab";
 import { OrdemProducoesTab } from "../../components/tabs/OrdemProducoesTab";
 import { GestaoProducoesTab } from "../../components/tabs/GestaoProducoesTab";
 import { FinanceiroTab } from "../../components/tabs/FinanceiroTab";
+import { RelatoriosTab } from "../../components/tabs/RelatoriosTab";
 import "./Dashboard.css";
 
 type TabType =
@@ -18,7 +19,8 @@ type TabType =
   | "produto"
   | "ordemProducoes"
   | "gestaoProducoes"
-  | "financeiro";
+  | "financeiro"
+  | "relatorios";
 
 export const DashboardPage = () => {
   const [activeTab, setActiveTab] = useState<TabType>("dashboard");
@@ -41,6 +43,8 @@ export const DashboardPage = () => {
         return <GestaoProducoesTab />;
       case "financeiro":
         return <FinanceiroTab />;
+      case "relatorios":
+        return <RelatoriosTab />;
       default:
         return <DashboardTab />;
     }

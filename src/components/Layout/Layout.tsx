@@ -8,6 +8,7 @@ import {
   ClipboardList,
   Cog,
   DollarSign,
+  BarChart3,
   LogOut,
   Menu,
   X,
@@ -78,6 +79,7 @@ export const Layout: React.FC<LayoutProps> = ({
     { icon: ClipboardList, label: "Ordem de Produções", key: "ordemProducoes" },
     { icon: Cog, label: "Gestão de Produções", key: "gestaoProducoes" },
     { icon: DollarSign, label: "Financeiro", key: "financeiro" },
+    { icon: BarChart3, label: "Relatórios", key: "relatorios" },
   ];
 
   const handleTabClick = (tabKey: string) => {
