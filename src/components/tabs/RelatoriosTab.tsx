@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from "react";
 import {
   TrendingUp,
   Package,
-  DollarSign,
   Users,
   Calendar,
   Download,
@@ -15,16 +14,14 @@ import { useAuth } from "../../hooks/useAuth";
 import { orderService } from "../../services/orderService";
 import { produtoService } from "../../services/productService";
 import { faccaoService } from "../../services/faccaoService";
-import { financeiroService } from "../../services/financeiroService";
 import { productionProgressService } from "../../services/productionProgressService";
 import type { ProductionOrder } from "../../types/order";
 import type { Produto } from "../../types/product";
 import type { Faccao } from "../../types/faccao";
-import type { LancamentoFinanceiro } from "../../types/financeiro";
 import type { ProductionOrderProgress } from "../../types/productionProgress";
 import "./RelatoriosTab.css";
 
-type RelatorioType = "producao" | "financeiro" | "performance";
+type RelatorioType = "producao" | "performance";
 type PeriodoType = "semana" | "mes" | "trimestre" | "ano";
 
 interface MetricaProducao {
@@ -33,14 +30,6 @@ interface MetricaProducao {
   ordensEmAndamento: number;
   taxaConclusao: number;
   tempoMedioPorEtapa: number;
-}
-
-interface MetricaFinanceira {
-  totalReceitas: number;
-  totalDespesas: number;
-  saldoAtual: number;
-  pendencias: number;
-  pagamentosFuturos: number;
 }
 
 interface FaccaoPerformance {
@@ -69,16 +58,6 @@ export const RelatoriosTab: React.FC = () => {
     taxaConclusao: 0,
     tempoMedioPorEtapa: 0,
   });
-
-  const [metricaFinanceira, setMetricaFinanceira] = useState<MetricaFinanceira>(
-    {
-      totalReceitas: 0,
-      totalDespesas: 0,
-      saldoAtual: 0,
-      pendencias: 0,
-      pagamentosFuturos: 0,
-    }
-  );
 
   const [faccoesPerformance, setFaccoesPerformance] = useState<
     FaccaoPerformance[]
@@ -130,39 +109,6 @@ export const RelatoriosTab: React.FC = () => {
         ordensEmAndamento,
         taxaConclusao,
         tempoMedioPorEtapa,
-      });
-    },
-    [periodo]
-  );
-
-  const calcularMetricasFinanceiras = useCallback(
-    (lancamentos: LancamentoFinanceiro[]) => {
-      const dataLimite = getDataLimite(periodo);
-      const lancamentosFiltrados = lancamentos.filter(
-        (lanc) => new Date(lanc.createdAt) >= dataLimite
-      );
-
-      const totalDespesas = lancamentosFiltrados.reduce(
-        (acc, lanc) => acc + lanc.valor,
-        0
-      );
-
-      const pendencias = lancamentosFiltrados.filter(
-        (lanc) => lanc.status === "pendente" || lanc.status === "atrasado"
-      ).length;
-
-      const valorPendente = lancamentosFiltrados
-        .filter(
-          (lanc) => lanc.status === "pendente" || lanc.status === "atrasado"
-        )
-        .reduce((acc, lanc) => acc + lanc.valor, 0);
-
-      setMetricaFinanceira({
-        totalReceitas: 0, // TODO: Implementar quando houver módulo de vendas
-        totalDespesas,
-        saldoAtual: -totalDespesas,
-        pendencias,
-        pagamentosFuturos: valorPendente,
       });
     },
     [periodo]
@@ -238,33 +184,19 @@ export const RelatoriosTab: React.FC = () => {
           productionProgressService.getAllProgress(user.uid),
         ]);
 
-      // Carregar lançamentos financeiros
-      const [pendentes, pagos] = await Promise.all([
-        financeiroService.getLancamentosPendentes(user.uid),
-        financeiroService.getLancamentosPagos(user.uid),
-      ]);
-
-      const allLancamentos = [...pendentes, ...pagos];
-
       setOrders(ordersData);
       setProdutos(produtosData);
       setFaccoes(faccoesData);
 
       // Calcular métricas
       calcularMetricasProducao(ordersData, progressosData);
-      calcularMetricasFinanceiras(allLancamentos);
       calcularPerformanceFaccoes(progressosData, faccoesData);
     } catch (error) {
       console.error("Erro ao carregar dados:", error);
     } finally {
       setLoading(false);
     }
-  }, [
-    user,
-    calcularMetricasProducao,
-    calcularMetricasFinanceiras,
-    calcularPerformanceFaccoes,
-  ]);
+  }, [user, calcularMetricasProducao, calcularPerformanceFaccoes]);
 
   useEffect(() => {
     loadData();
@@ -358,15 +290,6 @@ export const RelatoriosTab: React.FC = () => {
         >
           <BarChart3 size={20} />
           Produção
-        </button>
-        <button
-          className={`relatorio-tab ${
-            activeTab === "financeiro" ? "active" : ""
-          }`}
-          onClick={() => setActiveTab("financeiro")}
-        >
-          <DollarSign size={20} />
-          Financeiro
         </button>
         <button
           className={`relatorio-tab ${
@@ -530,110 +453,6 @@ export const RelatoriosTab: React.FC = () => {
               <div>
                 <strong>Tempo Médio por Etapa</strong>
                 <p>{metricaProducao.tempoMedioPorEtapa.toFixed(1)} dias</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {activeTab === "financeiro" && (
-          <div className="relatorio-section">
-            <h3 className="section-title">Relatório Financeiro</h3>
-
-            {/* Cards de Métricas Financeiras */}
-            <div className="metrics-grid">
-              <div className="metric-card">
-                <div className="metric-icon red">
-                  <DollarSign size={24} />
-                </div>
-                <div className="metric-info">
-                  <span className="metric-label">Total Despesas</span>
-                  <span className="metric-value">
-                    {metricaFinanceira.totalDespesas.toLocaleString("pt-BR", {
-                      style: "currency",
-                      currency: "BRL",
-                    })}
-                  </span>
-                </div>
-              </div>
-
-              <div className="metric-card">
-                <div className="metric-icon orange">
-                  <Activity size={24} />
-                </div>
-                <div className="metric-info">
-                  <span className="metric-label">Pendências</span>
-                  <span className="metric-value">
-                    {metricaFinanceira.pendencias}
-                  </span>
-                </div>
-              </div>
-
-              <div className="metric-card">
-                <div className="metric-icon purple">
-                  <Calendar size={24} />
-                </div>
-                <div className="metric-info">
-                  <span className="metric-label">Pagamentos Futuros</span>
-                  <span className="metric-value">
-                    {metricaFinanceira.pagamentosFuturos.toLocaleString(
-                      "pt-BR",
-                      {
-                        style: "currency",
-                        currency: "BRL",
-                      }
-                    )}
-                  </span>
-                </div>
-              </div>
-
-              <div className="metric-card">
-                <div className="metric-icon blue">
-                  <TrendingUp size={24} />
-                </div>
-                <div className="metric-info">
-                  <span className="metric-label">Saldo Período</span>
-                  <span className="metric-value">
-                    {metricaFinanceira.saldoAtual.toLocaleString("pt-BR", {
-                      style: "currency",
-                      currency: "BRL",
-                    })}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Análise de Custos */}
-            <div className="chart-container">
-              <h4 className="chart-title">Análise de Custos por Período</h4>
-              <div className="custos-analise">
-                <div className="custo-item">
-                  <span className="custo-label">Custos Diretos (Facções)</span>
-                  <span className="custo-valor">
-                    {metricaFinanceira.totalDespesas.toLocaleString("pt-BR", {
-                      style: "currency",
-                      currency: "BRL",
-                    })}
-                  </span>
-                  <div className="custo-bar">
-                    <div className="custo-bar-fill" style={{ width: "100%" }} />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Previsão */}
-            <div className="info-card warning">
-              <Activity size={20} />
-              <div>
-                <strong>Previsão de Pagamentos</strong>
-                <p>
-                  {metricaFinanceira.pendencias} lançamentos pendentes
-                  totalizando{" "}
-                  {metricaFinanceira.pagamentosFuturos.toLocaleString("pt-BR", {
-                    style: "currency",
-                    currency: "BRL",
-                  })}
-                </p>
               </div>
             </div>
           </div>
