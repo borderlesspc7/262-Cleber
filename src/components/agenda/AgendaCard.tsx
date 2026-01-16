@@ -15,11 +15,24 @@ export const AgendaCard: React.FC = () => {
 
   const loadTasks = async () => {
     if (!user) return;
-    
+
     try {
       setIsLoadingTasks(true);
       const userTasks = await taskService.getTasksByUser(user.uid);
-      setTasks(userTasks);
+
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0);
+      const amanha = new Date();
+      amanha.setDate(amanha.getDate() + 1);
+
+      const taskDoDia = userTasks.filter((task) => {
+        const taskDate = new Date(task.createdAt);
+        taskDate.setHours(0, 0, 0, 0);
+        return taskDate.getTime() === hoje.getTime();
+      });
+      setTasks(taskDoDia);
+
+      await taskService.deleteOldTasks(user.uid);
     } catch (error) {
       console.error("Erro ao carregar tarefas:", error);
     } finally {
@@ -33,7 +46,7 @@ export const AgendaCard: React.FC = () => {
 
   const handleCreateTask = async (taskData: CreateTaskData) => {
     if (!user) return;
-    
+
     try {
       setIsLoading(true);
       await taskService.createTask(user.uid, taskData);
@@ -57,7 +70,7 @@ export const AgendaCard: React.FC = () => {
 
   const handleDeleteTask = async (taskId: string) => {
     if (!confirm("Tem certeza que deseja excluir esta tarefa?")) return;
-    
+
     try {
       await taskService.deleteTask(taskId);
       await loadTasks(); // Recarregar a lista
@@ -100,9 +113,7 @@ export const AgendaCard: React.FC = () => {
             <Clock className="agenda-icon" size={20} />
             <h3>Agenda do Dia</h3>
           </div>
-          <p className="agenda-subtitle">
-            Suas tarefas e compromissos de hoje
-          </p>
+          <p className="agenda-subtitle">Suas tarefas e compromissos de hoje</p>
         </div>
         <button
           className="agenda-add-button"
@@ -129,13 +140,19 @@ export const AgendaCard: React.FC = () => {
             {tasks.map((task) => (
               <div
                 key={task.id}
-                className={`agenda-task ${task.completed ? "task-completed" : ""}`}
+                className={`agenda-task ${
+                  task.completed ? "task-completed" : ""
+                }`}
               >
                 <div className="task-content">
                   <div className="task-main">
                     <h4 className="task-description">{task.description}</h4>
                     <div className="task-meta">
-                      <span className={`task-priority ${getPriorityColor(task.priority)}`}>
+                      <span
+                        className={`task-priority ${getPriorityColor(
+                          task.priority
+                        )}`}
+                      >
                         {getPriorityText(task.priority)}
                       </span>
                       <span className="task-time">{task.time}</span>
@@ -146,8 +163,14 @@ export const AgendaCard: React.FC = () => {
                       className={`task-action task-complete ${
                         task.completed ? "task-completed-icon" : ""
                       }`}
-                      onClick={() => handleToggleComplete(task.id, !task.completed)}
-                      title={task.completed ? "Marcar como pendente" : "Marcar como concluída"}
+                      onClick={() =>
+                        handleToggleComplete(task.id, !task.completed)
+                      }
+                      title={
+                        task.completed
+                          ? "Marcar como pendente"
+                          : "Marcar como concluída"
+                      }
                     >
                       <Check size={14} />
                     </button>

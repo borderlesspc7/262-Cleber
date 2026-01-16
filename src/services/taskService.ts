@@ -1,13 +1,13 @@
-import { 
-  collection, 
-  addDoc, 
-  updateDoc, 
-  deleteDoc, 
-  doc, 
-  query, 
-  where, 
-  getDocs, 
-  Timestamp 
+import {
+  collection,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  query,
+  where,
+  getDocs,
+  Timestamp,
 } from "firebase/firestore";
 import { db } from "../lib/firebaseconfig";
 import type { Task, CreateTaskData, UpdateTaskData } from "../types/task";
@@ -41,11 +41,8 @@ export const taskService = {
   async getTasksByUser(userId: string): Promise<Task[]> {
     try {
       // Primeiro, buscar todas as tarefas do usuário
-      const q = query(
-        collection(db, "tasks"),
-        where("userId", "==", userId)
-      );
-      
+      const q = query(collection(db, "tasks"), where("userId", "==", userId));
+
       const querySnapshot = await getDocs(q);
       const tasks: Task[] = [];
 
@@ -93,7 +90,10 @@ export const taskService = {
     }
   },
 
-  async toggleTaskCompletion(taskId: string, completed: boolean): Promise<void> {
+  async toggleTaskCompletion(
+    taskId: string,
+    completed: boolean
+  ): Promise<void> {
     try {
       const taskRef = doc(db, "tasks", taskId);
       await updateDoc(taskRef, {
@@ -103,6 +103,33 @@ export const taskService = {
     } catch (error) {
       console.error("Erro ao alterar status da tarefa:", error);
       throw new Error("Erro ao alterar status da tarefa");
+    }
+  },
+
+  async deleteOldTasks(userId: string): Promise<void> {
+    try {
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0);
+
+      const q = query(collection(db, "tasks"), where("userId", "==", userId));
+
+      const querySnapshot = await getDocs(q);
+      const deletePromises: Promise<void>[] = [];
+
+      querySnapshot.forEach((docSnapshot) => {
+        const data = docSnapshot.data();
+        const taskDate = data.createdAt.toDate();
+        taskDate.setHours(0, 0, 0, 0);
+
+        if (taskDate.getTime() < hoje.getTime()) {
+          deletePromises.push(deleteDoc(doc(db, "tasks", docSnapshot.id)));
+        }
+      });
+
+      await Promise.all(deletePromises);
+    } catch (error) {
+      console.error("Erro ao deletar tarefas antigas:", error);
+      throw new Error("Erro ao deletar tarefas antigas");
     }
   },
 };
