@@ -74,7 +74,6 @@ O sistema é um **ERP completo para gestão de produção têxtil** com as segui
 - Alertas de:
   - Ordens próximas do prazo
   - Pagamentos vencendo
-  - Estoque baixo
   - Etapas paradas há muito tempo
   - Novas tarefas atribuídas
 

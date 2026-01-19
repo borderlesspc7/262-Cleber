@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { authService } from "../../services/authService";
 import { companyService } from "../../services/companyService";
+import { NotificationCenter } from "../notifications/NotificationCenter";
 import type { Company } from "../../types/company";
 import "./Layout.css";
 import { useNavigate } from "react-router-dom";
@@ -88,6 +89,12 @@ export const Layout: React.FC<LayoutProps> = ({
     }
   };
 
+  const handleNotificationNavigate = (tab: string) => {
+    if (onTabChange) {
+      onTabChange(tab);
+    }
+  };
+
   return (
     <div className="layout-container">
       {/* Sidebar */}
@@ -156,7 +163,7 @@ export const Layout: React.FC<LayoutProps> = ({
             </h1>
           </div>
           <div className="header-right">
-            {/* User info or other header elements can go here */}
+            <NotificationCenter onNavigate={handleNotificationNavigate} />
           </div>
         </header>
 

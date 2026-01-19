@@ -3,6 +3,7 @@ import { orderService } from "../../services/orderService";
 import { produtoService } from "../../services/productService";
 import { faccaoService } from "../../services/faccaoService";
 import { productionProgressService } from "../../services/productionProgressService";
+import { notificationMonitor } from "../../services/notificationMonitorService";
 import { useAuth } from "../../hooks/useAuth";
 import { AgendaCard } from "../agenda/AgendaCard";
 import type { ProductionOrder } from "../../types/order";
@@ -44,12 +45,24 @@ export const DashboardTab = () => {
         setProdutos(produtosData);
         setFaccoes(faccoesData);
         setProgressos(progressosData);
+
+        // Iniciar monitoramento de notificações automáticas
+        if (!notificationMonitor.isActive()) {
+          notificationMonitor.start(user.uid, 5); // Verifica a cada 5 minutos
+        }
       } catch (error) {
         console.error("Erro ao carregar dados:", error);
       }
     };
 
     loadData();
+
+    // Cleanup: parar monitoramento ao desmontar
+    return () => {
+      if (notificationMonitor.isActive()) {
+        notificationMonitor.stop();
+      }
+    };
   }, [user]);
 
   // Função para obter etapa atual e status
