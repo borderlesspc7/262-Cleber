@@ -11,6 +11,7 @@ import type {
 } from "../../types/product";
 import { useAuth } from "../../hooks/useAuth";
 import "./products.css";
+import { currencyToNumber } from "../../utils/masks";
 
 interface ProdutoFormProps {
   produtos: Produto[];

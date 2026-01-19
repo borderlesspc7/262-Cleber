@@ -8,7 +8,7 @@ import { runAllNotificationChecks } from "../utils/notificationHelpers";
  * Executa verificações periódicas em todo o sistema
  */
 export class NotificationMonitorService {
-  private intervalId: NodeJS.Timeout | null = null;
+  private intervalId: ReturnType<typeof setInterval> | null = null;
   private isRunning = false;
   private userId: string | null = null;
 
