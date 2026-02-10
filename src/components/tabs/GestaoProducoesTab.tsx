@@ -42,6 +42,7 @@ export const GestaoProducoesTab: React.FC = () => {
   >(new Map());
   const [search, setSearch] = useState("");
   const [selectedStage, setSelectedStage] = useState<string>("all");
+  const [loading, setLoading] = useState(true);
 
   const [faccoes, setFaccoes] = useState<Faccao[]>([]);
   const [showFinalizeModal, setShowFinalizeModal] = useState(false);
@@ -55,6 +56,7 @@ export const GestaoProducoesTab: React.FC = () => {
     if (!user) return;
 
     try {
+      setLoading(true);
       const [ordersData, stepsData, faccoesData, produtosData] =
         await Promise.all([
           orderService.getOrders(user.uid),
@@ -152,6 +154,8 @@ export const GestaoProducoesTab: React.FC = () => {
       setProgressData(progressMap);
     } catch (error) {
       console.error("Erro ao carregar dados:", error);
+    } finally {
+      setLoading(false);
     }
   }, [user]);
 
@@ -473,6 +477,19 @@ export const GestaoProducoesTab: React.FC = () => {
       toast.error("Erro ao excluir ordem de produção. Tente novamente.");
     }
   };
+
+  if (loading) {
+    return (
+      <div className="gestao-producoes-container">
+        <header className="gestao-producoes-header">
+          <div>
+            <h2 className="gestao-producoes-title">Gestão de Produção</h2>
+            <p className="gestao-producoes-subtitle">Carregando dados...</p>
+          </div>
+        </header>
+      </div>
+    );
+  }
 
   return (
     <div className="gestao-producoes-container">

@@ -25,8 +25,9 @@ export const faccaoService = {
       });
       return docRef.id;
     } catch (error) {
-      console.error("Erro ao criar facção:", error);
-      throw error;
+      throw new Error(
+        `Erro ao criar facção: ${error instanceof Error ? error.message : "Erro desconhecido"}`
+      );
     }
   },
 
@@ -40,8 +41,9 @@ export const faccaoService = {
         ...doc.data(),
       })) as Faccao[];
     } catch (error) {
-      console.error("Erro ao buscar facções:", error);
-      throw error;
+      throw new Error(
+        `Erro ao buscar facções: ${error instanceof Error ? error.message : "Erro desconhecido"}`
+      );
     }
   },
 
@@ -54,8 +56,9 @@ export const faccaoService = {
         updatedAt: serverTimestamp(),
       });
     } catch (error) {
-      console.error("Erro ao atualizar facção:", error);
-      throw error;
+      throw new Error(
+        `Erro ao atualizar facção: ${error instanceof Error ? error.message : "Erro desconhecido"}`
+      );
     }
   },
 
@@ -64,8 +67,9 @@ export const faccaoService = {
     try {
       await deleteDoc(doc(db, COLLECTION_NAME, id));
     } catch (error) {
-      console.error("Erro ao deletar facção:", error);
-      throw error;
+      throw new Error(
+        `Erro ao deletar facção: ${error instanceof Error ? error.message : "Erro desconhecido"}`
+      );
     }
   },
 };

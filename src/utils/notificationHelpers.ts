@@ -1,4 +1,5 @@
 import { notificationService } from "../services/notificationService";
+import { getDaysDifference } from "./dateFormatter";
 import type { ProductionOrder } from "../types/order";
 import type { LancamentoFinanceiro } from "../types/financeiro";
 import type { ProductionOrderProgress } from "../types/productionProgress";
@@ -34,9 +35,7 @@ export const checkOrdersDeadline = async (
           );
 
           if (!jaExiste) {
-            const diasRestantes = Math.ceil(
-              (dataPrevista.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24)
-            );
+            const diasRestantes = getDaysDifference(dataPrevista, hoje);
 
             await notificationService.createNotification({
               userId,
@@ -88,9 +87,7 @@ export const checkPaymentsDue = async (
           );
 
           if (!jaExiste) {
-            const diasRestantes = Math.ceil(
-              (dataVencimento.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24)
-            );
+            const diasRestantes = getDaysDifference(dataVencimento, hoje);
 
             await notificationService.createNotification({
               userId,
@@ -119,9 +116,7 @@ export const checkPaymentsDue = async (
           );
 
           if (!jaExiste) {
-            const diasAtrasado = Math.ceil(
-              (hoje.getTime() - dataVencimento.getTime()) / (1000 * 60 * 60 * 24)
-            );
+            const diasAtrasado = getDaysDifference(hoje, dataVencimento);
 
             await notificationService.createNotification({
               userId,
@@ -167,9 +162,7 @@ export const checkStoppedStages = async (
       for (const etapa of progresso.etapas) {
         if (etapa.status === "pausada" && etapa.dataInicio) {
           const dataInicio = new Date(etapa.dataInicio);
-          const diasParada = Math.ceil(
-            (hoje.getTime() - dataInicio.getTime()) / (1000 * 60 * 60 * 24)
-          );
+          const diasParada = getDaysDifference(hoje, dataInicio);
 
           // Se está parada há mais de 3 dias
           if (diasParada > 3) {

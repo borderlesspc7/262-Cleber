@@ -12,6 +12,8 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 import { db } from "../lib/firebaseconfig";
+import { removeUndefinedFields } from "../utils/firestoreHelpers";
+import { formatDateToISO } from "../utils/dateFormatter";
 import type {
   ProductionOrderProgress,
   UpdateStageProgressPayload,
@@ -21,30 +23,6 @@ import type {
 import type { ProductionStep } from "../types/step";
 
 const COLLECTION = "producaoProgresso";
-
-// Função auxiliar para remover campos undefined de objetos StageProgress
-const removeUndefinedFields = (etapa: StageProgress): StageProgress => {
-  const cleaned: Partial<StageProgress> = {};
-
-  // Campos obrigatórios
-  cleaned.etapaId = etapa.etapaId;
-  cleaned.etapaNome = etapa.etapaNome;
-  cleaned.ordem = etapa.ordem;
-  cleaned.finalizadas = etapa.finalizadas ?? 0;
-  cleaned.defeituosas = etapa.defeituosas ?? 0;
-  cleaned.status = etapa.status;
-
-  // Campos opcionais (apenas se existirem)
-  if (etapa.responsavelId) cleaned.responsavelId = etapa.responsavelId;
-  if (etapa.responsavelNome) cleaned.responsavelNome = etapa.responsavelNome;
-  if (etapa.dataInicio) cleaned.dataInicio = etapa.dataInicio;
-  if (etapa.dataFim) cleaned.dataFim = etapa.dataFim;
-  if (etapa.observacoes && etapa.observacoes.length > 0) {
-    cleaned.observacoes = etapa.observacoes;
-  }
-
-  return cleaned as StageProgress;
-};
 
 export const productionProgressService = {
   async getProgressByOrderId(
@@ -117,7 +95,7 @@ export const productionProgressService = {
 
         // Adicionar dataInicio apenas para a primeira etapa
         if (index === 0) {
-          etapa.dataInicio = new Date().toISOString().split("T")[0];
+          etapa.dataInicio = formatDateToISO(new Date());
         }
 
         return etapa;
@@ -211,7 +189,7 @@ export const productionProgressService = {
       finalizadas,
       defeituosas,
       status: "finalizada",
-      dataFim: new Date().toISOString().split("T")[0],
+      dataFim: formatDateToISO(new Date()),
     });
   },
 
@@ -256,7 +234,7 @@ export const productionProgressService = {
             finalizadas,
             defeituosas,
             status: "finalizada",
-            dataFim: new Date().toISOString().split("T")[0],
+            dataFim: formatDateToISO(new Date()),
           };
 
           // Adicionar campos opcionais apenas se existirem
@@ -334,7 +312,7 @@ export const productionProgressService = {
             status: "em_andamento",
             responsavelId,
             responsavelNome,
-            dataInicio: new Date().toISOString().split("T")[0],
+            dataInicio: formatDateToISO(new Date()),
             finalizadas: 0,
             defeituosas: 0,
           };

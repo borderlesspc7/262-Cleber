@@ -3,6 +3,7 @@ import { orderService } from "../../services/orderService";
 import { produtoService } from "../../services/productService";
 import { faccaoService } from "../../services/faccaoService";
 import { productionProgressService } from "../../services/productionProgressService";
+import { financeiroService } from "../../services/financeiroService";
 import { notificationMonitor } from "../../services/notificationMonitorService";
 import { useAuth } from "../../hooks/useAuth";
 import { AgendaCard } from "../agenda/AgendaCard";
@@ -10,6 +11,7 @@ import type { ProductionOrder } from "../../types/order";
 import type { Produto } from "../../types/product";
 import type { Faccao } from "../../types/faccao";
 import type { ProductionOrderProgress } from "../../types/productionProgress";
+import type { LancamentoFinanceiro } from "../../types/financeiro";
 import {
   FileText,
   Package,
@@ -27,41 +29,46 @@ export const DashboardTab = () => {
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [faccoes, setFaccoes] = useState<Faccao[]>([]);
   const [progressos, setProgressos] = useState<ProductionOrderProgress[]>([]);
+  const [lancamentosPendentes, setLancamentosPendentes] = useState<LancamentoFinanceiro[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadData = async () => {
       if (!user) return;
 
       try {
-        const [ordersData, produtosData, faccoesData, progressosData] =
+        setLoading(true);
+        const [ordersData, produtosData, faccoesData, progressosData, lancamentosData] =
           await Promise.all([
             orderService.getOrders(user.uid),
             produtoService.getProdutos(user.uid),
             faccaoService.getFaccoes(),
             productionProgressService.getAllProgress(user.uid),
+            financeiroService.getLancamentosPendentes(user.uid),
           ]);
 
         setOrders(ordersData);
         setProdutos(produtosData);
         setFaccoes(faccoesData);
         setProgressos(progressosData);
+        setLancamentosPendentes(lancamentosData);
 
-        // Iniciar monitoramento de notificações automáticas
+        // Iniciar monitoramento de notificações automáticas apenas se não estiver ativo
         if (!notificationMonitor.isActive()) {
-          notificationMonitor.start(user.uid, 5); // Verifica a cada 5 minutos
+          notificationMonitor.start(user.uid, 5);
         }
       } catch (error) {
         console.error("Erro ao carregar dados:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
     loadData();
 
-    // Cleanup: parar monitoramento ao desmontar
+    // Cleanup: parar monitoramento ao desmontar componente
     return () => {
-      if (notificationMonitor.isActive()) {
-        notificationMonitor.stop();
-      }
+      notificationMonitor.stop();
     };
   }, [user]);
 
@@ -117,6 +124,20 @@ export const DashboardTab = () => {
     .slice(0, 4);
 
   // Calcula pendências do mês atual
+  const pendenciasMesAtual = lancamentosPendentes
+    .filter((l) => l.status === "pendente" || l.status === "atrasado")
+    .reduce((acc, l) => acc + l.valor, 0);
+
+  if (loading) {
+    return (
+      <div className="tab-content">
+        <div className="tab-header">
+          <h2 className="tab-title">Dashboard</h2>
+          <p className="tab-subtitle">Carregando dados...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="tab-content">
@@ -189,8 +210,13 @@ export const DashboardTab = () => {
           <div className="card-header">
             <div className="card-info">
               <h3 className="card-title">Pendências Financeiras</h3>
-              <span className="card-value">R$ 100,00</span>
-              <p className="card-subtitle">A pagar este mês</p>
+              <span className="card-value">
+                {new Intl.NumberFormat("pt-BR", {
+                  style: "currency",
+                  currency: "BRL",
+                }).format(pendenciasMesAtual)}
+              </span>
+              <p className="card-subtitle">A pagar</p>
             </div>
             <div className="card-icon yellow">
               <DollarSign size={16} />
@@ -199,7 +225,7 @@ export const DashboardTab = () => {
           <div className="card-footer">
             <span className="card-trend negative">
               <TrendingDown size={12} />
-              -5%
+              {lancamentosPendentes.length} lançamentos
             </span>
           </div>
         </div>

@@ -29,9 +29,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Inicializar como não logado - contexto controla tudo
-    setUser(null);
-    setLoading(false);
+    // Observar mudanças no estado de autenticação
+    const unsubscribe = authService.observeAuthState((user) => {
+      setUser(user);
+      setLoading(false);
+    });
+
+    // Cleanup: cancelar observação ao desmontar
+    return () => unsubscribe();
   }, []);
 
   const login = async (credentials: LoginCredentials) => {

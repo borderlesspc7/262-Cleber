@@ -4,21 +4,20 @@ import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
-  apiKey:
-    import.meta.env.VITE_FIREBASE_API_KEY ||
-    "AIzaSyDMjPxIn42jeTVD0qksgZjoM9JR7nxLTxo",
-  authDomain:
-    import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "cleber-9a012.firebaseapp.com",
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "cleber-9a012",
-  storageBucket:
-    import.meta.env.VITE_FIREBASE_STORAGE_BUCKET ||
-    "cleber-9a012.firebasestorage.app",
-  messagingSenderId:
-    import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "174918177595",
-  appId:
-    import.meta.env.VITE_FIREBASE_APP_ID ||
-    "1:174918177595:web:341eabeb3c8d8144a75d1e",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
 } as const;
+
+// Validar que todas as configurações foram fornecidas
+if (!firebaseConfig.apiKey || !firebaseConfig.authDomain) {
+  throw new Error(
+    "Firebase configuration is missing. Please check your .env file."
+  );
+}
 
 const app = initializeApp(firebaseConfig);
 

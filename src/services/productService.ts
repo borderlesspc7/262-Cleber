@@ -251,6 +251,11 @@ export const produtoService = {
     produtoForm: ProdutoForm
   ): Promise<string> {
     try {
+      // Validar que o produto tem etapas de produção
+      if (!produtoForm.etapasProducao || produtoForm.etapasProducao.length === 0) {
+        throw new Error("O produto deve ter pelo menos uma etapa de produção definida");
+      }
+
       const docRef = await addDoc(collection(db, "produtos"), {
         refCodigo: produtoForm.refCodigo,
         descricao: produtoForm.descricao,
@@ -272,6 +277,11 @@ export const produtoService = {
 
   async updateProduto(id: string, produtoForm: ProdutoForm): Promise<void> {
     try {
+      // Validar que o produto tem etapas de produção
+      if (!produtoForm.etapasProducao || produtoForm.etapasProducao.length === 0) {
+        throw new Error("O produto deve ter pelo menos uma etapa de produção definida");
+      }
+
       await updateDoc(doc(db, "produtos", id), {
         refCodigo: produtoForm.refCodigo,
         descricao: produtoForm.descricao,

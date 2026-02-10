@@ -44,6 +44,7 @@ export const OrdemProducoesTab: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderToEdit, setOrderToEdit] = useState<ProductionOrder | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [orderToDelete, setOrderToDelete] = useState<string | null>(null);
@@ -93,28 +94,35 @@ export const OrdemProducoesTab: React.FC = () => {
   const loadData = async () => {
     if (!user) return;
 
-    const [ordersData, produtosData, tamanhosData] = await Promise.all([
-      orderService.getOrders(user.uid),
-      produtoService.getProdutos(user.uid),
-      tamanhoService.getTamanhos(user.uid),
-    ]);
+    try {
+      setLoading(true);
+      const [ordersData, produtosData, tamanhosData] = await Promise.all([
+        orderService.getOrders(user.uid),
+        produtoService.getProdutos(user.uid),
+        tamanhoService.getTamanhos(user.uid),
+      ]);
 
-    // Reconstruir produtos com tamanhos completos
-    const produtosCompletos = produtosData.map((produto) => {
-      const tamanhosProduto = tamanhosData.filter((t) =>
-        produto.tamanhosIds?.includes(t.id)
-      );
+      // Reconstruir produtos com tamanhos completos
+      const produtosCompletos = produtosData.map((produto) => {
+        const tamanhosProduto = tamanhosData.filter((t) =>
+          produto.tamanhosIds?.includes(t.id)
+        );
 
-      return {
-        ...produto,
-        tamanhos:
-          tamanhosProduto.length > 0 ? tamanhosProduto : produto.tamanhos || [],
-      };
-    });
+        return {
+          ...produto,
+          tamanhos:
+            tamanhosProduto.length > 0 ? tamanhosProduto : produto.tamanhos || [],
+        };
+      });
 
-    setOrders(ordersData);
-    setProdutos(produtosCompletos);
-    setTodosTamanhos(tamanhosData);
+      setOrders(ordersData);
+      setProdutos(produtosCompletos);
+      setTodosTamanhos(tamanhosData);
+    } catch (error) {
+      console.error("Erro ao carregar dados:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -213,6 +221,19 @@ export const OrdemProducoesTab: React.FC = () => {
     setOrderToEdit(null);
     setIsModalOpen(true);
   };
+
+  if (loading) {
+    return (
+      <div className="ordens-container">
+        <header className="ordens-header">
+          <div>
+            <h2>Ordens de Produção</h2>
+            <p>Carregando dados...</p>
+          </div>
+        </header>
+      </div>
+    );
+  }
 
   return (
     <div className="ordens-container">
