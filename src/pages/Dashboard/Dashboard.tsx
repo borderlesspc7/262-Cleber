@@ -54,8 +54,11 @@ export const DashboardPage = () => {
     setActiveTab(tab as TabType);
   };
 
+  // Garantir que função está sempre definida para evitar erros
+  const safeTabChange = handleTabChange || ((tab: string) => setActiveTab(tab as TabType));
+
   return (
-    <Layout activeTab={activeTab} onTabChange={handleTabChange}>
+    <Layout activeTab={activeTab} onTabChange={safeTabChange}>
       <div className="dashboard-container">{renderTabContent()}</div>
     </Layout>
   );

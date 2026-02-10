@@ -159,30 +159,49 @@ import {
       }
     },
   
-    // Deletar notificações antigas (mais de 30 dias)
+    // Deletar notificações antigas (mais de 30 dias) e lidas excedentes (máx 100)
     async deleteOldNotifications(userId: string): Promise<void> {
       try {
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-  
         const q = query(
           collection(db, COLLECTION),
-          where("userId", "==", userId)
+          where("userId", "==", userId),
+          orderBy("createdAt", "desc")
         );
   
         const querySnapshot = await getDocs(q);
         const deletePromises: Promise<void>[] = [];
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        
+        let totalCount = 0;
+        let readCount = 0;
   
         querySnapshot.forEach((docSnapshot) => {
           const data = docSnapshot.data();
           const createdAt = data.createdAt.toDate();
+          const isRead = data.read;
+          
+          totalCount++;
   
+          // Deletar notificações com mais de 30 dias
           if (createdAt < thirtyDaysAgo) {
             deletePromises.push(deleteDoc(doc(db, COLLECTION, docSnapshot.id)));
+            return;
+          }
+          
+          // Deletar notificações lidas além do limite (manter máx 100 por usuário)
+          if (isRead) {
+            readCount++;
+            if (readCount > 100) {
+              deletePromises.push(deleteDoc(doc(db, COLLECTION, docSnapshot.id)));
+            }
           }
         });
   
-        await Promise.all(deletePromises);
+        if (deletePromises.length > 0) {
+          await Promise.all(deletePromises);
+          console.log(`🗑️ ${deletePromises.length} notificações antigas deletadas para usuário ${userId}`);
+        }
       } catch (error) {
         console.error("Erro ao deletar notificações antigas:", error);
       }

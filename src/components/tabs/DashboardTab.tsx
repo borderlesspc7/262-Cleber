@@ -66,9 +66,10 @@ export const DashboardTab = () => {
 
     loadData();
 
-    // Cleanup: parar monitoramento ao desmontar componente
+    // Cleanup: Não parar monitoramento aqui para permitir verificações
+    // contínuas mesmo ao navegar entre abas
     return () => {
-      notificationMonitor.stop();
+      // notificationMonitor.stop(); // Desabilitado para manter monitoramento ativo
     };
   }, [user]);
 

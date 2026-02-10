@@ -90,6 +90,7 @@ export const authService = {
         name: credentials.name,
         createdAt: new Date(),
         updatedAt: new Date(),
+        lastLogin: new Date(),
         role: credentials.role || "user", // Role padrão se não especificado
       };
 

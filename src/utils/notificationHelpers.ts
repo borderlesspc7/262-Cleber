@@ -19,7 +19,7 @@ export const checkOrdersDeadline = async (
     // Buscar notificações existentes para não duplicar
     const notificacoesExistentes = await notificationService.getNotificationsByUser(userId);
     const notificacoesOrdemPrazo = notificacoesExistentes.filter(
-      (n) => n.type === "ordem_prazo" && !n.read
+      (n) => n.type === "ordem_prazo"
     );
 
     for (const order of orders) {
@@ -72,7 +72,7 @@ export const checkPaymentsDue = async (
 
     const notificacoesExistentes = await notificationService.getNotificationsByUser(userId);
     const notificacoesPagamento = notificacoesExistentes.filter(
-      (n) => n.type === "pagamento_vencendo" && !n.read
+      (n) => n.type === "pagamento_vencendo"
     );
 
     for (const lancamento of lancamentos) {
@@ -162,7 +162,7 @@ export const checkStoppedStages = async (
       for (const etapa of progresso.etapas) {
         if (etapa.status === "pausada" && etapa.dataInicio) {
           const dataInicio = new Date(etapa.dataInicio);
-          const diasParada = getDaysDifference(hoje, dataInicio);
+          const diasParada = getDaysDifference(dataInicio, hoje);
 
           // Se está parada há mais de 3 dias
           if (diasParada > 3) {
