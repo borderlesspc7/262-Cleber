@@ -25,6 +25,11 @@ type TabType =
 export const DashboardPage = () => {
   const [activeTab, setActiveTab] = useState<TabType>("dashboard");
 
+  // Definir a função ANTES de ser usada
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab as TabType);
+  };
+
   const renderTabContent = () => {
     switch (activeTab) {
       case "dashboard":
@@ -50,15 +55,8 @@ export const DashboardPage = () => {
     }
   };
 
-  const handleTabChange = (tab: string) => {
-    setActiveTab(tab as TabType);
-  };
-
-  // Garantir que função está sempre definida para evitar erros
-  const safeTabChange = handleTabChange || ((tab: string) => setActiveTab(tab as TabType));
-
   return (
-    <Layout activeTab={activeTab} onTabChange={safeTabChange}>
+    <Layout activeTab={activeTab} onTabChange={handleTabChange}>
       <div className="dashboard-container">{renderTabContent()}</div>
     </Layout>
   );

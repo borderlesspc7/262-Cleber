@@ -39,7 +39,7 @@ export const useNotifications = (userId: string ) => {
         }, 30000);
 
         return () => clearInterval(interval);
-    }, [loadNotifications, userId]);
+    }, [userId]);
 
     const markAsRead = async (notificationId: string) => {
         try{
