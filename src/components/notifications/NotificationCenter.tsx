@@ -1,7 +1,7 @@
 import React,  { useState, useEffect, useRef } from "react";
 import { Bell, Check, Trash2, X, AlertCircle, DollarSign, Clock, Package } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
-import { useNotifications } from "../../hooks/useNotification";
+import { useNotifications } from "../../hooks/useNotifications";
 import type { Notification } from "../../types/notification";
 import "./NotificationCenter.css";
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Plus, Edit, Trash2, Check } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { stepService } from "../../services/stepService";
@@ -20,7 +20,7 @@ export const EtapasTab: React.FC = () => {
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const loadSteps = async () => {
+  const loadSteps = useCallback(async () => {
     if (!user) return;
 
     try {
@@ -32,11 +32,11 @@ export const EtapasTab: React.FC = () => {
     } finally {
       setIsLoadingSteps(false);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     loadSteps();
-  }, [user]);
+  }, [loadSteps]);
 
   const handleCreateStep = async (stepData: CreateStepData) => {
     if (!user) return;

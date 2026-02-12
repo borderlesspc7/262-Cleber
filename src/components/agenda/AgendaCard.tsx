@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Clock, Plus, Check, Edit, Trash2 } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { taskService } from "../../services/taskService";
@@ -13,7 +13,7 @@ export const AgendaCard: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingTasks, setIsLoadingTasks] = useState(true);
 
-  const loadTasks = async () => {
+  const loadTasks = useCallback(async () => {
     if (!user) return;
 
     try {
@@ -38,11 +38,11 @@ export const AgendaCard: React.FC = () => {
     } finally {
       setIsLoadingTasks(false);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     loadTasks();
-  }, [user]);
+  }, [loadTasks]);
 
   const handleCreateTask = async (taskData: CreateTaskData) => {
     if (!user) return;

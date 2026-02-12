@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
 import {
   Plus,
   Search,
@@ -91,7 +91,7 @@ export const OrdemProducoesTab: React.FC = () => {
     }
   };
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     if (!user) return;
 
     try {
@@ -123,11 +123,11 @@ export const OrdemProducoesTab: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     loadData();
-  }, [user]);
+  }, [loadData]);
 
   const filteredOrders = useMemo(() => {
     const term = search.trim().toLowerCase();

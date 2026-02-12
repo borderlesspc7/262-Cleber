@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Package, Tag, Palette, Ruler, Check } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import {
@@ -135,14 +135,7 @@ export const ProdutoTab: React.FC = () => {
     }
   };
 
-  // Carregar dados do Firebase
-  useEffect(() => {
-    if (user) {
-      loadAllData();
-    }
-  }, [user]);
-
-  const loadAllData = async () => {
+  const loadAllData = useCallback(async () => {
     if (!user) return;
 
     try {
@@ -217,7 +210,14 @@ export const ProdutoTab: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  // Carregar dados do Firebase
+  useEffect(() => {
+    if (user) {
+      loadAllData();
+    }
+  }, [user, loadAllData]);
 
   // Funções para gerenciar categorias
   const handleAddCategoria = async (categoriaForm: CategoriaForm) => {

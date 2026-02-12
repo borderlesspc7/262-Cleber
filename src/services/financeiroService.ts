@@ -12,6 +12,7 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 import { db } from "../lib/firebaseconfig";
+import { removeUndefinedFields } from "../utils/firestoreHelpers";
 import type {
   LancamentoFinanceiro,
   CreateLancamentoPayload,
@@ -19,17 +20,6 @@ import type {
 } from "../types/financeiro";
 
 const COLLECTION = "lancamentosFinanceiros";
-
-// Helper para remover campos undefined
-const removeUndefinedFields = (obj: any): any => {
-  const cleaned: any = {};
-  Object.keys(obj).forEach((key) => {
-    if (obj[key] !== undefined) {
-      cleaned[key] = obj[key];
-    }
-  });
-  return cleaned;
-};
 
 export const financeiroService = {
   async createLancamento(

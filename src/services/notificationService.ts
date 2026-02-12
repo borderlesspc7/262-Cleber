@@ -173,7 +173,6 @@ import {
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
         
-        let totalCount = 0;
         let readCount = 0;
   
         querySnapshot.forEach((docSnapshot) => {
@@ -181,8 +180,6 @@ import {
           const createdAt = data.createdAt.toDate();
           const isRead = data.read;
           
-          totalCount++;
-  
           // Deletar notificações com mais de 30 dias
           if (createdAt < thirtyDaysAgo) {
             deletePromises.push(deleteDoc(doc(db, COLLECTION, docSnapshot.id)));
