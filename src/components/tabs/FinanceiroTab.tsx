@@ -8,10 +8,12 @@ import {
   CheckCircle,
   TrendingUp,
   CreditCard,
+  Printer,
 } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { financeiroService } from "../../services/financeiroService";
 import type { LancamentoFinanceiro } from "../../types/financeiro";
+import { PrintReceiptModal } from "../financeiro/PrintReceiptModal";
 import toast from "react-hot-toast";
 import "./FinanceiroTab.css";
 
@@ -29,6 +31,10 @@ export const FinanceiroTab: React.FC = () => {
     LancamentoFinanceiro[]
   >([]);
   const [loading, setLoading] = useState(true);
+
+  const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
+  const [lancamentoToPrint, setLancamentoToPrint] =
+    useState<LancamentoFinanceiro | null>(null);
 
   const loadData = useCallback(async () => {
     if (!user) return;
@@ -139,10 +145,24 @@ export const FinanceiroTab: React.FC = () => {
       toast.success("Pagamento registrado com sucesso!", {
         icon: <CheckCircle size={20} />,
       });
+
+      // Buscar o lançamento atualizado e abrir o modal de impressão
+      const lancamentoAtualizado = await financeiroService.getLancamentoById(
+        lancamentoId
+      );
+      if (lancamentoAtualizado) {
+        setLancamentoToPrint(lancamentoAtualizado);
+        setIsPrintModalOpen(true);
+      }
     } catch (error) {
       console.error("Erro ao registrar pagamento:", error);
       toast.error("Erro ao registrar pagamento");
     }
+  };
+
+  const handlePrintReceipt = (lancamento: LancamentoFinanceiro) => {
+    setLancamentoToPrint(lancamento);
+    setIsPrintModalOpen(true);
   };
 
   if (loading) {
@@ -398,6 +418,7 @@ export const FinanceiroTab: React.FC = () => {
                       <th>Vencimento</th>
                       <th>Data Pagamento</th>
                       <th>Status</th>
+                      <th>Ações</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -426,6 +447,16 @@ export const FinanceiroTab: React.FC = () => {
                             Pago
                           </span>
                         </td>
+                        <td>
+                          <button
+                            className="financeiro-action-btn financeiro-action-print"
+                            onClick={() => handlePrintReceipt(item)}
+                            title="Imprimir recibo"
+                          >
+                            <Printer size={14} />
+                            Recibo
+                          </button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -435,6 +466,16 @@ export const FinanceiroTab: React.FC = () => {
           )}
         </div>
       </div>
+
+      <PrintReceiptModal
+        isOpen={isPrintModalOpen}
+        onClose={() => {
+          setIsPrintModalOpen(false);
+          setLancamentoToPrint(null);
+        }}
+        lancamento={lancamentoToPrint!}
+        empresaNome={user?.displayName || "Empresa"}
+      />
     </div>
   );
 };

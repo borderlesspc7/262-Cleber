@@ -142,6 +142,33 @@ export const financeiroService = {
     }
   },
 
+  async getLancamentoById(
+    lancamentoId: string
+  ): Promise<LancamentoFinanceiro | null> {
+    try {
+      const docRef = doc(db, COLLECTION, lancamentoId);
+      const docSnap = await getDocs(query(collection(db, COLLECTION)));
+      const lancamentoDoc = docSnap.docs.find((d) => d.id === lancamentoId);
+
+      if (!lancamentoDoc) {
+        return null;
+      }
+
+      const data = lancamentoDoc.data();
+      return {
+        id: lancamentoDoc.id,
+        ...data,
+        dataVencimento: data.dataVencimento?.toDate() || new Date(),
+        dataPagamento: data.dataPagamento?.toDate(),
+        createdAt: data.createdAt?.toDate() || new Date(),
+        updatedAt: data.updatedAt?.toDate() || new Date(),
+      } as LancamentoFinanceiro;
+    } catch (error) {
+      console.error("Erro ao buscar lançamento:", error);
+      throw error;
+    }
+  },
+
   async updateLancamento(
     lancamentoId: string,
     payload: UpdateLancamentoPayload

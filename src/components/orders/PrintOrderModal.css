@@ -1,0 +1,447 @@
+/* Modal de Impressão */
+.print-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+}
+
+.print-modal {
+  background: white;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 1200px;
+  max-height: 95vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.print-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.print-modal-header h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.print-modal-header p {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 4px 0 0 0;
+}
+
+.print-modal-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-print {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-print:hover {
+  background: #1d4ed8;
+}
+
+.btn-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: #f3f4f6;
+  color: #374151;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-close:hover {
+  background: #e5e7eb;
+}
+
+.print-modal-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  background: #f9fafb;
+}
+
+/* Página de Impressão */
+.print-page {
+  background: white;
+  max-width: 210mm;
+  margin: 0 auto;
+  padding: 20mm;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  min-height: 297mm;
+}
+
+.print-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 3px solid #2563eb;
+}
+
+.print-title-section {
+  flex: 1;
+}
+
+.print-main-title {
+  font-size: 32px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 8px 0;
+  letter-spacing: 1px;
+}
+
+.print-order-code {
+  font-size: 24px;
+  font-weight: 600;
+  color: #2563eb;
+  margin-top: 8px;
+}
+
+.print-date-info {
+  text-align: right;
+}
+
+.print-date-item {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+
+.print-date-item strong {
+  color: #374151;
+}
+
+.print-date-item span {
+  color: #111827;
+  font-weight: 500;
+}
+
+/* Seções */
+.print-section {
+  margin-bottom: 24px;
+  page-break-inside: avoid;
+}
+
+.print-section-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 12px 0;
+  padding: 8px 12px;
+  background: #f3f4f6;
+  border-left: 4px solid #2563eb;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Grid de Informações */
+.print-info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.print-info-item {
+  display: flex;
+  gap: 8px;
+  padding: 10px;
+  background: #f9fafb;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+}
+
+.print-label {
+  font-weight: 600;
+  color: #374151;
+  font-size: 13px;
+}
+
+.print-value {
+  color: #111827;
+  font-size: 13px;
+}
+
+.print-priority {
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.print-info-box {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  background: #f9fafb;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+}
+
+/* Tabelas */
+.print-grade-table,
+.print-steps-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+  font-size: 12px;
+}
+
+.print-table-header {
+  background: #374151;
+  color: white;
+  padding: 10px;
+  text-align: left;
+  font-weight: 600;
+  border: 1px solid #1f2937;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.print-table-cell {
+  padding: 8px 10px;
+  border: 1px solid #d1d5db;
+  background: white;
+  font-size: 12px;
+}
+
+.print-table-center {
+  text-align: center;
+}
+
+.print-table-bold {
+  font-weight: 600;
+}
+
+.print-table-footer {
+  background: #f3f4f6;
+}
+
+.print-table-footer .print-table-cell {
+  background: #f3f4f6;
+  font-weight: 600;
+  border-top: 2px solid #9ca3af;
+}
+
+.print-total-highlight {
+  background: #dbeafe !important;
+  color: #1e40af;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+}
+
+/* Observações */
+.print-observations {
+  margin-top: 12px;
+}
+
+.print-observation-line {
+  height: 30px;
+  border-bottom: 1px solid #d1d5db;
+  margin-bottom: 12px;
+}
+
+/* Assinaturas */
+.print-signatures {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 40px;
+  margin-top: 40px;
+  padding-top: 20px;
+}
+
+.print-signature-box {
+  text-align: center;
+}
+
+.print-signature-line {
+  height: 1px;
+  background: #9ca3af;
+  margin-bottom: 8px;
+}
+
+.print-signature-label {
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+/* Rodapé */
+.print-footer {
+  margin-top: 30px;
+  padding-top: 15px;
+  border-top: 1px solid #e5e7eb;
+  text-align: center;
+}
+
+.print-footer p {
+  font-size: 11px;
+  color: #9ca3af;
+  margin: 0;
+}
+
+/* Estilos para Impressão */
+@media print {
+  body {
+    margin: 0;
+    padding: 0;
+  }
+
+  .no-print,
+  .print-modal-header,
+  .print-modal-overlay {
+    display: none !important;
+  }
+
+  .print-modal {
+    position: static;
+    max-width: none;
+    max-height: none;
+    box-shadow: none;
+    border-radius: 0;
+  }
+
+  .print-modal-content {
+    padding: 0;
+    overflow: visible;
+    background: white;
+  }
+
+  .print-page {
+    width: 210mm;
+    min-height: 297mm;
+    max-width: none;
+    margin: 0;
+    padding: 15mm;
+    box-shadow: none;
+    page-break-after: always;
+  }
+
+  .print-header {
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+  }
+
+  .print-main-title {
+    font-size: 28px;
+  }
+
+  .print-order-code {
+    font-size: 22px;
+  }
+
+  .print-section {
+    page-break-inside: avoid;
+    margin-bottom: 18px;
+  }
+
+  .print-section-title {
+    font-size: 14px;
+    padding: 6px 10px;
+  }
+
+  .print-grade-table,
+  .print-steps-table {
+    page-break-inside: avoid;
+  }
+
+  .print-table-header {
+    background: #374151 !important;
+    color: white !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .print-total-highlight {
+    background: #dbeafe !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .print-table-footer .print-table-cell {
+    background: #f3f4f6 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .print-signatures {
+    margin-top: 30px;
+  }
+
+  .print-footer {
+    margin-top: 20px;
+  }
+
+  /* Garantir que cores de fundo sejam impressas */
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+
+/* Responsivo para telas menores */
+@media screen and (max-width: 768px) {
+  .print-modal-overlay {
+    padding: 0;
+  }
+
+  .print-modal {
+    max-width: 100%;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+
+  .print-page {
+    padding: 15mm;
+  }
+
+  .print-info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .print-header {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .print-date-info {
+    text-align: left;
+  }
+
+  .print-signatures {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+}

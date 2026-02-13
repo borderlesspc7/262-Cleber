@@ -19,6 +19,7 @@ import { financeiroService } from "../../services/financeiroService";
 import type { ProductionOrder } from "../../types/order";
 import type { Produto, Tamanho } from "../../types/product";
 import { OrderModal } from "../orders/OrderModal";
+import { PrintOrderModal } from "../orders/PrintOrderModal";
 import toast from "react-hot-toast";
 import { DeleteConfirmModal } from "../../components/ui/DeleteConfirmModal/DeleteConfirmModal";
 import "./OrdemProducoesTab.css";
@@ -50,9 +51,17 @@ export const OrdemProducoesTab: React.FC = () => {
   const [orderToDelete, setOrderToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
+  const [orderToPrint, setOrderToPrint] = useState<ProductionOrder | null>(null);
+
   const handleDeleteClick = (id: string) => {
     setOrderToDelete(id);
     setIsDeleteModalOpen(true);
+  };
+
+  const handlePrint = (order: ProductionOrder) => {
+    setOrderToPrint(order);
+    setIsPrintModalOpen(true);
   };
 
   const handleConfirmDelete = async () => {
@@ -316,7 +325,11 @@ export const OrdemProducoesTab: React.FC = () => {
                     </span>
                   </div>
                   <div className="ordem-card__actions">
-                    <button className="icon-button">
+                    <button 
+                      className="icon-button"
+                      onClick={() => handlePrint(order)}
+                      title="Imprimir ordem"
+                    >
                       <Printer size={16} />
                     </button>
                     <button
@@ -445,6 +458,16 @@ export const OrdemProducoesTab: React.FC = () => {
         message="Tem certeza que deseja excluir esta ordem de produção?"
         confirmText="Excluir"
         cancelText="Cancelar"
+      />
+
+      <PrintOrderModal
+        isOpen={isPrintModalOpen}
+        onClose={() => {
+          setIsPrintModalOpen(false);
+          setOrderToPrint(null);
+        }}
+        order={orderToPrint!}
+        produto={produtos.find((p) => p.id === orderToPrint?.produtoId)}
       />
     </div>
   );

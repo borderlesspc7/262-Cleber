@@ -400,6 +400,17 @@
   border-color: #9ca3af;
 }
 
+.financeiro-action-print {
+  background: #dbeafe;
+  color: #1e40af;
+  border-color: #93c5fd;
+}
+
+.financeiro-action-print:hover {
+  background: #bfdbfe;
+  border-color: #60a5fa;
+}
+
 /* Empty States */
 .financeiro-empty-state {
   text-align: center;

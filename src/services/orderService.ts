@@ -9,6 +9,9 @@ import {
   where,
   orderBy,
   serverTimestamp,
+  runTransaction,
+  getDoc,
+  setDoc,
 } from "firebase/firestore";
 import { db } from "../lib/firebaseconfig";
 import type {
@@ -17,6 +20,46 @@ import type {
 } from "../types/order";
 
 const COLLECTION = "ordensProducao";
+const COUNTERS_COLLECTION = "counters";
+
+/**
+ * Gera o próximo número sequencial de Ordem de Produção
+ * Formato: OP-0001, OP-0002, etc.
+ * Usa transação para garantir que não haja duplicatas
+ */
+async function getNextOrderNumber(userId: string): Promise<string> {
+  const counterDocRef = doc(db, COUNTERS_COLLECTION, `op_counter_${userId}`);
+
+  try {
+    const nextNumber = await runTransaction(db, async (transaction) => {
+      const counterDoc = await transaction.get(counterDocRef);
+
+      let currentNumber = 1;
+      if (counterDoc.exists()) {
+        currentNumber = counterDoc.data().lastNumber + 1;
+      }
+
+      // Atualiza o contador
+      transaction.set(
+        counterDocRef,
+        {
+          lastNumber: currentNumber,
+          updatedAt: serverTimestamp(),
+        },
+        { merge: true }
+      );
+
+      return currentNumber;
+    });
+
+    // Formata o número com 4 dígitos (OP-0001, OP-0002, etc.)
+    return `OP-${String(nextNumber).padStart(4, "0")}`;
+  } catch (error) {
+    console.error("Erro ao gerar número da OP:", error);
+    // Fallback para o sistema antigo em caso de erro
+    return `OP-${Date.now()}`;
+  }
+}
 
 export const orderService = {
   async getOrders(userId: string): Promise<ProductionOrder[]> {
@@ -55,6 +98,9 @@ export const orderService = {
     produto: { descricao: string; refCodigo: string },
     responsavelNome?: string
   ) {
+    // Gera o próximo número sequencial de OP
+    const codigoOP = await getNextOrderNumber(userId);
+
     // Calcula o total de cada linha da grade
     const gradeWithTotals = payload.grade.map((row) => ({
       ...row,
@@ -73,7 +119,7 @@ export const orderService = {
       grade: gradeWithTotals,
       userId,
       status: "em_producao",
-      codigo: `OP${Date.now()}`,
+      codigo: codigoOP,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     });
