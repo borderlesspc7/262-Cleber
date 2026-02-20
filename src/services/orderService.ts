@@ -10,8 +10,6 @@ import {
   orderBy,
   serverTimestamp,
   runTransaction,
-  getDoc,
-  setDoc,
 } from "firebase/firestore";
 import { db } from "../lib/firebaseconfig";
 import type {

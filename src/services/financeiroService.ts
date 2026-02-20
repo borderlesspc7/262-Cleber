@@ -2,6 +2,7 @@ import {
   collection,
   addDoc,
   getDocs,
+  getDoc,
   updateDoc,
   deleteDoc,
   doc,
@@ -147,16 +148,15 @@ export const financeiroService = {
   ): Promise<LancamentoFinanceiro | null> {
     try {
       const docRef = doc(db, COLLECTION, lancamentoId);
-      const docSnap = await getDocs(query(collection(db, COLLECTION)));
-      const lancamentoDoc = docSnap.docs.find((d) => d.id === lancamentoId);
+      const docSnap = await getDoc(docRef);
 
-      if (!lancamentoDoc) {
+      if (!docSnap.exists()) {
         return null;
       }
 
-      const data = lancamentoDoc.data();
+      const data = docSnap.data();
       return {
-        id: lancamentoDoc.id,
+        id: docSnap.id,
         ...data,
         dataVencimento: data.dataVencimento?.toDate() || new Date(),
         dataPagamento: data.dataPagamento?.toDate(),

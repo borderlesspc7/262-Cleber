@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   Download,
   Search,
@@ -35,6 +35,7 @@ export const FinanceiroTab: React.FC = () => {
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
   const [lancamentoToPrint, setLancamentoToPrint] =
     useState<LancamentoFinanceiro | null>(null);
+  const hasLoadedRef = useRef(false);
 
   const loadData = useCallback(async () => {
     if (!user) return;
@@ -57,6 +58,8 @@ export const FinanceiroTab: React.FC = () => {
   }, [user]);
 
   useEffect(() => {
+    if (hasLoadedRef.current) return;
+    hasLoadedRef.current = true;
     loadData();
   }, [loadData]);
 
@@ -474,7 +477,7 @@ export const FinanceiroTab: React.FC = () => {
           setLancamentoToPrint(null);
         }}
         lancamento={lancamentoToPrint!}
-        empresaNome={user?.displayName || "Empresa"}
+        empresaNome={user?.name || "Empresa"}
       />
     </div>
   );

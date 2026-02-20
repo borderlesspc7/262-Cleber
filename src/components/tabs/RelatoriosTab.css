@@ -49,6 +49,15 @@
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
+.btn-export-secondary {
+  background: #10b981;
+}
+
+.btn-export-secondary:hover {
+  background: #0ea371;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
 /* Filtros */
 .relatorios-filters {
   display: flex;

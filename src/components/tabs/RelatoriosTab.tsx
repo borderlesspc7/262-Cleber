@@ -218,14 +218,207 @@ export const RelatoriosTab: React.FC = () => {
     }
   };
 
-  const handleExportar = () => {
-    // TODO: Implementar exportação para PDF/Excel
-    alert("Funcionalidade de exportação em desenvolvimento");
+  const getPeriodoLabel = (periodo: PeriodoType): string => {
+    switch (periodo) {
+      case "semana":
+        return "Última Semana";
+      case "mes":
+        return "Último Mês";
+      case "trimestre":
+        return "Último Trimestre";
+      case "ano":
+        return "Último Ano";
+      default:
+        return "Último Mês";
+    }
   };
 
-  const getProdutosMaisProduzidos = () => {
+  const formatDate = (date: Date) =>
+    new Intl.DateTimeFormat("pt-BR").format(date);
+
+  const formatNumber = (value: number, digits: number = 0) =>
+    new Intl.NumberFormat("pt-BR", {
+      minimumFractionDigits: digits,
+      maximumFractionDigits: digits,
+    }).format(value);
+
+  const openPrintWindow = (html: string) => {
+    const printWindow = window.open("", "_blank", "noopener,noreferrer");
+    if (!printWindow) {
+      alert("Não foi possível abrir a janela de impressão.");
+      return;
+    }
+
+    printWindow.document.open();
+    printWindow.document.write(html);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.onload = () => {
+      printWindow.print();
+    };
+  };
+
+  const buildReportShell = (
+    title: string,
+    subtitle: string,
+    content: string
+  ) => {
+    return `<!DOCTYPE html>
+      <html lang="pt-BR">
+        <head>
+          <meta charset="utf-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1" />
+          <title>${title}</title>
+          <style>
+            @page { size: A4; margin: 18mm; }
+            * { box-sizing: border-box; }
+            body { font-family: "Segoe UI", Arial, sans-serif; color: #0f172a; }
+            h1 { font-size: 20px; margin: 0 0 4px 0; }
+            h2 { font-size: 14px; margin: 0 0 16px 0; color: #475569; font-weight: 600; }
+            .meta { font-size: 12px; color: #64748b; margin-bottom: 16px; }
+            .section { margin: 18px 0; }
+            .section-title { font-size: 14px; font-weight: 700; margin-bottom: 10px; }
+            .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+            .card { border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; }
+            .card-label { font-size: 11px; color: #64748b; }
+            .card-value { font-size: 16px; font-weight: 700; }
+            table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+            th, td { border: 1px solid #e2e8f0; padding: 8px; font-size: 12px; text-align: left; }
+            th { background: #f8fafc; font-weight: 700; }
+            .muted { color: #64748b; }
+          </style>
+        </head>
+        <body>
+          <h1>${title}</h1>
+          <h2>${subtitle}</h2>
+          <div class="meta">Gerado em ${formatDate(new Date())}</div>
+          ${content}
+        </body>
+      </html>`;
+  };
+
+  const handleExportarProducao = () => {
+    const dataLimite = getDataLimite(periodo);
+    const ordersFiltradas = orders.filter(
+      (order) => new Date(order.createdAt) >= dataLimite
+    );
+    const ordensConcluidas = ordersFiltradas.filter(
+      (order) => order.status === "concluida"
+    ).length;
+    const ordensEmAndamento = ordersFiltradas.filter(
+      (order) => order.status === "em_producao"
+    ).length;
+    const ordensPlanejadas = ordersFiltradas.filter(
+      (order) => order.status === "planejada"
+    ).length;
+    const taxaConclusao =
+      ordersFiltradas.length > 0
+        ? (ordensConcluidas / ordersFiltradas.length) * 100
+        : 0;
+    const topProdutos = getProdutosMaisProduzidos(ordersFiltradas);
+
+    const content = `
+      <div class="section">
+        <div class="section-title">Resumo</div>
+        <div class="grid">
+          <div class="card"><div class="card-label">Total de Ordens</div><div class="card-value">${formatNumber(ordersFiltradas.length)}</div></div>
+          <div class="card"><div class="card-label">Concluídas</div><div class="card-value">${formatNumber(ordensConcluidas)}</div></div>
+          <div class="card"><div class="card-label">Em Andamento</div><div class="card-value">${formatNumber(ordensEmAndamento)}</div></div>
+          <div class="card"><div class="card-label">Planejadas</div><div class="card-value">${formatNumber(ordensPlanejadas)}</div></div>
+          <div class="card"><div class="card-label">Taxa de Conclusão</div><div class="card-value">${formatNumber(taxaConclusao, 1)}%</div></div>
+          <div class="card"><div class="card-label">Tempo Médio por Etapa</div><div class="card-value">${formatNumber(metricaProducao.tempoMedioPorEtapa, 1)} dias</div></div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-title">Top 5 Produtos Mais Produzidos</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Produto</th>
+              <th>Quantidade de Ordens</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${topProdutos
+              .map(
+                (produto) => `
+              <tr>
+                <td>${produto.nome}</td>
+                <td>${formatNumber(produto.quantidade)}</td>
+              </tr>`
+              )
+              .join("")}
+            ${topProdutos.length === 0 ? `<tr><td colspan="2" class="muted">Sem dados para o período</td></tr>` : ""}
+          </tbody>
+        </table>
+      </div>
+    `;
+
+    const html = buildReportShell(
+      "Relatório de Produção",
+      `Período: ${getPeriodoLabel(periodo)}`,
+      content
+    );
+
+    openPrintWindow(html);
+  };
+
+  const handleExportarPerformance = () => {
+    const faccoesAtivas = faccoes.filter((f) => f.ativo).length;
+    const faccoesTop = faccoesPerformance.slice(0, 5);
+
+    const content = `
+      <div class="section">
+        <div class="section-title">Indicadores Gerais</div>
+        <div class="grid">
+          <div class="card"><div class="card-label">Facções Ativas</div><div class="card-value">${formatNumber(faccoesAtivas)}</div></div>
+          <div class="card"><div class="card-label">Facções Cadastradas</div><div class="card-value">${formatNumber(faccoes.length)}</div></div>
+          <div class="card"><div class="card-label">Produtos Cadastrados</div><div class="card-value">${formatNumber(produtos.length)}</div></div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-title">Facções Mais Produtivas</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Facção</th>
+              <th>Ordens Finalizadas</th>
+              <th>Tempo Médio (dias)</th>
+              <th>Taxa de Defeitos</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${faccoesTop
+              .map(
+                (faccao) => `
+              <tr>
+                <td>${faccao.faccaoNome}</td>
+                <td>${formatNumber(faccao.ordensFinalizadas)}</td>
+                <td>${formatNumber(faccao.tempoMedio, 1)}</td>
+                <td>${formatNumber(faccao.taxaDefeitos, 1)}%</td>
+              </tr>`
+              )
+              .join("")}
+            ${faccoesTop.length === 0 ? `<tr><td colspan="4" class="muted">Sem dados de performance</td></tr>` : ""}
+          </tbody>
+        </table>
+      </div>
+    `;
+
+    const html = buildReportShell(
+      "Relatório de Performance",
+      "Resumo de Facções e Produtos",
+      content
+    );
+
+    openPrintWindow(html);
+  };
+
+  const getProdutosMaisProduzidos = (
+    ordersBase: ProductionOrder[] = orders
+  ) => {
     const produtoCount = new Map<string, number>();
-    orders.forEach((order) => {
+    ordersBase.forEach((order) => {
       const count = produtoCount.get(order.produtoDescricao) || 0;
       produtoCount.set(order.produtoDescricao, count + 1);
     });
@@ -255,9 +448,16 @@ export const RelatoriosTab: React.FC = () => {
           </p>
         </div>
         <div className="relatorios-actions">
-          <button className="btn-export" onClick={handleExportar}>
+          <button className="btn-export" onClick={handleExportarProducao}>
             <Download size={18} />
-            Exportar Relatório
+            Exportar Produção (PDF)
+          </button>
+          <button
+            className="btn-export btn-export-secondary"
+            onClick={handleExportarPerformance}
+          >
+            <Download size={18} />
+            Exportar Performance (PDF)
           </button>
         </div>
       </div>
