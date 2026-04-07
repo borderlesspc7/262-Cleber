@@ -1,12 +1,17 @@
 import React, { useRef } from "react";
 import { X, Printer } from "lucide-react";
 import type { LancamentoFinanceiro } from "../../types/financeiro";
+import type { Company } from "../../types/company";
+import { formatDateBR, formatDateTimeBR } from "../../utils/dateFormatter";
 import "./PrintReceiptModal.css";
 
 interface PrintReceiptModalProps {
   isOpen: boolean;
   onClose: () => void;
   lancamento: LancamentoFinanceiro;
+  /** Dados cadastrados em Cadastros (preferência) */
+  company?: Company | null;
+  /** Fallback quando não houver nome da empresa no cadastro */
   empresaNome?: string;
 }
 
@@ -14,9 +19,13 @@ export const PrintReceiptModal: React.FC<PrintReceiptModalProps> = ({
   isOpen,
   onClose,
   lancamento,
+  company,
   empresaNome = "Empresa",
 }) => {
   const printRef = useRef<HTMLDivElement>(null);
+
+  const displayName = company?.nome?.trim() || empresaNome;
+  const companyEmail = company?.email?.trim();
 
   const handlePrint = () => {
     window.print();
@@ -29,21 +38,7 @@ export const PrintReceiptModal: React.FC<PrintReceiptModalProps> = ({
     }).format(value);
   };
 
-  const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat("pt-BR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    }).format(date);
-  };
-
-  const formatDateLong = (date: Date) => {
-    return new Intl.DateTimeFormat("pt-BR", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    }).format(date);
-  };
+  const formatDate = (date: Date) => formatDateBR(date);
 
   const extenso = (valor: number): string => {
     const unidades = [
@@ -177,7 +172,21 @@ export const PrintReceiptModal: React.FC<PrintReceiptModalProps> = ({
           <div className="receipt-page">
             {/* Cabeçalho do Recibo */}
             <div className="receipt-header">
-              <div className="receipt-company-name">{empresaNome}</div>
+              <div className="receipt-company-row">
+                {company?.logoUrl && (
+                  <img
+                    src={company.logoUrl}
+                    alt=""
+                    className="receipt-company-logo"
+                  />
+                )}
+                <div className="receipt-company-text">
+                  <div className="receipt-company-name">{displayName}</div>
+                  {companyEmail && (
+                    <div className="receipt-company-email">{companyEmail}</div>
+                  )}
+                </div>
+              </div>
               <div className="receipt-title">RECIBO DE PAGAMENTO</div>
               <div className="receipt-number">
                 Nº {lancamento.id.substring(0, 8).toUpperCase()}
@@ -196,7 +205,7 @@ export const PrintReceiptModal: React.FC<PrintReceiptModalProps> = ({
             <div className="receipt-body">
               <div className="receipt-text-section">
                 <p className="receipt-main-text">
-                  Recebi de <strong>{empresaNome}</strong> a quantia de{" "}
+                  Recebi de <strong>{displayName}</strong> a quantia de{" "}
                   <strong>{formatCurrency(lancamento.valor)}</strong> (
                   {extenso(lancamento.valor)}), referente ao pagamento de
                   serviços prestados conforme especificado abaixo:
@@ -279,10 +288,10 @@ export const PrintReceiptModal: React.FC<PrintReceiptModalProps> = ({
             {/* Data e Local */}
             <div className="receipt-date-location">
               <p>
-                {empresaNome},{" "}
+                {displayName},{" "}
                 {lancamento.dataPagamento
-                  ? formatDateLong(lancamento.dataPagamento)
-                  : formatDateLong(new Date())}
+                  ? formatDate(lancamento.dataPagamento)
+                  : formatDate(new Date())}
                 .
               </p>
             </div>
@@ -304,7 +313,7 @@ export const PrintReceiptModal: React.FC<PrintReceiptModalProps> = ({
               <div className="receipt-signature-box">
                 <div className="receipt-signature-line"></div>
                 <div className="receipt-signature-info">
-                  <p className="receipt-signature-name">{empresaNome}</p>
+                  <p className="receipt-signature-name">{displayName}</p>
                   <p className="receipt-signature-label">
                     Assinatura do Pagador
                   </p>
@@ -318,7 +327,7 @@ export const PrintReceiptModal: React.FC<PrintReceiptModalProps> = ({
                 Este recibo tem validade como comprovante de pagamento.
               </p>
               <p className="receipt-footer-info">
-                Documento gerado em {new Date().toLocaleString("pt-BR")} - ID:{" "}
+                Documento gerado em {formatDateTimeBR(new Date())} - ID:{" "}
                 {lancamento.id}
               </p>
             </div>

@@ -11,6 +11,7 @@ import {
   Shirt,
   Play,
   Trash2,
+  Printer,
 } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { orderService } from "../../services/orderService";
@@ -28,6 +29,10 @@ import {
 import { faccaoService } from "../../services/faccaoService";
 import type { Faccao } from "../../types/faccao";
 import { financeiroService } from "../../services/financeiroService";
+import { companyService } from "../../services/companyService";
+import type { Company } from "../../types/company";
+import { PrintOrderModal } from "../orders/PrintOrderModal";
+import { FINANCEIRO_REFRESH_EVENT } from "../../constants/appEvents";
 import toast from "react-hot-toast";
 import { DeleteConfirmModal } from "../../components/ui/DeleteConfirmModal/DeleteConfirmModal";
 import "./GestaoProducoesTab.css";
@@ -52,18 +57,27 @@ export const GestaoProducoesTab: React.FC = () => {
   const [orderToDelete, setOrderToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  const [companyInfo, setCompanyInfo] = useState<Company | null>(null);
+  const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
+  const [orderToPrint, setOrderToPrint] = useState<ProductionOrder | null>(
+    null
+  );
+
   const loadData = useCallback(async () => {
     if (!user) return;
 
     try {
       setLoading(true);
-      const [ordersData, stepsData, faccoesData, produtosData] =
+      const [ordersData, stepsData, faccoesData, produtosData, companyData] =
         await Promise.all([
           orderService.getOrders(user.uid),
           stepService.getStepsByUser(user.uid),
           faccaoService.getFaccoes(),
           produtoService.getProdutos(user.uid),
+          companyService.getCompanyInfo(),
         ]);
+
+      setCompanyInfo(companyData);
 
       setOrders(ordersData);
       setSteps(stepsData);
@@ -311,6 +325,11 @@ export const GestaoProducoesTab: React.FC = () => {
     setShowFinalizeModal(true);
   };
 
+  const handlePrintOrder = (order: ProductionOrder) => {
+    setOrderToPrint(order);
+    setIsPrintModalOpen(true);
+  };
+
   const handleSubmitFinalize = async (data: FinalizeStageData) => {
     if (!user || !orderToFinalize) return;
 
@@ -382,15 +401,26 @@ export const GestaoProducoesTab: React.FC = () => {
           data.responsavelProximaEtapaId,
           responsavel.nome
         );
+      } else if (!data.proximaEtapaId?.trim()) {
+        await orderService.updateOrderStatus(order.id, "concluida");
       }
+
+      window.dispatchEvent(new CustomEvent(FINANCEIRO_REFRESH_EVENT));
 
       await loadData();
       setShowFinalizeModal(false);
       setOrderToFinalize(null);
 
-      toast.success("Etapa finalizada e lançamento financeiro criado!", {
-        icon: <Check size={20} />,
-      });
+      const isUltimaEtapa = !data.proximaEtapaId?.trim();
+      if (isUltimaEtapa) {
+        toast.success("Ordem concluída com sucesso!", {
+          icon: <Check size={20} />,
+        });
+      } else {
+        toast.success("Etapa finalizada e lançamento financeiro criado!", {
+          icon: <Check size={20} />,
+        });
+      }
     } catch (error) {
       console.error("Erro ao finalizar etapa:", error);
       toast.error("Erro ao finalizar etapa");
@@ -670,6 +700,15 @@ export const GestaoProducoesTab: React.FC = () => {
                     </button>
                   </>
                 )}
+                <button
+                  type="button"
+                  className="gestao-action-btn gestao-action-print"
+                  onClick={() => handlePrintOrder(order)}
+                  title="Imprimir ordem de produção"
+                >
+                  <Printer size={16} className="gestao-action-icon" />
+                  Imprimir
+                </button>
                 <button className="gestao-action-btn gestao-action-report">
                   <AlertTriangle size={16} className="gestao-action-icon" />
                   Reportar Problema
@@ -773,6 +812,19 @@ export const GestaoProducoesTab: React.FC = () => {
         confirmText="Excluir"
         cancelText="Cancelar"
       />
+
+      {orderToPrint && (
+        <PrintOrderModal
+          isOpen={isPrintModalOpen}
+          onClose={() => {
+            setIsPrintModalOpen(false);
+            setOrderToPrint(null);
+          }}
+          order={orderToPrint}
+          produto={produtos.find((p) => p.id === orderToPrint.produtoId)}
+          company={companyInfo}
+        />
+      )}
     </div>
   );
 };

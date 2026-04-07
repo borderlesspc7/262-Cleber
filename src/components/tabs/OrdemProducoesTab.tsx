@@ -16,6 +16,8 @@ import { orderService } from "../../services/orderService";
 import { produtoService, tamanhoService } from "../../services/productService";
 import { productionProgressService } from "../../services/productionProgressService";
 import { financeiroService } from "../../services/financeiroService";
+import { companyService } from "../../services/companyService";
+import type { Company } from "../../types/company";
 import type { ProductionOrder } from "../../types/order";
 import type { Produto, Tamanho } from "../../types/product";
 import { OrderModal } from "../orders/OrderModal";
@@ -53,6 +55,7 @@ export const OrdemProducoesTab: React.FC = () => {
 
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
   const [orderToPrint, setOrderToPrint] = useState<ProductionOrder | null>(null);
+  const [companyInfo, setCompanyInfo] = useState<Company | null>(null);
 
   const handleDeleteClick = (id: string) => {
     setOrderToDelete(id);
@@ -105,11 +108,13 @@ export const OrdemProducoesTab: React.FC = () => {
 
     try {
       setLoading(true);
-      const [ordersData, produtosData, tamanhosData] = await Promise.all([
-        orderService.getOrders(user.uid),
-        produtoService.getProdutos(user.uid),
-        tamanhoService.getTamanhos(user.uid),
-      ]);
+      const [ordersData, produtosData, tamanhosData, companyData] =
+        await Promise.all([
+          orderService.getOrders(user.uid),
+          produtoService.getProdutos(user.uid),
+          tamanhoService.getTamanhos(user.uid),
+          companyService.getCompanyInfo(),
+        ]);
 
       // Reconstruir produtos com tamanhos completos
       const produtosCompletos = produtosData.map((produto) => {
@@ -127,6 +132,7 @@ export const OrdemProducoesTab: React.FC = () => {
       setOrders(ordersData);
       setProdutos(produtosCompletos);
       setTodosTamanhos(tamanhosData);
+      setCompanyInfo(companyData);
     } catch (error) {
       console.error("Erro ao carregar dados:", error);
     } finally {
@@ -468,6 +474,7 @@ export const OrdemProducoesTab: React.FC = () => {
         }}
         order={orderToPrint!}
         produto={produtos.find((p) => p.id === orderToPrint?.produtoId)}
+        company={companyInfo}
       />
     </div>
   );

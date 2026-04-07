@@ -9,13 +9,19 @@ import {
   TrendingUp,
   CreditCard,
   Printer,
+  RefreshCw,
 } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { financeiroService } from "../../services/financeiroService";
+import { companyService } from "../../services/companyService";
 import type { LancamentoFinanceiro } from "../../types/financeiro";
+import type { Company } from "../../types/company";
 import { PrintReceiptModal } from "../financeiro/PrintReceiptModal";
 import toast from "react-hot-toast";
 import "./FinanceiroTab.css";
+import { formatDateBR } from "../../utils/dateFormatter";
+import { downloadCsv } from "../../utils/csvExport";
+import { FINANCEIRO_REFRESH_EVENT } from "../../constants/appEvents";
 
 export const FinanceiroTab: React.FC = () => {
   const { user } = useAuth();
@@ -35,33 +41,107 @@ export const FinanceiroTab: React.FC = () => {
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
   const [lancamentoToPrint, setLancamentoToPrint] =
     useState<LancamentoFinanceiro | null>(null);
+  const [companyInfo, setCompanyInfo] = useState<Company | null>(null);
   const hasLoadedRef = useRef(false);
 
-  const loadData = useCallback(async () => {
-    if (!user) return;
+  const loadData = useCallback(
+    async (options?: { silent?: boolean }) => {
+      const silent = options?.silent ?? false;
+      if (!user) return;
 
-    try {
-      setLoading(true);
-      const [pendentes, pagos] = await Promise.all([
-        financeiroService.getLancamentosPendentes(user.uid),
-        financeiroService.getLancamentosPagos(user.uid),
-      ]);
+      try {
+        if (!silent) setLoading(true);
+        const [pendentes, pagos, company] = await Promise.all([
+          financeiroService.getLancamentosPendentes(user.uid),
+          financeiroService.getLancamentosPagos(user.uid),
+          companyService.getCompanyInfo(),
+        ]);
 
-      setLancamentosPendentes(pendentes);
-      setLancamentosPagos(pagos);
-    } catch (error) {
-      console.error("Erro ao carregar lançamentos:", error);
-      toast.error("Erro ao carregar dados financeiros");
-    } finally {
-      setLoading(false);
-    }
-  }, [user]);
+        setLancamentosPendentes(pendentes);
+        setLancamentosPagos(pagos);
+        setCompanyInfo(company);
+      } catch (error) {
+        console.error("Erro ao carregar lançamentos:", error);
+        toast.error("Erro ao carregar dados financeiros");
+      } finally {
+        if (!silent) setLoading(false);
+      }
+    },
+    [user]
+  );
 
   useEffect(() => {
     if (hasLoadedRef.current) return;
     hasLoadedRef.current = true;
     loadData();
   }, [loadData]);
+
+  useEffect(() => {
+    const onRefresh = () => {
+      loadData({ silent: true });
+    };
+    window.addEventListener(FINANCEIRO_REFRESH_EVENT, onRefresh);
+    return () => window.removeEventListener(FINANCEIRO_REFRESH_EVENT, onRefresh);
+  }, [loadData]);
+
+  const handleManualRefresh = async () => {
+    await loadData({ silent: true });
+    toast.success("Lista atualizada");
+  };
+
+  const handleExportCsv = () => {
+    const today = formatDateBR(new Date()).replace(/\//g, "-");
+    if (activeTab === "pendencias") {
+      const header = [
+        "Ordem",
+        "Facção",
+        "Etapa",
+        "Produto",
+        "Valor",
+        "Vencimento",
+        "Status",
+      ];
+      const rows = filteredPendencies.map((item) => {
+        const statusLabel =
+          item.status === "atrasado"
+            ? `Atrasado (${getDiasAtraso(item.dataVencimento)}d)`
+            : "Pendente";
+        return [
+          item.ordemCodigo,
+          item.faccaoNome,
+          item.etapaNome,
+          item.produtoDescricao,
+          formatCurrency(item.valor),
+          formatDate(item.dataVencimento),
+          statusLabel,
+        ];
+      });
+      downloadCsv(`financeiro-pendencias-${today}.csv`, [header, ...rows]);
+    } else {
+      const header = [
+        "Ordem",
+        "Facção",
+        "Etapa",
+        "Produto",
+        "Valor",
+        "Vencimento",
+        "Data Pagamento",
+        "Status",
+      ];
+      const rows = filteredPagamentos.map((item) => [
+        item.ordemCodigo,
+        item.faccaoNome,
+        item.etapaNome,
+        item.produtoDescricao,
+        formatCurrency(item.valor),
+        formatDate(item.dataVencimento),
+        item.dataPagamento ? formatDate(item.dataPagamento) : "-",
+        "Pago",
+      ]);
+      downloadCsv(`financeiro-pagamentos-${today}.csv`, [header, ...rows]);
+    }
+    toast.success("Relatório exportado");
+  };
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
@@ -70,9 +150,7 @@ export const FinanceiroTab: React.FC = () => {
     }).format(value);
   };
 
-  const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat("pt-BR").format(new Date(date));
-  };
+  const formatDate = (date: Date) => formatDateBR(date);
 
   const getDiasAtraso = (dataVencimento: Date): number => {
     const hoje = new Date();
@@ -144,7 +222,7 @@ export const FinanceiroTab: React.FC = () => {
 
     try {
       await financeiroService.marcarComoPago(lancamentoId);
-      await loadData();
+      await loadData({ silent: true });
       toast.success("Pagamento registrado com sucesso!", {
         icon: <CheckCircle size={20} />,
       });
@@ -186,10 +264,25 @@ export const FinanceiroTab: React.FC = () => {
             Controle de pagamentos e pendências financeiras
           </p>
         </div>
-        <button className="financeiro-export-btn">
-          <Download size={18} />
-          <span>Exportar Relatório</span>
-        </button>
+        <div className="financeiro-header-actions">
+          <button
+            type="button"
+            className="financeiro-refresh-btn"
+            onClick={handleManualRefresh}
+            title="Atualizar lista"
+          >
+            <RefreshCw size={18} />
+            <span>Atualizar</span>
+          </button>
+          <button
+            type="button"
+            className="financeiro-export-btn"
+            onClick={handleExportCsv}
+          >
+            <Download size={18} />
+            <span>Exportar Relatório</span>
+          </button>
+        </div>
       </div>
 
       {/* Summary Cards */}
@@ -477,6 +570,7 @@ export const FinanceiroTab: React.FC = () => {
           setLancamentoToPrint(null);
         }}
         lancamento={lancamentoToPrint!}
+        company={companyInfo}
         empresaNome={user?.name || "Empresa"}
       />
     </div>

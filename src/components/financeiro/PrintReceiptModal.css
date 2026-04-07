@@ -72,6 +72,35 @@
   border-bottom: 3px double #2563eb;
 }
 
+.receipt-company-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.receipt-company-logo {
+  max-height: 64px;
+  max-width: 160px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.receipt-company-text {
+  text-align: center;
+  min-width: 0;
+}
+
+.receipt-company-email {
+  font-size: 14px;
+  color: #6b7280;
+  font-weight: 500;
+  margin-top: 6px;
+  word-break: break-all;
+}
+
 .receipt-company-name {
   font-size: 28px;
   font-weight: 700;
@@ -335,6 +364,15 @@
   .receipt-header {
     margin-bottom: 30px;
     padding-bottom: 20px;
+  }
+
+  .receipt-company-row {
+    gap: 0.75rem;
+  }
+
+  .receipt-company-logo {
+    max-height: 56px;
+    max-width: 140px;
   }
 
   .receipt-company-name {

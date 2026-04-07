@@ -2,6 +2,8 @@ import React, { useRef } from "react";
 import { X, Printer } from "lucide-react";
 import type { ProductionOrder } from "../../types/order";
 import type { Produto } from "../../types/product";
+import type { Company } from "../../types/company";
+import { formatDateBR, formatDateTimeBR } from "../../utils/dateFormatter";
 import "./PrintOrderModal.css";
 
 interface PrintOrderModalProps {
@@ -9,6 +11,7 @@ interface PrintOrderModalProps {
   onClose: () => void;
   order: ProductionOrder;
   produto: Produto | undefined;
+  company?: Company | null;
 }
 
 export const PrintOrderModal: React.FC<PrintOrderModalProps> = ({
@@ -16,6 +19,7 @@ export const PrintOrderModal: React.FC<PrintOrderModalProps> = ({
   onClose,
   order,
   produto,
+  company,
 }) => {
   const printRef = useRef<HTMLDivElement>(null);
 
@@ -23,11 +27,7 @@ export const PrintOrderModal: React.FC<PrintOrderModalProps> = ({
     window.print();
   };
 
-  const formatDate = (dateString: string) => {
-    if (!dateString) return "--";
-    const date = new Date(dateString);
-    return date.toLocaleDateString("pt-BR");
-  };
+  const formatDate = (value: Date | string) => formatDateBR(value);
 
   const getTotalPecas = () => {
     return order.grade.reduce((acc, row) => acc + row.total, 0);
@@ -62,6 +62,26 @@ export const PrintOrderModal: React.FC<PrintOrderModalProps> = ({
 
         <div className="print-modal-content" ref={printRef}>
           <div className="print-page">
+            {(company?.logoUrl || company?.nome || company?.email) && (
+              <div className="print-company-banner">
+                {company?.logoUrl && (
+                  <img
+                    src={company.logoUrl}
+                    alt=""
+                    className="print-company-logo"
+                  />
+                )}
+                <div className="print-company-details">
+                  {company?.nome && (
+                    <div className="print-company-name">{company.nome}</div>
+                  )}
+                  {company?.email && (
+                    <div className="print-company-email">{company.email}</div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Cabeçalho */}
             <div className="print-header">
               <div className="print-title-section">
@@ -71,7 +91,7 @@ export const PrintOrderModal: React.FC<PrintOrderModalProps> = ({
               <div className="print-date-info">
                 <div className="print-date-item">
                   <strong>Data Emissão:</strong>
-                  <span>{formatDate(order.createdAt.toISOString())}</span>
+                  <span>{formatDate(order.createdAt)}</span>
                 </div>
                 <div className="print-date-item">
                   <strong>Data Início:</strong>
@@ -245,8 +265,8 @@ export const PrintOrderModal: React.FC<PrintOrderModalProps> = ({
             {/* Rodapé */}
             <div className="print-footer">
               <p>
-                Documento gerado em {new Date().toLocaleString("pt-BR")} - Sistema
-                de Gestão de Produção
+                Documento gerado em {formatDateTimeBR(new Date())} - Sistema de
+                Gestão de Produção
               </p>
             </div>
           </div>

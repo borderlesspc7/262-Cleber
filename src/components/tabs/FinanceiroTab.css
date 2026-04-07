@@ -29,6 +29,33 @@
   margin: 0;
 }
 
+.financeiro-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.financeiro-refresh-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: #f1f5f9;
+  color: #334155;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.financeiro-refresh-btn:hover {
+  background: #e2e8f0;
+  border-color: #cbd5e1;
+}
+
 .financeiro-export-btn {
   display: flex;
   align-items: center;

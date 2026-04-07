@@ -285,6 +285,7 @@
 .gestao-card-actions {
   padding: 1.5rem;
   display: flex;
+  flex-wrap: wrap;
   gap: 0.75rem;
   background: #ffffff;
   border-top: 1px solid #f1f5f9;
@@ -335,6 +336,26 @@
 }
 
 .gestao-action-resume:hover:not(:disabled) .gestao-action-icon {
+  color: #ffffff;
+}
+
+.gestao-action-print {
+  border-color: #bfdbfe;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.gestao-action-print .gestao-action-icon {
+  color: #1d4ed8;
+}
+
+.gestao-action-print:hover:not(:disabled) {
+  background: #2563eb;
+  color: #ffffff;
+  border-color: #2563eb;
+}
+
+.gestao-action-print:hover:not(:disabled) .gestao-action-icon {
   color: #ffffff;
 }
 

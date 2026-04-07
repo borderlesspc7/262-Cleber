@@ -1,9 +1,32 @@
 import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import {
+  ref,
+  uploadBytes,
+  getDownloadURL,
+  deleteObject,
+} from "firebase/storage";
 import { db, storage } from "../lib/firebaseconfig";
 import type { Company } from "../types/company";
 
 const COMPANY_DOC_ID = "company_info";
+const LOGO_STORAGE_PREFIX = "company/logo_";
+const MAX_LOGO_BYTES = 5 * 1024 * 1024;
+
+/** Remove caracteres problemáticos no path do Storage */
+function sanitizeFileName(originalName: string): string {
+  const base = originalName.replace(/[^\w.-]+/g, "_").replace(/^\.+/, "");
+  return base || "logo";
+}
+
+async function deleteLogoIfPossible(previousLogoUrl: string | undefined): Promise<void> {
+  if (!previousLogoUrl?.trim()) return;
+  try {
+    const storageRef = ref(storage, previousLogoUrl);
+    await deleteObject(storageRef);
+  } catch {
+    // URL antiga inválida ou arquivo já removido — segue o fluxo
+  }
+}
 
 export const companyService = {
   // Buscar informações da empresa
@@ -40,15 +63,36 @@ export const companyService = {
     }
   },
 
-  // Upload de logo
-  async uploadLogo(file: File): Promise<string> {
+  /**
+   * Upload de logo no Storage; opcionalmente remove a logo anterior (mesmo bucket).
+   */
+  async uploadLogo(
+    file: File,
+    options?: { previousLogoUrl?: string }
+  ): Promise<string> {
+    if (!file.type.startsWith("image/")) {
+      throw new Error("Arquivo inválido: selecione uma imagem.");
+    }
+    if (file.size > MAX_LOGO_BYTES) {
+      throw new Error("A imagem deve ter no máximo 5MB.");
+    }
+
+    const safeName = sanitizeFileName(file.name);
+    const storageRef = ref(
+      storage,
+      `${LOGO_STORAGE_PREFIX}${Date.now()}_${safeName}`
+    );
+
     try {
-      const storageRef = ref(
-        storage,
-        `company/logo_${Date.now()}_${file.name}`
-      );
-      await uploadBytes(storageRef, file);
+      await uploadBytes(storageRef, file, {
+        contentType: file.type || "image/jpeg",
+      });
       const downloadURL = await getDownloadURL(storageRef);
+
+      if (options?.previousLogoUrl && options.previousLogoUrl !== downloadURL) {
+        await deleteLogoIfPossible(options.previousLogoUrl);
+      }
+
       return downloadURL;
     } catch (error) {
       console.error("Erro ao fazer upload da logo:", error);

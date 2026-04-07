@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Building2, MapPin, Upload, Save, Loader2 } from "lucide-react";
+import { Building2, MapPin, Upload, Save, Loader2, Mail } from "lucide-react";
 import { companyService } from "../../services/companyService";
 import type { Company } from "../../types/company";
 import "./CompanyForm.css";
@@ -16,6 +16,7 @@ export const CompanyForm: React.FC = () => {
   const [formData, setFormData] = useState<Company>({
     nome: "",
     endereco: "",
+    email: "",
     logoUrl: "",
   });
 
@@ -72,7 +73,10 @@ export const CompanyForm: React.FC = () => {
 
     try {
       setUploadingLogo(true);
-      const logoUrl = await companyService.uploadLogo(file);
+      const previousUrl = formData.logoUrl?.trim() || undefined;
+      const logoUrl = await companyService.uploadLogo(file, {
+        previousLogoUrl: previousUrl,
+      });
       setFormData((prev) => ({
         ...prev,
         logoUrl,
@@ -80,7 +84,9 @@ export const CompanyForm: React.FC = () => {
       setMessage({ type: "success", text: "Logo enviada com sucesso!" });
     } catch (error) {
       console.error("Erro ao fazer upload:", error);
-      setMessage({ type: "error", text: "Erro ao fazer upload da logo" });
+      const msg =
+        error instanceof Error ? error.message : "Erro ao fazer upload da logo";
+      setMessage({ type: "error", text: msg });
     } finally {
       setUploadingLogo(false);
     }
@@ -94,6 +100,15 @@ export const CompanyForm: React.FC = () => {
       return;
     }
 
+    const emailTrim = formData.email?.trim() ?? "";
+    if (emailTrim) {
+      const ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailTrim);
+      if (!ok) {
+        setMessage({ type: "error", text: "Informe um e-mail válido" });
+        return;
+      }
+    }
+
     try {
       setLoading(true);
       setMessage(null);
@@ -101,6 +116,7 @@ export const CompanyForm: React.FC = () => {
       await companyService.saveCompanyInfo({
         nome: formData.nome,
         endereco: formData.endereco,
+        email: emailTrim || undefined,
         logoUrl: formData.logoUrl,
       });
 
@@ -131,7 +147,7 @@ export const CompanyForm: React.FC = () => {
         <Building2 size={32} />
         <div>
           <h2>Informações da Empresa</h2>
-          <p>Configure o nome, logo e endereço da sua empresa</p>
+          <p>Configure o nome, logo, e-mail e endereço da sua empresa</p>
         </div>
       </div>
 
@@ -170,6 +186,24 @@ export const CompanyForm: React.FC = () => {
               Formatos aceitos: JPG, PNG, GIF (máx. 5MB)
             </p>
           </div>
+        </div>
+
+        {/* E-mail */}
+        <div className="form-group">
+          <label htmlFor="email" className="form-label">
+            <Mail size={18} />
+            E-mail
+          </label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            value={formData.email ?? ""}
+            onChange={handleInputChange}
+            placeholder="contato@empresa.com.br"
+            className="form-input"
+            autoComplete="email"
+          />
         </div>
 
         {/* Nome da Empresa */}

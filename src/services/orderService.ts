@@ -15,6 +15,7 @@ import { db } from "../lib/firebaseconfig";
 import type {
   ProductionOrder,
   CreateProductionOrderPayload,
+  OrderStatus,
 } from "../types/order";
 
 const COLLECTION = "ordensProducao";
@@ -150,5 +151,12 @@ export const orderService = {
 
   async deleteOrder(id: string) {
     await deleteDoc(doc(db, COLLECTION, id));
+  },
+
+  async updateOrderStatus(orderId: string, status: OrderStatus): Promise<void> {
+    await updateDoc(doc(db, COLLECTION, orderId), {
+      status,
+      updatedAt: serverTimestamp(),
+    });
   },
 };

@@ -15,11 +15,14 @@ import { orderService } from "../../services/orderService";
 import { produtoService } from "../../services/productService";
 import { faccaoService } from "../../services/faccaoService";
 import { productionProgressService } from "../../services/productionProgressService";
+import { companyService } from "../../services/companyService";
 import type { ProductionOrder } from "../../types/order";
 import type { Produto } from "../../types/product";
 import type { Faccao } from "../../types/faccao";
 import type { ProductionOrderProgress } from "../../types/productionProgress";
+import type { Company } from "../../types/company";
 import "./RelatoriosTab.css";
+import { formatDateTimeBR } from "../../utils/dateFormatter";
 
 type RelatorioType = "producao" | "performance";
 type PeriodoType = "semana" | "mes" | "trimestre" | "ano";
@@ -49,6 +52,7 @@ export const RelatoriosTab: React.FC = () => {
   const [orders, setOrders] = useState<ProductionOrder[]>([]);
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [faccoes, setFaccoes] = useState<Faccao[]>([]);
+  const [companyInfo, setCompanyInfo] = useState<Company | null>(null);
 
   // Métricas calculadas
   const [metricaProducao, setMetricaProducao] = useState<MetricaProducao>({
@@ -176,17 +180,19 @@ export const RelatoriosTab: React.FC = () => {
 
     try {
       setLoading(true);
-      const [ordersData, produtosData, faccoesData, progressosData] =
+      const [ordersData, produtosData, faccoesData, progressosData, companyData] =
         await Promise.all([
           orderService.getOrders(user.uid),
           produtoService.getProdutos(user.uid),
           faccaoService.getFaccoes(),
           productionProgressService.getAllProgress(user.uid),
+          companyService.getCompanyInfo(),
         ]);
 
       setOrders(ordersData);
       setProdutos(produtosData);
       setFaccoes(faccoesData);
+      setCompanyInfo(companyData);
 
       // Calcular métricas
       calcularMetricasProducao(ordersData, progressosData);
@@ -233,14 +239,18 @@ export const RelatoriosTab: React.FC = () => {
     }
   };
 
-  const formatDate = (date: Date) =>
-    new Intl.DateTimeFormat("pt-BR").format(date);
-
   const formatNumber = (value: number, digits: number = 0) =>
     new Intl.NumberFormat("pt-BR", {
       minimumFractionDigits: digits,
       maximumFractionDigits: digits,
     }).format(value);
+
+  const escapeHtml = (raw: string) =>
+    raw
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
 
   const openPrintWindow = (html: string) => {
     const printWindow = window.open("", "_blank", "noopener,noreferrer");
@@ -263,16 +273,37 @@ export const RelatoriosTab: React.FC = () => {
     subtitle: string,
     content: string
   ) => {
+    const c = companyInfo;
+    const companyHeader =
+      c && (c.logoUrl || c.nome || c.email)
+        ? `<div class="company-print">
+            ${
+              c.logoUrl
+                ? `<img class="company-print-logo" src="${escapeHtml(c.logoUrl)}" alt="" />`
+                : ""
+            }
+            <div class="company-print-text">
+              ${c.nome ? `<div class="company-print-name">${escapeHtml(c.nome)}</div>` : ""}
+              ${c.email ? `<div class="company-print-email">${escapeHtml(c.email)}</div>` : ""}
+            </div>
+          </div>`
+        : "";
+
     return `<!DOCTYPE html>
       <html lang="pt-BR">
         <head>
           <meta charset="utf-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1" />
-          <title>${title}</title>
+          <title>${escapeHtml(title)}</title>
           <style>
             @page { size: A4; margin: 18mm; }
             * { box-sizing: border-box; }
             body { font-family: "Segoe UI", Arial, sans-serif; color: #0f172a; }
+            .company-print { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #e2e8f0; }
+            .company-print-logo { max-height: 48px; max-width: 140px; object-fit: contain; }
+            .company-print-text { min-width: 0; }
+            .company-print-name { font-size: 15px; font-weight: 700; }
+            .company-print-email { font-size: 12px; color: #64748b; margin-top: 4px; word-break: break-all; }
             h1 { font-size: 20px; margin: 0 0 4px 0; }
             h2 { font-size: 14px; margin: 0 0 16px 0; color: #475569; font-weight: 600; }
             .meta { font-size: 12px; color: #64748b; margin-bottom: 16px; }
@@ -282,16 +313,17 @@ export const RelatoriosTab: React.FC = () => {
             .card { border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; }
             .card-label { font-size: 11px; color: #64748b; }
             .card-value { font-size: 16px; font-weight: 700; }
-            table { width: 100%; border-collapse: collapse; margin-top: 8px; }
-            th, td { border: 1px solid #e2e8f0; padding: 8px; font-size: 12px; text-align: left; }
+            table { width: 100%; max-width: 100%; table-layout: fixed; border-collapse: collapse; margin-top: 8px; }
+            th, td { border: 1px solid #e2e8f0; padding: 8px; font-size: 12px; text-align: left; word-break: break-word; overflow-wrap: anywhere; }
             th { background: #f8fafc; font-weight: 700; }
             .muted { color: #64748b; }
           </style>
         </head>
         <body>
-          <h1>${title}</h1>
-          <h2>${subtitle}</h2>
-          <div class="meta">Gerado em ${formatDate(new Date())}</div>
+          ${companyHeader}
+          <h1>${escapeHtml(title)}</h1>
+          <h2>${escapeHtml(subtitle)}</h2>
+          <div class="meta">Gerado em ${formatDateTimeBR(new Date())}</div>
           ${content}
         </body>
       </html>`;

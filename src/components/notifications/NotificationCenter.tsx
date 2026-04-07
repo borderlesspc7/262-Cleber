@@ -4,6 +4,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { useNotifications } from "../../hooks/useNotifications";
 import type { Notification } from "../../types/notification";
 import "./NotificationCenter.css";
+import { formatDateBR } from "../../utils/dateFormatter";
 
 interface NotificationCenterProps {
     onNavigate: (tab: string) => void;
@@ -74,7 +75,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNaviga
         if (diffHours < 24) return `${diffHours}h atrás`;
         if (diffDays === 1) return "Ontem";
         if (diffDays < 7) return `${diffDays} dias atrás`;
-        return date.toLocaleDateString("pt-BR");
+        return formatDateBR(date);
       };
     
 
