@@ -49,6 +49,13 @@
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
+.btn-export:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
 .btn-export-secondary {
   background: #10b981;
 }
@@ -56,6 +63,41 @@
 .btn-export-secondary:hover {
   background: #0ea371;
   box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.btn-refresh {
+  background: #0f172a;
+}
+
+.btn-refresh:hover {
+  background: #1e293b;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.28);
+}
+
+.btn-export-csv {
+  background: #f59e0b;
+}
+
+.btn-export-csv:hover {
+  background: #d97706;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+.relatorios-warning {
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  background: #fff7ed;
+  border: 1px solid #fdba74;
+  color: #9a3412;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.relatorios-last-updated {
+  margin-top: 0.75rem;
+  color: #64748b;
+  font-size: 0.8rem;
 }
 
 /* Filtros */

@@ -66,6 +66,11 @@
   background: #1d4ed8;
 }
 
+.btn-print:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
 .btn-close {
   display: flex;
   align-items: center;
@@ -82,6 +87,12 @@
 
 .btn-close:hover {
   background: #e5e7eb;
+}
+
+.btn-close:focus-visible,
+.btn-print:focus-visible {
+  outline: 2px solid #1d4ed8;
+  outline-offset: 2px;
 }
 
 .print-modal-content {
@@ -101,6 +112,16 @@
   min-height: 297mm;
   box-sizing: border-box;
   overflow-x: hidden;
+}
+
+.print-warning-banner {
+  margin-bottom: 12px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #fed7aa;
+  background: #fff7ed;
+  color: #9a3412;
+  font-size: 12px;
 }
 
 /* Dados da empresa (cadastro) */
@@ -138,6 +159,14 @@
   color: #6b7280;
   margin-top: 4px;
   word-break: break-all;
+}
+
+.print-company-address {
+  font-size: 12px;
+  color: #4b5563;
+  margin-top: 4px;
+  word-break: break-word;
+  line-height: 1.35;
 }
 
 .print-header {
@@ -260,7 +289,9 @@
 }
 
 .print-grade-table th,
-.print-grade-table td {
+.print-grade-table td,
+.print-steps-table th,
+.print-steps-table td {
   word-break: break-word;
   overflow-wrap: anywhere;
   hyphens: auto;

@@ -99,4 +99,25 @@ export const companyService = {
       throw error;
     }
   },
+
+  /**
+   * Upload e persistência da logo no documento da empresa.
+   * Garante que a URL da logo fique salva no banco imediatamente após o upload.
+   */
+  async uploadAndSaveLogo(
+    file: File,
+    options?: { previousLogoUrl?: string }
+  ): Promise<string> {
+    const logoUrl = await this.uploadLogo(file, options);
+    const docRef = doc(db, "company", COMPANY_DOC_ID);
+    await setDoc(
+      docRef,
+      {
+        logoUrl,
+        updatedAt: serverTimestamp(),
+      },
+      { merge: true }
+    );
+    return logoUrl;
+  },
 };

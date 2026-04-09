@@ -21,7 +21,10 @@ import toast from "react-hot-toast";
 import "./FinanceiroTab.css";
 import { formatDateBR } from "../../utils/dateFormatter";
 import { downloadCsv } from "../../utils/csvExport";
-import { FINANCEIRO_REFRESH_EVENT } from "../../constants/appEvents";
+import {
+  FINANCEIRO_REFRESH_EVENT,
+  RELATORIOS_REFRESH_EVENT,
+} from "../../constants/appEvents";
 
 export const FinanceiroTab: React.FC = () => {
   const { user } = useAuth();
@@ -37,10 +40,16 @@ export const FinanceiroTab: React.FC = () => {
     LancamentoFinanceiro[]
   >([]);
   const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
   const [lancamentoToPrint, setLancamentoToPrint] =
     useState<LancamentoFinanceiro | null>(null);
+  const [lancamentoToConfirm, setLancamentoToConfirm] =
+    useState<LancamentoFinanceiro | null>(null);
+  const [processingPaymentId, setProcessingPaymentId] = useState<string | null>(
+    null
+  );
   const [companyInfo, setCompanyInfo] = useState<Company | null>(null);
   const hasLoadedRef = useRef(false);
 
@@ -51,6 +60,7 @@ export const FinanceiroTab: React.FC = () => {
 
       try {
         if (!silent) setLoading(true);
+        if (!silent) setErrorMessage(null);
         const [pendentes, pagos, company] = await Promise.all([
           financeiroService.getLancamentosPendentes(user.uid),
           financeiroService.getLancamentosPagos(user.uid),
@@ -62,6 +72,9 @@ export const FinanceiroTab: React.FC = () => {
         setCompanyInfo(company);
       } catch (error) {
         console.error("Erro ao carregar lançamentos:", error);
+        setErrorMessage(
+          "Não foi possível carregar os dados financeiros. Tente atualizar novamente."
+        );
         toast.error("Erro ao carregar dados financeiros");
       } finally {
         if (!silent) setLoading(false);
@@ -217,19 +230,26 @@ export const FinanceiroTab: React.FC = () => {
     );
   });
 
-  const handlePagar = async (lancamentoId: string) => {
-    if (!window.confirm("Confirmar pagamento deste lançamento?")) return;
-
+  const handlePagar = async () => {
+    if (!lancamentoToConfirm) return;
     try {
-      await financeiroService.marcarComoPago(lancamentoId);
+      setProcessingPaymentId(lancamentoToConfirm.id);
+      const result = await financeiroService.marcarComoPagoSePendente(
+        lancamentoToConfirm.id
+      );
+      window.dispatchEvent(new CustomEvent(RELATORIOS_REFRESH_EVENT));
       await loadData({ silent: true });
-      toast.success("Pagamento registrado com sucesso!", {
-        icon: <CheckCircle size={20} />,
-      });
+      if (result === "already_paid") {
+        toast("Este lançamento já estava pago.");
+      } else {
+        toast.success("Pagamento registrado com sucesso!", {
+          icon: <CheckCircle size={20} />,
+        });
+      }
 
       // Buscar o lançamento atualizado e abrir o modal de impressão
       const lancamentoAtualizado = await financeiroService.getLancamentoById(
-        lancamentoId
+        lancamentoToConfirm.id
       );
       if (lancamentoAtualizado) {
         setLancamentoToPrint(lancamentoAtualizado);
@@ -238,6 +258,9 @@ export const FinanceiroTab: React.FC = () => {
     } catch (error) {
       console.error("Erro ao registrar pagamento:", error);
       toast.error("Erro ao registrar pagamento");
+    } finally {
+      setLancamentoToConfirm(null);
+      setProcessingPaymentId(null);
     }
   };
 
@@ -401,6 +424,14 @@ export const FinanceiroTab: React.FC = () => {
 
       {/* Content Area */}
       <div className="financeiro-content-card">
+        {errorMessage && (
+          <div className="financeiro-error-banner">
+            <span>{errorMessage}</span>
+            <button type="button" onClick={handleManualRefresh}>
+              Tentar novamente
+            </button>
+          </div>
+        )}
         <div className="financeiro-content-header">
           <div className="financeiro-content-title-section">
             <DollarSign className="financeiro-dollar-icon" size={24} />
@@ -439,25 +470,32 @@ export const FinanceiroTab: React.FC = () => {
                 {filteredPendencies.length === 0 ? (
                   <tr>
                     <td colSpan={8} className="financeiro-empty-state">
-                      Nenhuma pendência encontrada
+                      <div>Nenhuma pendência encontrada</div>
+                      <button
+                        type="button"
+                        className="financeiro-empty-retry-btn"
+                        onClick={handleManualRefresh}
+                      >
+                        Atualizar lista
+                      </button>
                     </td>
                   </tr>
                 ) : (
                   filteredPendencies.map((item) => (
                     <tr key={item.id}>
-                      <td>{item.ordemCodigo}</td>
-                      <td>{item.faccaoNome}</td>
-                      <td>
+                      <td data-label="Ordem">{item.ordemCodigo}</td>
+                      <td data-label="Facção">{item.faccaoNome}</td>
+                      <td data-label="Etapa">
                         <span className="financeiro-badge financeiro-badge-default">
                           {item.etapaNome}
                         </span>
                       </td>
-                      <td>{item.produtoDescricao}</td>
-                      <td className="financeiro-cell-value">
+                      <td data-label="Produto">{item.produtoDescricao}</td>
+                      <td data-label="Valor" className="financeiro-cell-value">
                         {formatCurrency(item.valor)}
                       </td>
-                      <td>{formatDate(item.dataVencimento)}</td>
-                      <td>
+                      <td data-label="Vencimento">{formatDate(item.dataVencimento)}</td>
+                      <td data-label="Status">
                         <span
                           className={`financeiro-badge ${
                             item.status === "atrasado"
@@ -478,13 +516,16 @@ export const FinanceiroTab: React.FC = () => {
                           )}
                         </span>
                       </td>
-                      <td>
+                      <td data-label="Ações">
                         <button
                           className="financeiro-action-btn"
-                          onClick={() => handlePagar(item.id)}
+                          onClick={() => setLancamentoToConfirm(item)}
+                          disabled={processingPaymentId === item.id}
                         >
                           <CreditCard size={14} />
-                          Pagar
+                          {processingPaymentId === item.id
+                            ? "Processando..."
+                            : "Pagar"}
                         </button>
                       </td>
                     </tr>
@@ -501,6 +542,13 @@ export const FinanceiroTab: React.FC = () => {
                   <p className="financeiro-empty-subtitle">
                     Os pagamentos realizados aparecerão aqui
                   </p>
+                  <button
+                    type="button"
+                    className="financeiro-empty-retry-btn"
+                    onClick={handleManualRefresh}
+                  >
+                    Atualizar lista
+                  </button>
                 </div>
               ) : (
                 <table className="financeiro-table">
@@ -520,30 +568,30 @@ export const FinanceiroTab: React.FC = () => {
                   <tbody>
                     {filteredPagamentos.map((item) => (
                       <tr key={item.id}>
-                        <td>{item.ordemCodigo}</td>
-                        <td>{item.faccaoNome}</td>
-                        <td>
+                        <td data-label="Ordem">{item.ordemCodigo}</td>
+                        <td data-label="Facção">{item.faccaoNome}</td>
+                        <td data-label="Etapa">
                           <span className="financeiro-badge financeiro-badge-default">
                             {item.etapaNome}
                           </span>
                         </td>
-                        <td>{item.produtoDescricao}</td>
-                        <td className="financeiro-cell-value">
+                        <td data-label="Produto">{item.produtoDescricao}</td>
+                        <td data-label="Valor" className="financeiro-cell-value">
                           {formatCurrency(item.valor)}
                         </td>
-                        <td>{formatDate(item.dataVencimento)}</td>
-                        <td>
+                        <td data-label="Vencimento">{formatDate(item.dataVencimento)}</td>
+                        <td data-label="Data Pagamento">
                           {item.dataPagamento
                             ? formatDate(item.dataPagamento)
                             : "-"}
                         </td>
-                        <td>
+                        <td data-label="Status">
                           <span className="financeiro-badge financeiro-badge-success">
                             <CheckCircle size={14} />
                             Pago
                           </span>
                         </td>
-                        <td>
+                        <td data-label="Ações">
                           <button
                             className="financeiro-action-btn financeiro-action-print"
                             onClick={() => handlePrintReceipt(item)}
@@ -573,6 +621,61 @@ export const FinanceiroTab: React.FC = () => {
         company={companyInfo}
         empresaNome={user?.name || "Empresa"}
       />
+
+      {lancamentoToConfirm && (
+        <div
+          className="financeiro-confirm-overlay"
+          onClick={() => setLancamentoToConfirm(null)}
+        >
+          <div
+            className="financeiro-confirm-modal"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="confirmar-pagamento-title"
+          >
+            <h3 id="confirmar-pagamento-title">Confirmar pagamento</h3>
+            <p>
+              Você está prestes a marcar este lançamento como pago.
+            </p>
+            <div className="financeiro-confirm-details">
+              <div>
+                <strong>OP:</strong> {lancamentoToConfirm.ordemCodigo}
+              </div>
+              <div>
+                <strong>Facção:</strong> {lancamentoToConfirm.faccaoNome}
+              </div>
+              <div>
+                <strong>Valor:</strong> {formatCurrency(lancamentoToConfirm.valor)}
+              </div>
+              <div>
+                <strong>Vencimento:</strong>{" "}
+                {formatDate(lancamentoToConfirm.dataVencimento)}
+              </div>
+            </div>
+            <div className="financeiro-confirm-actions">
+              <button
+                type="button"
+                className="financeiro-confirm-cancel"
+                onClick={() => setLancamentoToConfirm(null)}
+                disabled={processingPaymentId === lancamentoToConfirm.id}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className="financeiro-confirm-submit"
+                onClick={handlePagar}
+                disabled={processingPaymentId === lancamentoToConfirm.id}
+              >
+                {processingPaymentId === lancamentoToConfirm.id
+                  ? "Processando..."
+                  : "Confirmar pagamento"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -22,6 +22,29 @@ import type {
 
 const COLLECTION = "lancamentosFinanceiros";
 
+const toLancamento = (
+  docId: string,
+  data: Record<string, unknown>
+): LancamentoFinanceiro => {
+  return {
+    id: docId,
+    ...(data as Omit<LancamentoFinanceiro, "id">),
+    dataVencimento: (data.dataVencimento as Timestamp | undefined)?.toDate() || new Date(),
+    dataPagamento: (data.dataPagamento as Timestamp | undefined)?.toDate(),
+    createdAt: (data.createdAt as Timestamp | undefined)?.toDate() || new Date(),
+    updatedAt: (data.updatedAt as Timestamp | undefined)?.toDate() || new Date(),
+  };
+};
+
+const getDisplayStatus = (lancamento: LancamentoFinanceiro): LancamentoFinanceiro["status"] => {
+  if (lancamento.status === "pago") return "pago";
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+  const vencimento = new Date(lancamento.dataVencimento);
+  vencimento.setHours(0, 0, 0, 0);
+  return vencimento < hoje ? "atrasado" : "pendente";
+};
+
 export const financeiroService = {
   async createLancamento(
     payload: CreateLancamentoPayload,
@@ -54,17 +77,9 @@ export const financeiroService = {
       );
 
       const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map((doc) => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          ...data,
-          dataVencimento: data.dataVencimento?.toDate() || new Date(),
-          dataPagamento: data.dataPagamento?.toDate(),
-          createdAt: data.createdAt?.toDate() || new Date(),
-          updatedAt: data.updatedAt?.toDate() || new Date(),
-        } as LancamentoFinanceiro;
-      });
+      return querySnapshot.docs.map((entry) =>
+        toLancamento(entry.id, entry.data())
+      );
     } catch (error) {
       console.error("Erro ao buscar lançamentos:", error);
       throw error;
@@ -83,33 +98,10 @@ export const financeiroService = {
       );
 
       const querySnapshot = await getDocs(q);
-      const lancamentos = querySnapshot.docs.map((doc) => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          ...data,
-          dataVencimento: data.dataVencimento?.toDate() || new Date(),
-          dataPagamento: data.dataPagamento?.toDate(),
-          createdAt: data.createdAt?.toDate() || new Date(),
-          updatedAt: data.updatedAt?.toDate() || new Date(),
-        } as LancamentoFinanceiro;
+      return querySnapshot.docs.map((entry) => {
+        const lancamento = toLancamento(entry.id, entry.data());
+        return { ...lancamento, status: getDisplayStatus(lancamento) };
       });
-
-      // Atualizar status para atrasado se necessário
-      const hoje = new Date();
-      hoje.setHours(0, 0, 0, 0);
-
-      for (const lancamento of lancamentos) {
-        const vencimento = new Date(lancamento.dataVencimento);
-        vencimento.setHours(0, 0, 0, 0);
-
-        if (lancamento.status === "pendente" && vencimento < hoje) {
-          await this.updateLancamento(lancamento.id, { status: "atrasado" });
-          lancamento.status = "atrasado";
-        }
-      }
-
-      return lancamentos;
     } catch (error) {
       console.error("Erro ao buscar lançamentos pendentes:", error);
       throw error;
@@ -126,17 +118,9 @@ export const financeiroService = {
       );
 
       const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map((doc) => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          ...data,
-          dataVencimento: data.dataVencimento?.toDate() || new Date(),
-          dataPagamento: data.dataPagamento?.toDate(),
-          createdAt: data.createdAt?.toDate() || new Date(),
-          updatedAt: data.updatedAt?.toDate() || new Date(),
-        } as LancamentoFinanceiro;
-      });
+      return querySnapshot.docs.map((entry) =>
+        toLancamento(entry.id, entry.data())
+      );
     } catch (error) {
       console.error("Erro ao buscar lançamentos pagos:", error);
       throw error;
@@ -155,14 +139,7 @@ export const financeiroService = {
       }
 
       const data = docSnap.data();
-      return {
-        id: docSnap.id,
-        ...data,
-        dataVencimento: data.dataVencimento?.toDate() || new Date(),
-        dataPagamento: data.dataPagamento?.toDate(),
-        createdAt: data.createdAt?.toDate() || new Date(),
-        updatedAt: data.updatedAt?.toDate() || new Date(),
-      } as LancamentoFinanceiro;
+      return toLancamento(docSnap.id, data);
     } catch (error) {
       console.error("Erro ao buscar lançamento:", error);
       throw error;
@@ -202,6 +179,18 @@ export const financeiroService = {
     }
   },
 
+  async marcarComoPagoSePendente(lancamentoId: string): Promise<"paid" | "already_paid"> {
+    const lancamento = await this.getLancamentoById(lancamentoId);
+    if (!lancamento) {
+      throw new Error("Lançamento não encontrado");
+    }
+    if (lancamento.status === "pago") {
+      return "already_paid";
+    }
+    await this.marcarComoPago(lancamentoId);
+    return "paid";
+  },
+
   async deleteLancamento(lancamentoId: string): Promise<void> {
     try {
       await deleteDoc(doc(db, COLLECTION, lancamentoId));
@@ -228,5 +217,32 @@ export const financeiroService = {
       console.error("Erro ao deletar lançamentos da ordem:", error);
       throw error;
     }
+  },
+
+  async upsertLancamentoByOrderStage(
+    payload: CreateLancamentoPayload,
+    userId: string
+  ): Promise<string> {
+    const q = query(
+      collection(db, COLLECTION),
+      where("ordemProducaoId", "==", payload.ordemProducaoId),
+      where("etapaId", "==", payload.etapaId),
+      where("faccaoId", "==", payload.faccaoId),
+      where("userId", "==", userId)
+    );
+
+    const snapshot = await getDocs(q);
+    if (snapshot.empty) {
+      return this.createLancamento(payload, userId);
+    }
+
+    const existing = snapshot.docs[0];
+    const updateData = removeUndefinedFields({
+      ...payload,
+      dataVencimento: Timestamp.fromDate(payload.dataVencimento),
+      updatedAt: serverTimestamp(),
+    });
+    await updateDoc(existing.ref, updateData);
+    return existing.id;
   },
 };

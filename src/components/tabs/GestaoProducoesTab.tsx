@@ -32,9 +32,13 @@ import { financeiroService } from "../../services/financeiroService";
 import { companyService } from "../../services/companyService";
 import type { Company } from "../../types/company";
 import { PrintOrderModal } from "../orders/PrintOrderModal";
-import { FINANCEIRO_REFRESH_EVENT } from "../../constants/appEvents";
+import {
+  FINANCEIRO_REFRESH_EVENT,
+  RELATORIOS_REFRESH_EVENT,
+} from "../../constants/appEvents";
 import toast from "react-hot-toast";
 import { DeleteConfirmModal } from "../../components/ui/DeleteConfirmModal/DeleteConfirmModal";
+import { formatDateBR } from "../../utils/dateFormatter";
 import "./GestaoProducoesTab.css";
 
 export const GestaoProducoesTab: React.FC = () => {
@@ -368,7 +372,7 @@ export const GestaoProducoesTab: React.FC = () => {
         const dataVencimento = new Date();
         dataVencimento.setDate(dataVencimento.getDate() + 30); // Vencimento em 30 dias
 
-        await financeiroService.createLancamento(
+        await financeiroService.upsertLancamentoByOrderStage(
           {
             ordemProducaoId: order.id,
             ordemCodigo: order.codigo,
@@ -406,6 +410,7 @@ export const GestaoProducoesTab: React.FC = () => {
       }
 
       window.dispatchEvent(new CustomEvent(FINANCEIRO_REFRESH_EVENT));
+      window.dispatchEvent(new CustomEvent(RELATORIOS_REFRESH_EVENT));
 
       await loadData();
       setShowFinalizeModal(false);
@@ -651,7 +656,7 @@ export const GestaoProducoesTab: React.FC = () => {
                   <div className="detail-content">
                     <span className="detail-label">Iniciado em</span>
                     <span className="detail-value">
-                      {order.dataInicio || "--"}
+                      {formatDateBR(order.dataInicio)}
                     </span>
                   </div>
                 </div>
@@ -668,47 +673,50 @@ export const GestaoProducoesTab: React.FC = () => {
 
               {/* Ações */}
               <div className="gestao-card-actions">
-                {isPaused ? (
+                <div className="gestao-card-actions-primary">
+                  {isPaused ? (
+                    <button
+                      className="gestao-action-btn gestao-action-primary gestao-action-resume"
+                      onClick={() => handleResumeStage(order.id)}
+                    >
+                      <Play size={16} className="gestao-action-icon" />
+                      Retomar Produção
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        className="gestao-action-btn gestao-action-primary gestao-action-finish"
+                        onClick={() => handleFinalizeStage(order.id)}
+                        disabled={
+                          !currentStage || currentStage.status !== "em_andamento"
+                        }
+                      >
+                        <Check size={16} className="gestao-action-icon" />
+                        Finalizar Etapa
+                      </button>
+                      <button
+                        className="gestao-action-btn gestao-action-primary gestao-action-pause"
+                        onClick={() => handlePauseStage(order.id)}
+                        disabled={
+                          !currentStage || currentStage.status !== "em_andamento"
+                        }
+                      >
+                        <Pause size={16} className="gestao-action-icon" />
+                        Pausar
+                      </button>
+                    </>
+                  )}
+                </div>
+                <div className="gestao-card-actions-secondary">
                   <button
-                    className="gestao-action-btn gestao-action-resume"
-                    onClick={() => handleResumeStage(order.id)}
+                    type="button"
+                    className="gestao-action-btn gestao-action-print"
+                    onClick={() => handlePrintOrder(order)}
+                    title="Imprimir ordem de produção"
                   >
-                    <Play size={16} className="gestao-action-icon" />
-                    Retomar Produção
+                    <Printer size={16} className="gestao-action-icon" />
+                    Imprimir OP
                   </button>
-                ) : (
-                  <>
-                    <button
-                      className="gestao-action-btn gestao-action-finish"
-                      onClick={() => handleFinalizeStage(order.id)}
-                      disabled={
-                        !currentStage || currentStage.status !== "em_andamento"
-                      }
-                    >
-                      <Check size={16} className="gestao-action-icon" />
-                      Finalizar Etapa
-                    </button>
-                    <button
-                      className="gestao-action-btn gestao-action-pause"
-                      onClick={() => handlePauseStage(order.id)}
-                      disabled={
-                        !currentStage || currentStage.status !== "em_andamento"
-                      }
-                    >
-                      <Pause size={16} className="gestao-action-icon" />
-                      Pausar
-                    </button>
-                  </>
-                )}
-                <button
-                  type="button"
-                  className="gestao-action-btn gestao-action-print"
-                  onClick={() => handlePrintOrder(order)}
-                  title="Imprimir ordem de produção"
-                >
-                  <Printer size={16} className="gestao-action-icon" />
-                  Imprimir
-                </button>
                 <button className="gestao-action-btn gestao-action-report">
                   <AlertTriangle size={16} className="gestao-action-icon" />
                   Reportar Problema
@@ -721,6 +729,7 @@ export const GestaoProducoesTab: React.FC = () => {
                   <Trash2 size={16} className="gestao-action-icon" />
                   Excluir
                 </button>
+                </div>
               </div>
             </article>
           );

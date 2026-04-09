@@ -74,7 +74,7 @@ export const CompanyForm: React.FC = () => {
     try {
       setUploadingLogo(true);
       const previousUrl = formData.logoUrl?.trim() || undefined;
-      const logoUrl = await companyService.uploadLogo(file, {
+      const logoUrl = await companyService.uploadAndSaveLogo(file, {
         previousLogoUrl: previousUrl,
       });
       setFormData((prev) => ({
@@ -82,6 +82,7 @@ export const CompanyForm: React.FC = () => {
         logoUrl,
       }));
       setMessage({ type: "success", text: "Logo enviada com sucesso!" });
+      window.dispatchEvent(new CustomEvent("companyInfoUpdated"));
     } catch (error) {
       console.error("Erro ao fazer upload:", error);
       const msg =

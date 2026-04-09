@@ -24,6 +24,7 @@ import { OrderModal } from "../orders/OrderModal";
 import { PrintOrderModal } from "../orders/PrintOrderModal";
 import toast from "react-hot-toast";
 import { DeleteConfirmModal } from "../../components/ui/DeleteConfirmModal/DeleteConfirmModal";
+import { formatDateBR } from "../../utils/dateFormatter";
 import "./OrdemProducoesTab.css";
 
 const PRIORITY_LABELS = {
@@ -364,7 +365,7 @@ export const OrdemProducoesTab: React.FC = () => {
                     <div className="ordem-card__date-content">
                       <span className="ordem-card__date-label">Início</span>
                       <span className="ordem-card__date-value">
-                        {order.dataInicio || "--"}
+                        {formatDateBR(order.dataInicio)}
                       </span>
                     </div>
                   </div>
@@ -375,7 +376,7 @@ export const OrdemProducoesTab: React.FC = () => {
                     <div className="ordem-card__date-content">
                       <span className="ordem-card__date-label">Previsão</span>
                       <span className="ordem-card__date-value">
-                        {order.dataPrevista || "--"}
+                        {formatDateBR(order.dataPrevista)}
                       </span>
                     </div>
                   </div>

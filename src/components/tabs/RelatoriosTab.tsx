@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   TrendingUp,
   Package,
   Users,
   Calendar,
   Download,
+  RefreshCw,
   Filter,
   BarChart3,
   PieChart,
@@ -22,7 +23,10 @@ import type { Faccao } from "../../types/faccao";
 import type { ProductionOrderProgress } from "../../types/productionProgress";
 import type { Company } from "../../types/company";
 import "./RelatoriosTab.css";
-import { formatDateTimeBR } from "../../utils/dateFormatter";
+import { formatDateBR, formatDateTimeBR } from "../../utils/dateFormatter";
+import { downloadCsv } from "../../utils/csvExport";
+import { RELATORIOS_REFRESH_EVENT } from "../../constants/appEvents";
+import toast from "react-hot-toast";
 
 type RelatorioType = "producao" | "performance";
 type PeriodoType = "semana" | "mes" | "trimestre" | "ano";
@@ -47,6 +51,12 @@ export const RelatoriosTab: React.FC = () => {
   const [activeTab, setActiveTab] = useState<RelatorioType>("producao");
   const [periodo, setPeriodo] = useState<PeriodoType>("mes");
   const [loading, setLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [lastUpdatedAt, setLastUpdatedAt] = useState<Date | null>(null);
+  const refreshTimeoutRef = useRef<number | null>(null);
+  const refreshInFlightRef = useRef(false);
 
   // Dados
   const [orders, setOrders] = useState<ProductionOrder[]>([]);
@@ -175,11 +185,14 @@ export const RelatoriosTab: React.FC = () => {
     []
   );
 
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(async (options?: { silent?: boolean }) => {
+    const silent = options?.silent ?? false;
     if (!user) return;
 
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
+      if (silent) setIsRefreshing(true);
+      setErrorMessage(null);
       const [ordersData, produtosData, faccoesData, progressosData, companyData] =
         await Promise.all([
           orderService.getOrders(user.uid),
@@ -197,16 +210,46 @@ export const RelatoriosTab: React.FC = () => {
       // Calcular métricas
       calcularMetricasProducao(ordersData, progressosData);
       calcularPerformanceFaccoes(progressosData, faccoesData);
+      setLastUpdatedAt(new Date());
     } catch (error) {
       console.error("Erro ao carregar dados:", error);
+      setErrorMessage(
+        "Não foi possível atualizar os relatórios agora. Exibindo os últimos dados carregados."
+      );
+      toast.error("Erro ao carregar relatórios");
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
+      if (silent) setIsRefreshing(false);
     }
   }, [user, calcularMetricasProducao, calcularPerformanceFaccoes]);
 
   useEffect(() => {
     loadData();
   }, [loadData, periodo]);
+
+  useEffect(() => {
+    const scheduleRefresh = () => {
+      if (refreshInFlightRef.current) return;
+      if (refreshTimeoutRef.current) {
+        window.clearTimeout(refreshTimeoutRef.current);
+      }
+      refreshTimeoutRef.current = window.setTimeout(async () => {
+        refreshInFlightRef.current = true;
+        try {
+          await loadData({ silent: true });
+        } finally {
+          refreshInFlightRef.current = false;
+        }
+      }, 250);
+    };
+    window.addEventListener(RELATORIOS_REFRESH_EVENT, scheduleRefresh);
+    return () => {
+      if (refreshTimeoutRef.current) {
+        window.clearTimeout(refreshTimeoutRef.current);
+      }
+      window.removeEventListener(RELATORIOS_REFRESH_EVENT, scheduleRefresh);
+    };
+  }, [loadData]);
 
   const getDataLimite = (periodo: PeriodoType): Date => {
     const hoje = new Date();
@@ -244,6 +287,108 @@ export const RelatoriosTab: React.FC = () => {
       minimumFractionDigits: digits,
       maximumFractionDigits: digits,
     }).format(value);
+
+  const handleRefresh = async () => {
+    await loadData({ silent: true });
+    toast.success(`Relatórios atualizados (${getPeriodoLabel(periodo)})`);
+  };
+
+  const getExportFileDate = () => formatDateBR(new Date()).replace(/\//g, "-");
+  const getExportTimestamp = () =>
+    formatDateTimeBR(new Date()).replace(/[/: ]/g, "-");
+
+  const runExportJob = async (
+    label: string,
+    exporter: () => Promise<void> | void
+  ) => {
+    if (isExporting) return;
+    try {
+      setIsExporting(true);
+      await exporter();
+      toast.success(`${label} exportado com sucesso`);
+    } catch (error) {
+      console.error(`Erro ao exportar ${label}:`, error);
+      toast.error(`Falha ao exportar ${label}`);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const exportarCsvProducao = () => {
+    const dataLimite = getDataLimite(periodo);
+    const ordersFiltradas = orders.filter(
+      (order) => new Date(order.createdAt) >= dataLimite
+    );
+    const ordensConcluidas = ordersFiltradas.filter(
+      (order) => order.status === "concluida"
+    ).length;
+    const ordensEmAndamento = ordersFiltradas.filter(
+      (order) => order.status === "em_producao"
+    ).length;
+    const ordensPlanejadas = ordersFiltradas.filter(
+      (order) => order.status === "planejada"
+    ).length;
+    const taxaConclusao =
+      ordersFiltradas.length > 0
+        ? (ordensConcluidas / ordersFiltradas.length) * 100
+        : 0;
+    const topProdutos = getProdutosMaisProduzidos(ordersFiltradas);
+
+    const rows: (string | number)[][] = [
+      ["Relatório", "Produção"],
+      ["Período", getPeriodoLabel(periodo)],
+      ["Gerado em", formatDateTimeBR(new Date())],
+      [],
+      ["Resumo", "Valor"],
+      ["Total de Ordens", ordersFiltradas.length],
+      ["Concluídas", ordensConcluidas],
+      ["Em Andamento", ordensEmAndamento],
+      ["Planejadas", ordensPlanejadas],
+      ["Taxa de Conclusão (%)", Number(taxaConclusao.toFixed(2))],
+      [
+        "Tempo Médio por Etapa (dias)",
+        Number(metricaProducao.tempoMedioPorEtapa.toFixed(2)),
+      ],
+      [],
+      ["Top Produtos", "Quantidade de Ordens"],
+      ...topProdutos.map((p) => [p.nome, p.quantidade]),
+    ];
+
+    const fileDate = getExportFileDate();
+    const stamp = getExportTimestamp();
+    downloadCsv(`relatorios-producao-${periodo}-${fileDate}-${stamp}.csv`, rows);
+  };
+
+  const exportarCsvPerformance = () => {
+    const faccoesAtivas = faccoes.filter((f) => f.ativo).length;
+    const faccoesTop = faccoesPerformance.slice(0, 5);
+
+    const rows: (string | number)[][] = [
+      ["Relatório", "Performance"],
+      ["Período", getPeriodoLabel(periodo)],
+      ["Gerado em", formatDateTimeBR(new Date())],
+      [],
+      ["Indicador", "Valor"],
+      ["Facções Ativas", faccoesAtivas],
+      ["Facções Cadastradas", faccoes.length],
+      ["Produtos Cadastrados", produtos.length],
+      [],
+      ["Facção", "Ordens Finalizadas", "Tempo Médio (dias)", "Taxa Defeitos (%)"],
+      ...faccoesTop.map((f) => [
+        f.faccaoNome,
+        f.ordensFinalizadas,
+        Number(f.tempoMedio.toFixed(2)),
+        Number(f.taxaDefeitos.toFixed(2)),
+      ]),
+    ];
+
+    const fileDate = getExportFileDate();
+    const stamp = getExportTimestamp();
+    downloadCsv(
+      `relatorios-performance-${periodo}-${fileDate}-${stamp}.csv`,
+      rows
+    );
+  };
 
   const escapeHtml = (raw: string) =>
     raw
@@ -285,6 +430,7 @@ export const RelatoriosTab: React.FC = () => {
             <div class="company-print-text">
               ${c.nome ? `<div class="company-print-name">${escapeHtml(c.nome)}</div>` : ""}
               ${c.email ? `<div class="company-print-email">${escapeHtml(c.email)}</div>` : ""}
+              ${c.endereco ? `<div class="company-print-address">${escapeHtml(c.endereco)}</div>` : ""}
             </div>
           </div>`
         : "";
@@ -304,6 +450,7 @@ export const RelatoriosTab: React.FC = () => {
             .company-print-text { min-width: 0; }
             .company-print-name { font-size: 15px; font-weight: 700; }
             .company-print-email { font-size: 12px; color: #64748b; margin-top: 4px; word-break: break-all; }
+            .company-print-address { font-size: 12px; color: #4b5563; margin-top: 4px; line-height: 1.35; word-break: break-word; }
             h1 { font-size: 20px; margin: 0 0 4px 0; }
             h2 { font-size: 14px; margin: 0 0 16px 0; color: #475569; font-weight: 600; }
             .meta { font-size: 12px; color: #64748b; margin-bottom: 16px; }
@@ -480,19 +627,59 @@ export const RelatoriosTab: React.FC = () => {
           </p>
         </div>
         <div className="relatorios-actions">
-          <button className="btn-export" onClick={handleExportarProducao}>
+          <button
+            className="btn-export btn-refresh"
+            onClick={handleRefresh}
+            disabled={isRefreshing || isExporting}
+          >
+            <RefreshCw size={18} />
+            {isRefreshing ? "Atualizando..." : "Atualizar"}
+          </button>
+          <button
+            className="btn-export"
+            onClick={() => runExportJob("Produção (PDF)", handleExportarProducao)}
+            disabled={isExporting}
+          >
             <Download size={18} />
             Exportar Produção (PDF)
           </button>
           <button
+            className="btn-export btn-export-csv"
+            onClick={() => runExportJob("Produção (CSV)", exportarCsvProducao)}
+            disabled={isExporting}
+          >
+            <Download size={18} />
+            Exportar Produção (CSV)
+          </button>
+          <button
             className="btn-export btn-export-secondary"
-            onClick={handleExportarPerformance}
+            onClick={() =>
+              runExportJob("Performance (PDF)", handleExportarPerformance)
+            }
+            disabled={isExporting}
           >
             <Download size={18} />
             Exportar Performance (PDF)
           </button>
+          <button
+            className="btn-export btn-export-secondary btn-export-csv"
+            onClick={() =>
+              runExportJob("Performance (CSV)", exportarCsvPerformance)
+            }
+            disabled={isExporting}
+          >
+            <Download size={18} />
+            Exportar Performance (CSV)
+          </button>
         </div>
       </div>
+
+      {errorMessage && <div className="relatorios-warning">{errorMessage}</div>}
+      {lastUpdatedAt && (
+        <div className="relatorios-last-updated">
+          Última atualização: {formatDateTimeBR(lastUpdatedAt)}
+        </div>
+      )}
 
       {/* Filtros */}
       <div className="relatorios-filters">

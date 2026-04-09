@@ -284,11 +284,18 @@
 /* Ações */
 .gestao-card-actions {
   padding: 1.5rem;
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: 1fr;
   gap: 0.75rem;
   background: #ffffff;
   border-top: 1px solid #f1f5f9;
+}
+
+.gestao-card-actions-primary,
+.gestao-card-actions-secondary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
 }
 
 .gestao-action-btn {
@@ -304,7 +311,7 @@
   transition: all 0.2s;
   background: #f8fafc;
   color: #475569;
-  font-weight: bold;
+  font-weight: 700;
 }
 
 .gestao-action-btn:disabled {
@@ -316,6 +323,16 @@
 .gestao-action-btn:hover:not(:disabled) {
   background: #9333ea;
   color: #ffffff;
+}
+
+.gestao-action-primary {
+  background: #ede9fe;
+  border-color: #ddd6fe;
+  color: #6d28d9;
+}
+
+.gestao-action-primary .gestao-action-icon {
+  color: #6d28d9;
 }
 
 .gestao-action-icon {
@@ -409,7 +426,8 @@
     gap: 1rem;
   }
 
-  .gestao-card-actions {
+  .gestao-card-actions-primary,
+  .gestao-card-actions-secondary {
     flex-direction: column;
   }
 

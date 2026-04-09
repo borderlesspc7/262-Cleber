@@ -26,6 +26,7 @@ export const PrintReceiptModal: React.FC<PrintReceiptModalProps> = ({
 
   const displayName = company?.nome?.trim() || empresaNome;
   const companyEmail = company?.email?.trim();
+  const companyAddress = company?.endereco?.trim();
 
   const handlePrint = () => {
     window.print();
@@ -184,6 +185,9 @@ export const PrintReceiptModal: React.FC<PrintReceiptModalProps> = ({
                   <div className="receipt-company-name">{displayName}</div>
                   {companyEmail && (
                     <div className="receipt-company-email">{companyEmail}</div>
+                  )}
+                  {companyAddress && (
+                    <div className="receipt-company-address">{companyAddress}</div>
                   )}
                 </div>
               </div>

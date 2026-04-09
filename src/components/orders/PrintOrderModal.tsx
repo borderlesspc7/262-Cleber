@@ -1,9 +1,10 @@
-import React, { useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { X, Printer } from "lucide-react";
 import type { ProductionOrder } from "../../types/order";
 import type { Produto } from "../../types/product";
 import type { Company } from "../../types/company";
 import { formatDateBR, formatDateTimeBR } from "../../utils/dateFormatter";
+import toast from "react-hot-toast";
 import "./PrintOrderModal.css";
 
 interface PrintOrderModalProps {
@@ -22,9 +23,43 @@ export const PrintOrderModal: React.FC<PrintOrderModalProps> = ({
   company,
 }) => {
   const printRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const [isPrinting, setIsPrinting] = useState(false);
+  const [logoLoadFailed, setLogoLoadFailed] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    };
+    document.addEventListener("keydown", onKeyDown);
+    closeButtonRef.current?.focus();
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [isOpen, onClose]);
+
+  useEffect(() => {
+    if (isOpen) {
+      setLogoLoadFailed(false);
+    }
+  }, [isOpen, order.id]);
 
   const handlePrint = () => {
-    window.print();
+    if (typeof window.print !== "function") {
+      toast.error("Seu navegador não suporta impressão nesta tela.");
+      return;
+    }
+    setIsPrinting(true);
+    try {
+      toast("Abrindo janela de impressão...");
+      window.print();
+    } catch (error) {
+      console.error("Erro ao imprimir ordem:", error);
+      toast.error("Não foi possível abrir a impressão.");
+    } finally {
+      setIsPrinting(false);
+    }
   };
 
   const formatDate = (value: Date | string) => formatDateBR(value);
@@ -42,19 +77,30 @@ export const PrintOrderModal: React.FC<PrintOrderModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="print-modal-overlay">
-      <div className="print-modal">
+    <div className="print-modal-overlay" onClick={onClose}>
+      <div
+        className="print-modal"
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="print-order-title"
+      >
         <div className="print-modal-header no-print">
           <div>
-            <h2>Impressão de Ordem de Produção</h2>
+            <h2 id="print-order-title">Impressão de Ordem de Produção</h2>
             <p>Visualize antes de imprimir</p>
           </div>
           <div className="print-modal-actions">
-            <button className="btn-print" onClick={handlePrint}>
+            <button className="btn-print" onClick={handlePrint} disabled={isPrinting}>
               <Printer size={18} />
-              Imprimir
+              {isPrinting ? "Preparando..." : "Imprimir"}
             </button>
-            <button className="btn-close" onClick={onClose}>
+            <button
+              ref={closeButtonRef}
+              className="btn-close"
+              onClick={onClose}
+              aria-label="Fechar visualização de impressão"
+            >
               <X size={18} />
             </button>
           </div>
@@ -62,13 +108,25 @@ export const PrintOrderModal: React.FC<PrintOrderModalProps> = ({
 
         <div className="print-modal-content" ref={printRef}>
           <div className="print-page">
+            {!company?.nome && !company?.logoUrl && (
+              <div className="print-warning-banner">
+                Cabeçalho da empresa incompleto. Cadastre os dados da empresa para
+                uma impressão mais profissional.
+              </div>
+            )}
+            {!produto && (
+              <div className="print-warning-banner">
+                Alguns dados do produto não foram localizados para esta ordem.
+              </div>
+            )}
             {(company?.logoUrl || company?.nome || company?.email) && (
               <div className="print-company-banner">
-                {company?.logoUrl && (
+                {company?.logoUrl && !logoLoadFailed && (
                   <img
                     src={company.logoUrl}
                     alt=""
                     className="print-company-logo"
+                    onError={() => setLogoLoadFailed(true)}
                   />
                 )}
                 <div className="print-company-details">
@@ -77,6 +135,11 @@ export const PrintOrderModal: React.FC<PrintOrderModalProps> = ({
                   )}
                   {company?.email && (
                     <div className="print-company-email">{company.email}</div>
+                  )}
+                  {company?.endereco && (
+                    <div className="print-company-address">
+                      {company.endereco}
+                    </div>
                   )}
                 </div>
               </div>

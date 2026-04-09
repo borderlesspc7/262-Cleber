@@ -101,6 +101,15 @@
   word-break: break-all;
 }
 
+.receipt-company-address {
+  font-size: 13px;
+  color: #4b5563;
+  font-weight: 500;
+  margin-top: 4px;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
 .receipt-company-name {
   font-size: 28px;
   font-weight: 700;

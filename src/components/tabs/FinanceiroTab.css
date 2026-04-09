@@ -297,6 +297,27 @@
   overflow: hidden;
 }
 
+.financeiro-error-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: #fff7ed;
+  color: #9a3412;
+  border-bottom: 1px solid #fed7aa;
+}
+
+.financeiro-error-banner button {
+  border: 1px solid #fdba74;
+  background: #fff;
+  color: #9a3412;
+  border-radius: 0.375rem;
+  padding: 0.375rem 0.625rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
 .financeiro-content-header {
   padding: 1.5rem;
   border-bottom: 1px solid #e5e7eb;
@@ -427,6 +448,19 @@
   border-color: #9ca3af;
 }
 
+.financeiro-action-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.financeiro-action-btn:focus-visible,
+.financeiro-nav-tab:focus-visible,
+.financeiro-refresh-btn:focus-visible,
+.financeiro-export-btn:focus-visible {
+  outline: 2px solid #7c3aed;
+  outline-offset: 2px;
+}
+
 .financeiro-action-print {
   background: #dbeafe;
   color: #1e40af;
@@ -464,6 +498,90 @@
   font-size: 0.875rem;
   margin-top: 0.5rem;
   opacity: 0.7;
+}
+
+.financeiro-empty-retry-btn {
+  margin-top: 0.75rem;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #334155;
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.financeiro-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+  padding: 1rem;
+}
+
+.financeiro-confirm-modal {
+  width: 100%;
+  max-width: 460px;
+  background: #fff;
+  border-radius: 0.75rem;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.25);
+  padding: 1rem;
+}
+
+.financeiro-confirm-modal h3 {
+  margin: 0 0 0.5rem;
+  color: #0f172a;
+}
+
+.financeiro-confirm-modal p {
+  margin: 0;
+  color: #475569;
+}
+
+.financeiro-confirm-details {
+  margin-top: 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  display: grid;
+  gap: 0.5rem;
+  color: #1e293b;
+  font-size: 0.875rem;
+}
+
+.financeiro-confirm-actions {
+  margin-top: 1rem;
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.financeiro-confirm-cancel,
+.financeiro-confirm-submit {
+  border: 0;
+  border-radius: 0.5rem;
+  padding: 0.625rem 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.financeiro-confirm-cancel {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
+.financeiro-confirm-submit {
+  background: #2563eb;
+  color: #fff;
+}
+
+.financeiro-confirm-cancel:disabled,
+.financeiro-confirm-submit:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 
 /* Responsive Design */
