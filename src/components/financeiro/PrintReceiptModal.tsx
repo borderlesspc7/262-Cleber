@@ -169,7 +169,7 @@ export const PrintReceiptModal: React.FC<PrintReceiptModalProps> = ({
           </div>
         </div>
 
-        <div className="receipt-modal-content" ref={printRef}>
+        <div className="receipt-modal-content print-receipt-content" ref={printRef}>
           <div className="receipt-page">
             {/* Cabeçalho do Recibo */}
             <div className="receipt-header">

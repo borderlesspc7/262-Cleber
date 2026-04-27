@@ -2,14 +2,15 @@ import {
   collection,
   addDoc,
   getDocs,
+  getDoc,
   doc,
   updateDoc,
   deleteDoc,
   query,
   where,
-  orderBy,
   serverTimestamp,
 } from "firebase/firestore";
+import type { DocumentData, UpdateData } from "firebase/firestore";
 import { db } from "../lib/firebaseconfig";
 import type {
   Categoria,
@@ -22,21 +23,102 @@ import type {
   ProdutoForm,
 } from "../types/product";
 
+const PRODUCT_COLLECTIONS = {
+  categorias: ["Categorias", "categorias"],
+  cores: ["Cores", "cores"],
+  tamanhos: ["tamanhos", "Tamanhos"],
+} as const;
+
+const uniqueById = <T extends { id: string }>(items: T[]): T[] =>
+  Array.from(new Map(items.map((item) => [item.id, item])).values());
+
+const toDate = (value: unknown): Date | undefined => {
+  if (
+    value &&
+    typeof value === "object" &&
+    "toDate" in value &&
+    typeof value.toDate === "function"
+  ) {
+    return value.toDate();
+  }
+
+  return undefined;
+};
+
+const updateExistingDocument = async (
+  collectionNames: readonly string[],
+  id: string,
+  data: UpdateData<DocumentData>
+): Promise<void> => {
+  for (const collectionName of collectionNames) {
+    const documentRef = doc(db, collectionName, id);
+    const documentSnapshot = await getDoc(documentRef);
+
+    if (documentSnapshot.exists()) {
+      await updateDoc(documentRef, data);
+      return;
+    }
+  }
+
+  await updateDoc(doc(db, collectionNames[0], id), data);
+};
+
+const deleteExistingDocument = async (
+  collectionNames: readonly string[],
+  id: string
+): Promise<void> => {
+  const existingDocuments = await Promise.all(
+    collectionNames.map(async (collectionName) => {
+      const documentRef = doc(db, collectionName, id);
+      const documentSnapshot = await getDoc(documentRef);
+
+      return documentSnapshot.exists() ? documentRef : null;
+    })
+  );
+
+  const documentsToDelete = existingDocuments.filter(
+    (documentRef): documentRef is NonNullable<typeof documentRef> =>
+      documentRef !== null
+  );
+
+  if (documentsToDelete.length === 0) {
+    await deleteDoc(doc(db, collectionNames[0], id));
+    return;
+  }
+
+  await Promise.all(
+    documentsToDelete.map((documentRef) => deleteDoc(documentRef))
+  );
+};
+
 // ============= CATEGORIAS =============
 export const categoriaService = {
   async getCategorias(userId: string): Promise<Categoria[]> {
     try {
-      const q = query(
-        collection(db, "categorias"),
-        where("userId", "==", userId),
-        orderBy("nome", "asc")
+      const snapshots = await Promise.all(
+        PRODUCT_COLLECTIONS.categorias.map((collectionName) =>
+          getDocs(
+            query(collection(db, collectionName), where("userId", "==", userId))
+          )
+        )
       );
-      const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate(),
-      })) as Categoria[];
+      const categorias = snapshots.flatMap((querySnapshot) =>
+        querySnapshot.docs.map((documentSnapshot) => {
+          const data = documentSnapshot.data();
+
+          return {
+            id: documentSnapshot.id,
+            nome: data.nome || "",
+            descricao: data.descricao || "",
+            ativo: data.ativo !== false,
+            createdAt: toDate(data.createdAt) || new Date(),
+          };
+        })
+      );
+
+      return uniqueById(categorias).sort((a, b) =>
+        a.nome.localeCompare(b.nome)
+      );
     } catch (error) {
       console.error("Erro ao buscar categorias:", error);
       throw error;
@@ -48,12 +130,15 @@ export const categoriaService = {
     categoriaForm: CategoriaForm
   ): Promise<string> {
     try {
-      const docRef = await addDoc(collection(db, "categorias"), {
-        ...categoriaForm,
-        userId,
-        ativo: true,
-        createdAt: serverTimestamp(),
-      });
+      const docRef = await addDoc(
+        collection(db, PRODUCT_COLLECTIONS.categorias[0]),
+        {
+          ...categoriaForm,
+          userId,
+          ativo: true,
+          createdAt: serverTimestamp(),
+        }
+      );
       return docRef.id;
     } catch (error) {
       console.error("Erro ao criar categoria:", error);
@@ -66,7 +151,7 @@ export const categoriaService = {
     categoriaForm: CategoriaForm
   ): Promise<void> {
     try {
-      await updateDoc(doc(db, "categorias", id), {
+      await updateExistingDocument(PRODUCT_COLLECTIONS.categorias, id, {
         ...categoriaForm,
         updatedAt: serverTimestamp(),
       });
@@ -78,7 +163,7 @@ export const categoriaService = {
 
   async deleteCategoria(id: string): Promise<void> {
     try {
-      await deleteDoc(doc(db, "categorias", id));
+      await deleteExistingDocument(PRODUCT_COLLECTIONS.categorias, id);
     } catch (error) {
       console.error("Erro ao deletar categoria:", error);
       throw error;
@@ -90,17 +175,28 @@ export const categoriaService = {
 export const corService = {
   async getCores(userId: string): Promise<Cor[]> {
     try {
-      const q = query(
-        collection(db, "cores"),
-        where("userId", "==", userId),
-        orderBy("nome", "asc")
+      const snapshots = await Promise.all(
+        PRODUCT_COLLECTIONS.cores.map((collectionName) =>
+          getDocs(
+            query(collection(db, collectionName), where("userId", "==", userId))
+          )
+        )
       );
-      const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate(),
-      })) as Cor[];
+      const cores = snapshots.flatMap((querySnapshot) =>
+        querySnapshot.docs.map((documentSnapshot) => {
+          const data = documentSnapshot.data();
+
+          return {
+            id: documentSnapshot.id,
+            nome: data.nome || "",
+            codigo: data.codigo || "#000000",
+            ativo: data.ativo !== false,
+            createdAt: toDate(data.createdAt) || new Date(),
+          };
+        })
+      );
+
+      return uniqueById(cores).sort((a, b) => a.nome.localeCompare(b.nome));
     } catch (error) {
       console.error("Erro ao buscar cores:", error);
       throw error;
@@ -109,12 +205,15 @@ export const corService = {
 
   async createCor(userId: string, corForm: CorForm): Promise<string> {
     try {
-      const docRef = await addDoc(collection(db, "cores"), {
-        ...corForm,
-        userId,
-        ativo: true,
-        createdAt: serverTimestamp(),
-      });
+      const docRef = await addDoc(
+        collection(db, PRODUCT_COLLECTIONS.cores[0]),
+        {
+          ...corForm,
+          userId,
+          ativo: true,
+          createdAt: serverTimestamp(),
+        }
+      );
       return docRef.id;
     } catch (error) {
       console.error("Erro ao criar cor:", error);
@@ -124,7 +223,7 @@ export const corService = {
 
   async updateCor(id: string, corForm: CorForm): Promise<void> {
     try {
-      await updateDoc(doc(db, "cores", id), {
+      await updateExistingDocument(PRODUCT_COLLECTIONS.cores, id, {
         ...corForm,
         updatedAt: serverTimestamp(),
       });
@@ -136,7 +235,7 @@ export const corService = {
 
   async deleteCor(id: string): Promise<void> {
     try {
-      await deleteDoc(doc(db, "cores", id));
+      await deleteExistingDocument(PRODUCT_COLLECTIONS.cores, id);
     } catch (error) {
       console.error("Erro ao deletar cor:", error);
       throw error;
@@ -148,17 +247,28 @@ export const corService = {
 export const tamanhoService = {
   async getTamanhos(userId: string): Promise<Tamanho[]> {
     try {
-      const q = query(
-        collection(db, "tamanhos"),
-        where("userId", "==", userId),
-        orderBy("ordem", "asc")
+      const snapshots = await Promise.all(
+        PRODUCT_COLLECTIONS.tamanhos.map((collectionName) =>
+          getDocs(
+            query(collection(db, collectionName), where("userId", "==", userId))
+          )
+        )
       );
-      const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate(),
-      })) as Tamanho[];
+      const tamanhos = snapshots.flatMap((querySnapshot) =>
+        querySnapshot.docs.map((documentSnapshot) => {
+          const data = documentSnapshot.data();
+
+          return {
+            id: documentSnapshot.id,
+            nome: data.nome || "",
+            ordem: Number(data.ordem) || 1,
+            ativo: data.ativo !== false,
+            createdAt: toDate(data.createdAt) || new Date(),
+          };
+        })
+      );
+
+      return uniqueById(tamanhos).sort((a, b) => a.ordem - b.ordem);
     } catch (error) {
       console.error("Erro ao buscar tamanhos:", error);
       throw error;
@@ -170,12 +280,15 @@ export const tamanhoService = {
     tamanhoForm: TamanhoForm
   ): Promise<string> {
     try {
-      const docRef = await addDoc(collection(db, "tamanhos"), {
-        ...tamanhoForm,
-        userId,
-        ativo: true,
-        createdAt: serverTimestamp(),
-      });
+      const docRef = await addDoc(
+        collection(db, PRODUCT_COLLECTIONS.tamanhos[0]),
+        {
+          ...tamanhoForm,
+          userId,
+          ativo: true,
+          createdAt: serverTimestamp(),
+        }
+      );
       return docRef.id;
     } catch (error) {
       console.error("Erro ao criar tamanho:", error);
@@ -185,7 +298,7 @@ export const tamanhoService = {
 
   async updateTamanho(id: string, tamanhoForm: TamanhoForm): Promise<void> {
     try {
-      await updateDoc(doc(db, "tamanhos", id), {
+      await updateExistingDocument(PRODUCT_COLLECTIONS.tamanhos, id, {
         ...tamanhoForm,
         updatedAt: serverTimestamp(),
       });
@@ -197,7 +310,7 @@ export const tamanhoService = {
 
   async deleteTamanho(id: string): Promise<void> {
     try {
-      await deleteDoc(doc(db, "tamanhos", id));
+      await deleteExistingDocument(PRODUCT_COLLECTIONS.tamanhos, id);
     } catch (error) {
       console.error("Erro ao deletar tamanho:", error);
       throw error;

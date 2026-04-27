@@ -336,43 +336,77 @@
 
 /* Estilos para Impressão */
 @media print {
-  body {
+  @page {
+    size: A4;
     margin: 0;
-    padding: 0;
+  }
+
+  html,
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+  }
+
+  body * {
+    visibility: hidden !important;
   }
 
   .no-print,
-  .receipt-modal-header,
-  .receipt-modal-overlay {
+  .receipt-modal-header {
     display: none !important;
   }
 
+  .receipt-modal-overlay,
   .receipt-modal {
-    position: static;
-    max-width: none;
-    max-height: none;
-    box-shadow: none;
-    border-radius: 0;
+    position: static !important;
+    inset: auto !important;
+    display: block !important;
+    width: 100% !important;
+    max-width: none !important;
+    max-height: none !important;
+    height: auto !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    visibility: visible !important;
   }
 
-  .receipt-modal-content {
-    padding: 0;
-    overflow: visible;
-    background: white;
+  .print-receipt-content,
+  .print-receipt-content * {
+    visibility: visible !important;
+  }
+
+  .print-receipt-content {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    background: white !important;
   }
 
   .receipt-page {
-    max-width: none;
-    margin: 0;
-    padding: 40px 50px;
-    box-shadow: none;
-    min-height: auto;
-    page-break-after: always;
+    width: 210mm !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 18mm 16mm !important;
+    box-shadow: none !important;
+    min-height: auto !important;
+    page-break-after: auto !important;
+    break-after: auto !important;
   }
 
   .receipt-header {
-    margin-bottom: 30px;
-    padding-bottom: 20px;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
   }
 
   .receipt-company-row {
@@ -425,12 +459,22 @@
   }
 
   .receipt-signatures {
-    margin-top: 50px;
-    margin-bottom: 30px;
+    margin-top: 30px;
+    margin-bottom: 16px;
   }
 
   .receipt-footer {
-    margin-top: 40px;
+    margin-top: 14px;
+    padding-top: 10px;
+  }
+
+  .receipt-footer-text {
+    margin-bottom: 3px;
+  }
+
+  .receipt-footer-info {
+    font-size: 9px;
+    line-height: 1.2;
   }
 
   /* Garantir que cores de fundo sejam impressas */

@@ -393,38 +393,70 @@
 
 /* Estilos para Impressão */
 @media print {
-  body {
+  @page {
+    size: A4;
     margin: 0;
-    padding: 0;
+  }
+
+  html,
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+  }
+
+  body * {
+    visibility: hidden !important;
   }
 
   .no-print,
-  .print-modal-header,
-  .print-modal-overlay {
+  .print-modal-header {
     display: none !important;
   }
 
+  .print-modal-overlay,
   .print-modal {
-    position: static;
+    position: static !important;
+    inset: auto !important;
+    display: block !important;
+    width: 100% !important;
     max-width: none;
     max-height: none;
-    box-shadow: none;
-    border-radius: 0;
+    height: auto !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    visibility: visible !important;
+  }
+
+  .print-modal-content,
+  .print-modal-content * {
+    visibility: visible !important;
   }
 
   .print-modal-content {
-    padding: 0;
-    overflow: visible;
-    background: white;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    background: white !important;
   }
 
   .print-page {
-    width: 210mm;
+    width: 210mm !important;
     min-height: 297mm;
-    max-width: none;
-    margin: 0;
+    max-width: none !important;
+    margin: 0 !important;
     padding: 15mm;
-    box-shadow: none;
+    box-shadow: none !important;
     page-break-after: always;
   }
 

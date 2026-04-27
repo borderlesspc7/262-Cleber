@@ -18,7 +18,10 @@ import "./OrderModal.css";
 interface OrderModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: CreateProductionOrderPayload) => Promise<void>;
+  onSubmit: (
+    data: CreateProductionOrderPayload,
+    produto: { descricao: string; refCodigo: string }
+  ) => Promise<void>;
   isSubmitting: boolean;
   orderToEdit?: ProductionOrder;
 }
@@ -294,7 +297,10 @@ export const OrderModal: React.FC<OrderModalProps> = ({
         };
       }),
     };
-    await onSubmit(payload);
+    await onSubmit(payload, {
+      descricao: produtoSelecionado.descricao,
+      refCodigo: produtoSelecionado.refCodigo,
+    });
   };
 
   if (!isOpen) return null;

@@ -10,7 +10,7 @@ import "./PrintOrderModal.css";
 interface PrintOrderModalProps {
   isOpen: boolean;
   onClose: () => void;
-  order: ProductionOrder;
+  order: ProductionOrder | null;
   produto: Produto | undefined;
   company?: Company | null;
 }
@@ -43,7 +43,7 @@ export const PrintOrderModal: React.FC<PrintOrderModalProps> = ({
     if (isOpen) {
       setLogoLoadFailed(false);
     }
-  }, [isOpen, order.id]);
+  }, [isOpen, order?.id]);
 
   const handlePrint = () => {
     if (typeof window.print !== "function") {
@@ -65,16 +65,16 @@ export const PrintOrderModal: React.FC<PrintOrderModalProps> = ({
   const formatDate = (value: Date | string) => formatDateBR(value);
 
   const getTotalPecas = () => {
-    return order.grade.reduce((acc, row) => acc + row.total, 0);
+    return order?.grade.reduce((acc, row) => acc + row.total, 0) ?? 0;
   };
 
   const getTamanhosList = () => {
-    if (!order.grade || order.grade.length === 0) return [];
+    if (!order?.grade || order.grade.length === 0) return [];
     const firstRow = order.grade[0];
     return Object.keys(firstRow.quantidades);
   };
 
-  if (!isOpen) return null;
+  if (!isOpen || !order) return null;
 
   return (
     <div className="print-modal-overlay" onClick={onClose}>

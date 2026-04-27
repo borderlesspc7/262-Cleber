@@ -27,9 +27,12 @@ import { formatDateBR, formatDateTimeBR } from "../../utils/dateFormatter";
 import { downloadCsv } from "../../utils/csvExport";
 import { RELATORIOS_REFRESH_EVENT } from "../../constants/appEvents";
 import toast from "react-hot-toast";
+import { jsPDF } from "jspdf";
 
 type RelatorioType = "producao" | "performance";
 type PeriodoType = "semana" | "mes" | "trimestre" | "ano";
+
+type PdfTableRow = Array<string | number>;
 
 interface MetricaProducao {
   totalOrdens: number;
@@ -390,90 +393,182 @@ export const RelatoriosTab: React.FC = () => {
     );
   };
 
-  const escapeHtml = (raw: string) =>
-    raw
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;");
+  const createReportPdf = (title: string, subtitle: string) => {
+    const doc = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 40;
+    let y = margin;
 
-  const openPrintWindow = (html: string) => {
-    const printWindow = window.open("", "_blank", "noopener,noreferrer");
-    if (!printWindow) {
-      alert("Não foi possível abrir a janela de impressão.");
-      return;
+    const companyName = companyInfo?.nome?.trim();
+    if (companyName) {
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(12);
+      doc.text(companyName, margin, y);
+      y += 16;
     }
 
-    printWindow.document.open();
-    printWindow.document.write(html);
-    printWindow.document.close();
-    printWindow.focus();
-    printWindow.onload = () => {
-      printWindow.print();
-    };
+    const companyDetails = [companyInfo?.email, companyInfo?.endereco]
+      .map((value) => value?.trim())
+      .filter((value): value is string => Boolean(value));
+
+    if (companyDetails.length > 0) {
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      companyDetails.forEach((detail) => {
+        const lines = doc.splitTextToSize(detail, pageWidth - margin * 2);
+        doc.text(lines, margin, y);
+        y += lines.length * 11;
+      });
+      y += 8;
+    }
+
+    doc.setDrawColor(226, 232, 240);
+    doc.line(margin, y, pageWidth - margin, y);
+    y += 24;
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(18);
+    doc.text(title, margin, y);
+    y += 20;
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(11);
+    doc.setTextColor(71, 85, 105);
+    doc.text(subtitle, margin, y);
+    y += 16;
+    doc.text(`Gerado em ${formatDateTimeBR(new Date())}`, margin, y);
+    y += 24;
+    doc.setTextColor(15, 23, 42);
+
+    return { doc, y, margin, pageWidth };
   };
 
-  const buildReportShell = (
-    title: string,
-    subtitle: string,
-    content: string
+  const ensurePdfSpace = (
+    doc: jsPDF,
+    currentY: number,
+    requiredHeight: number,
+    margin: number
   ) => {
-    const c = companyInfo;
-    const companyHeader =
-      c && (c.logoUrl || c.nome || c.email)
-        ? `<div class="company-print">
-            ${
-              c.logoUrl
-                ? `<img class="company-print-logo" src="${escapeHtml(c.logoUrl)}" alt="" />`
-                : ""
-            }
-            <div class="company-print-text">
-              ${c.nome ? `<div class="company-print-name">${escapeHtml(c.nome)}</div>` : ""}
-              ${c.email ? `<div class="company-print-email">${escapeHtml(c.email)}</div>` : ""}
-              ${c.endereco ? `<div class="company-print-address">${escapeHtml(c.endereco)}</div>` : ""}
-            </div>
-          </div>`
-        : "";
+    const pageHeight = doc.internal.pageSize.getHeight();
+    if (currentY + requiredHeight <= pageHeight - margin) {
+      return currentY;
+    }
 
-    return `<!DOCTYPE html>
-      <html lang="pt-BR">
-        <head>
-          <meta charset="utf-8" />
-          <meta name="viewport" content="width=device-width, initial-scale=1" />
-          <title>${escapeHtml(title)}</title>
-          <style>
-            @page { size: A4; margin: 18mm; }
-            * { box-sizing: border-box; }
-            body { font-family: "Segoe UI", Arial, sans-serif; color: #0f172a; }
-            .company-print { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #e2e8f0; }
-            .company-print-logo { max-height: 48px; max-width: 140px; object-fit: contain; }
-            .company-print-text { min-width: 0; }
-            .company-print-name { font-size: 15px; font-weight: 700; }
-            .company-print-email { font-size: 12px; color: #64748b; margin-top: 4px; word-break: break-all; }
-            .company-print-address { font-size: 12px; color: #4b5563; margin-top: 4px; line-height: 1.35; word-break: break-word; }
-            h1 { font-size: 20px; margin: 0 0 4px 0; }
-            h2 { font-size: 14px; margin: 0 0 16px 0; color: #475569; font-weight: 600; }
-            .meta { font-size: 12px; color: #64748b; margin-bottom: 16px; }
-            .section { margin: 18px 0; }
-            .section-title { font-size: 14px; font-weight: 700; margin-bottom: 10px; }
-            .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-            .card { border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; }
-            .card-label { font-size: 11px; color: #64748b; }
-            .card-value { font-size: 16px; font-weight: 700; }
-            table { width: 100%; max-width: 100%; table-layout: fixed; border-collapse: collapse; margin-top: 8px; }
-            th, td { border: 1px solid #e2e8f0; padding: 8px; font-size: 12px; text-align: left; word-break: break-word; overflow-wrap: anywhere; }
-            th { background: #f8fafc; font-weight: 700; }
-            .muted { color: #64748b; }
-          </style>
-        </head>
-        <body>
-          ${companyHeader}
-          <h1>${escapeHtml(title)}</h1>
-          <h2>${escapeHtml(subtitle)}</h2>
-          <div class="meta">Gerado em ${formatDateTimeBR(new Date())}</div>
-          ${content}
-        </body>
-      </html>`;
+    doc.addPage();
+    return margin;
+  };
+
+  const addPdfSectionTitle = (
+    doc: jsPDF,
+    title: string,
+    currentY: number,
+    margin: number
+  ) => {
+    const y = ensurePdfSpace(doc, currentY, 28, margin);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(12);
+    doc.text(title, margin, y);
+    return y + 16;
+  };
+
+  const addPdfCards = (
+    doc: jsPDF,
+    cards: Array<{ label: string; value: string }>,
+    currentY: number,
+    margin: number,
+    pageWidth: number
+  ) => {
+    const gap = 8;
+    const columns = 3;
+    const cardWidth = (pageWidth - margin * 2 - gap * (columns - 1)) / columns;
+    const cardHeight = 48;
+    let y = currentY;
+
+    cards.forEach((card, index) => {
+      if (index % columns === 0) {
+        y = ensurePdfSpace(doc, y, cardHeight, margin);
+      }
+
+      const column = index % columns;
+      const x = margin + column * (cardWidth + gap);
+
+      doc.setDrawColor(226, 232, 240);
+      doc.roundedRect(x, y, cardWidth, cardHeight, 6, 6);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      doc.setTextColor(100, 116, 139);
+      doc.text(card.label, x + 10, y + 16);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(13);
+      doc.setTextColor(15, 23, 42);
+      doc.text(card.value, x + 10, y + 36);
+
+      if (column === columns - 1 || index === cards.length - 1) {
+        y += cardHeight + gap;
+      }
+    });
+
+    return y + 8;
+  };
+
+  const addPdfTable = (
+    doc: jsPDF,
+    headers: string[],
+    rows: PdfTableRow[],
+    currentY: number,
+    margin: number,
+    pageWidth: number
+  ) => {
+    const tableWidth = pageWidth - margin * 2;
+    const columnWidth = tableWidth / headers.length;
+    const headerHeight = 24;
+    const lineHeight = 11;
+    const padding = 6;
+    let y = ensurePdfSpace(doc, currentY, headerHeight + 24, margin);
+
+    const drawHeader = () => {
+      doc.setFillColor(248, 250, 252);
+      doc.setDrawColor(226, 232, 240);
+      doc.rect(margin, y, tableWidth, headerHeight, "FD");
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(9);
+      doc.setTextColor(15, 23, 42);
+      headers.forEach((header, index) => {
+        doc.text(header, margin + index * columnWidth + padding, y + 15);
+      });
+      y += headerHeight;
+    };
+
+    drawHeader();
+
+    const rowsToRender = rows.length > 0 ? rows : [["Sem dados"]];
+    rowsToRender.forEach((row) => {
+      const cellLines = headers.map((_, index) =>
+        doc.splitTextToSize(String(row[index] ?? ""), columnWidth - padding * 2)
+      );
+      const rowHeight =
+        Math.max(...cellLines.map((lines) => lines.length)) * lineHeight +
+        padding * 2;
+
+      y = ensurePdfSpace(doc, y, rowHeight, margin);
+      if (y === margin) {
+        drawHeader();
+      }
+
+      doc.setDrawColor(226, 232, 240);
+      doc.rect(margin, y, tableWidth, rowHeight);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.setTextColor(15, 23, 42);
+
+      cellLines.forEach((lines, index) => {
+        doc.text(lines, margin + index * columnWidth + padding, y + padding + 9);
+      });
+
+      y += rowHeight;
+    });
+
+    return y + 12;
   };
 
   const handleExportarProducao = () => {
@@ -496,101 +591,108 @@ export const RelatoriosTab: React.FC = () => {
         : 0;
     const topProdutos = getProdutosMaisProduzidos(ordersFiltradas);
 
-    const content = `
-      <div class="section">
-        <div class="section-title">Resumo</div>
-        <div class="grid">
-          <div class="card"><div class="card-label">Total de Ordens</div><div class="card-value">${formatNumber(ordersFiltradas.length)}</div></div>
-          <div class="card"><div class="card-label">Concluídas</div><div class="card-value">${formatNumber(ordensConcluidas)}</div></div>
-          <div class="card"><div class="card-label">Em Andamento</div><div class="card-value">${formatNumber(ordensEmAndamento)}</div></div>
-          <div class="card"><div class="card-label">Planejadas</div><div class="card-value">${formatNumber(ordensPlanejadas)}</div></div>
-          <div class="card"><div class="card-label">Taxa de Conclusão</div><div class="card-value">${formatNumber(taxaConclusao, 1)}%</div></div>
-          <div class="card"><div class="card-label">Tempo Médio por Etapa</div><div class="card-value">${formatNumber(metricaProducao.tempoMedioPorEtapa, 1)} dias</div></div>
-        </div>
-      </div>
-      <div class="section">
-        <div class="section-title">Top 5 Produtos Mais Produzidos</div>
-        <table>
-          <thead>
-            <tr>
-              <th>Produto</th>
-              <th>Quantidade de Ordens</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${topProdutos
-              .map(
-                (produto) => `
-              <tr>
-                <td>${produto.nome}</td>
-                <td>${formatNumber(produto.quantidade)}</td>
-              </tr>`
-              )
-              .join("")}
-            ${topProdutos.length === 0 ? `<tr><td colspan="2" class="muted">Sem dados para o período</td></tr>` : ""}
-          </tbody>
-        </table>
-      </div>
-    `;
-
-    const html = buildReportShell(
+    const pdf = createReportPdf(
       "Relatório de Produção",
-      `Período: ${getPeriodoLabel(periodo)}`,
-      content
+      `Período: ${getPeriodoLabel(periodo)}`
     );
 
-    openPrintWindow(html);
+    let y = addPdfSectionTitle(
+      pdf.doc,
+      "Resumo",
+      pdf.y,
+      pdf.margin
+    );
+    y = addPdfCards(
+      pdf.doc,
+      [
+        { label: "Total de Ordens", value: formatNumber(ordersFiltradas.length) },
+        { label: "Concluídas", value: formatNumber(ordensConcluidas) },
+        { label: "Em Andamento", value: formatNumber(ordensEmAndamento) },
+        { label: "Planejadas", value: formatNumber(ordensPlanejadas) },
+        { label: "Taxa de Conclusão", value: `${formatNumber(taxaConclusao, 1)}%` },
+        {
+          label: "Tempo Médio por Etapa",
+          value: `${formatNumber(metricaProducao.tempoMedioPorEtapa, 1)} dias`,
+        },
+      ],
+      y,
+      pdf.margin,
+      pdf.pageWidth
+    );
+
+    y = addPdfSectionTitle(
+      pdf.doc,
+      "Top 5 Produtos Mais Produzidos",
+      y,
+      pdf.margin
+    );
+    addPdfTable(
+      pdf.doc,
+      ["Produto", "Quantidade de Ordens"],
+      topProdutos.map((produto) => [
+        produto.nome,
+        formatNumber(produto.quantidade),
+      ]),
+      y,
+      pdf.margin,
+      pdf.pageWidth
+    );
+
+    const fileDate = getExportFileDate();
+    const stamp = getExportTimestamp();
+    pdf.doc.save(`relatorios-producao-${periodo}-${fileDate}-${stamp}.pdf`);
   };
 
   const handleExportarPerformance = () => {
     const faccoesAtivas = faccoes.filter((f) => f.ativo).length;
     const faccoesTop = faccoesPerformance.slice(0, 5);
 
-    const content = `
-      <div class="section">
-        <div class="section-title">Indicadores Gerais</div>
-        <div class="grid">
-          <div class="card"><div class="card-label">Facções Ativas</div><div class="card-value">${formatNumber(faccoesAtivas)}</div></div>
-          <div class="card"><div class="card-label">Facções Cadastradas</div><div class="card-value">${formatNumber(faccoes.length)}</div></div>
-          <div class="card"><div class="card-label">Produtos Cadastrados</div><div class="card-value">${formatNumber(produtos.length)}</div></div>
-        </div>
-      </div>
-      <div class="section">
-        <div class="section-title">Facções Mais Produtivas</div>
-        <table>
-          <thead>
-            <tr>
-              <th>Facção</th>
-              <th>Ordens Finalizadas</th>
-              <th>Tempo Médio (dias)</th>
-              <th>Taxa de Defeitos</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${faccoesTop
-              .map(
-                (faccao) => `
-              <tr>
-                <td>${faccao.faccaoNome}</td>
-                <td>${formatNumber(faccao.ordensFinalizadas)}</td>
-                <td>${formatNumber(faccao.tempoMedio, 1)}</td>
-                <td>${formatNumber(faccao.taxaDefeitos, 1)}%</td>
-              </tr>`
-              )
-              .join("")}
-            ${faccoesTop.length === 0 ? `<tr><td colspan="4" class="muted">Sem dados de performance</td></tr>` : ""}
-          </tbody>
-        </table>
-      </div>
-    `;
-
-    const html = buildReportShell(
+    const pdf = createReportPdf(
       "Relatório de Performance",
-      "Resumo de Facções e Produtos",
-      content
+      `Período: ${getPeriodoLabel(periodo)}`
     );
 
-    openPrintWindow(html);
+    let y = addPdfSectionTitle(
+      pdf.doc,
+      "Indicadores Gerais",
+      pdf.y,
+      pdf.margin
+    );
+    y = addPdfCards(
+      pdf.doc,
+      [
+        { label: "Facções Ativas", value: formatNumber(faccoesAtivas) },
+        { label: "Facções Cadastradas", value: formatNumber(faccoes.length) },
+        { label: "Produtos Cadastrados", value: formatNumber(produtos.length) },
+      ],
+      y,
+      pdf.margin,
+      pdf.pageWidth
+    );
+
+    y = addPdfSectionTitle(
+      pdf.doc,
+      "Facções Mais Produtivas",
+      y,
+      pdf.margin
+    );
+    addPdfTable(
+      pdf.doc,
+      ["Facção", "Ordens Finalizadas", "Tempo Médio", "Taxa de Defeitos"],
+      faccoesTop.map((faccao) => [
+        faccao.faccaoNome,
+        formatNumber(faccao.ordensFinalizadas),
+        `${formatNumber(faccao.tempoMedio, 1)} dias`,
+        `${formatNumber(faccao.taxaDefeitos, 1)}%`,
+      ]),
+      y,
+      pdf.margin,
+      pdf.pageWidth
+    );
+
+    const fileDate = getExportFileDate();
+    const stamp = getExportTimestamp();
+    pdf.doc.save(`relatorios-performance-${periodo}-${fileDate}-${stamp}.pdf`);
   };
 
   const getProdutosMaisProduzidos = (

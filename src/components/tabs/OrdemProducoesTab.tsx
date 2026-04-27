@@ -163,12 +163,14 @@ export const OrdemProducoesTab: React.FC = () => {
     order.grade.reduce((acc, row) => acc + row.total, 0);
 
   const handleSubmit = async (
-    payload: Parameters<typeof orderService.createOrder>[1]
+    payload: Parameters<typeof orderService.createOrder>[1],
+    selectedProduct?: { descricao: string; refCodigo: string }
   ) => {
     if (!user) return;
 
     // Buscar informações do produto
-    const produto = produtos.find((p) => p.id === payload.produtoId);
+    const produto =
+      produtos.find((p) => p.id === payload.produtoId) ?? selectedProduct;
     if (!produto) {
       toast.error("Produto não encontrado");
       return;
@@ -467,16 +469,18 @@ export const OrdemProducoesTab: React.FC = () => {
         cancelText="Cancelar"
       />
 
-      <PrintOrderModal
-        isOpen={isPrintModalOpen}
-        onClose={() => {
-          setIsPrintModalOpen(false);
-          setOrderToPrint(null);
-        }}
-        order={orderToPrint!}
-        produto={produtos.find((p) => p.id === orderToPrint?.produtoId)}
-        company={companyInfo}
-      />
+      {isPrintModalOpen && orderToPrint && (
+        <PrintOrderModal
+          isOpen={isPrintModalOpen}
+          onClose={() => {
+            setIsPrintModalOpen(false);
+            setOrderToPrint(null);
+          }}
+          order={orderToPrint}
+          produto={produtos.find((p) => p.id === orderToPrint.produtoId)}
+          company={companyInfo}
+        />
+      )}
     </div>
   );
 };

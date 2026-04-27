@@ -35,6 +35,7 @@ export const ProdutoFormComponent: React.FC<ProdutoFormProps> = ({
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showCategorias, setShowCategorias] = useState(false);
+  const [validationMessage, setValidationMessage] = useState("");
   const [etapasDisponiveis, setEtapasDisponiveis] = useState<ProductionStep[]>(
     []
   );
@@ -48,6 +49,41 @@ export const ProdutoFormComponent: React.FC<ProdutoFormProps> = ({
   });
 
   const { user } = useAuth();
+
+  const updateFormField = <K extends keyof ProdutoForm>(
+    field: K,
+    value: ProdutoForm[K]
+  ) => {
+    setFormData((currentFormData) => ({
+      ...currentFormData,
+      [field]: value,
+    }));
+    setValidationMessage("");
+  };
+
+  const getProductValidationMessage = (): string | null => {
+    if (!formData.refCodigo.trim()) {
+      return "Informe o código do produto.";
+    }
+
+    if (!formData.descricao.trim()) {
+      return "Informe a descrição do produto.";
+    }
+
+    if (!formData.categoriaId) {
+      return "Selecione uma categoria para o produto.";
+    }
+
+    if (formData.coresIds.length === 0) {
+      return "Selecione pelo menos uma cor para o produto.";
+    }
+
+    if (formData.tamanhosIds.length === 0) {
+      return "Selecione pelo menos um tamanho para o produto.";
+    }
+
+    return null;
+  };
 
   useEffect(() => {
     const loadEtapas = async () => {
@@ -65,12 +101,12 @@ export const ProdutoFormComponent: React.FC<ProdutoFormProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (
-      !formData.refCodigo.trim() ||
-      !formData.descricao.trim() ||
-      !formData.categoriaId
-    )
+
+    const productValidationMessage = getProductValidationMessage();
+    if (productValidationMessage) {
+      setValidationMessage(productValidationMessage);
       return;
+    }
 
     if (editingId) {
       onEdit(editingId, formData);
@@ -93,6 +129,7 @@ export const ProdutoFormComponent: React.FC<ProdutoFormProps> = ({
     setShowForm(false);
     setEditingId(null);
     setShowCategorias(false);
+    setValidationMessage("");
   };
 
   const handleEdit = (produto: Produto) => {
@@ -111,24 +148,25 @@ export const ProdutoFormComponent: React.FC<ProdutoFormProps> = ({
     });
     setEditingId(produto.id);
     setShowForm(true);
+    setValidationMessage("");
   };
 
   const handleCategoriaChange = (categoriaId: string) => {
-    setFormData({ ...formData, categoriaId });
+    updateFormField("categoriaId", categoriaId);
   };
 
   const handleCorToggle = (corId: string) => {
     const coresIds = formData.coresIds.includes(corId)
       ? formData.coresIds.filter((id) => id !== corId)
       : [...formData.coresIds, corId];
-    setFormData({ ...formData, coresIds });
+    updateFormField("coresIds", coresIds);
   };
 
   const handleTamanhoToggle = (tamanhoId: string) => {
     const tamanhosIds = formData.tamanhosIds.includes(tamanhoId)
       ? formData.tamanhosIds.filter((id) => id !== tamanhoId)
       : [...formData.tamanhosIds, tamanhoId];
-    setFormData({ ...formData, tamanhosIds });
+    updateFormField("tamanhosIds", tamanhosIds);
   };
 
   const handleEtapaToggle = (etapaId: string) => {
@@ -140,6 +178,7 @@ export const ProdutoFormComponent: React.FC<ProdutoFormProps> = ({
         ...formData,
         etapasProducao: etapasAtuais.filter((e) => e.etapaId !== etapaId),
       });
+      setValidationMessage("");
     } else {
       const etapa = etapasDisponiveis.find((e) => e.id === etapaId);
       if (etapa) {
@@ -154,6 +193,7 @@ export const ProdutoFormComponent: React.FC<ProdutoFormProps> = ({
             },
           ],
         });
+        setValidationMessage("");
       }
     }
   };
@@ -198,7 +238,7 @@ export const ProdutoFormComponent: React.FC<ProdutoFormProps> = ({
                 id="refCodigo"
                 value={formData.refCodigo}
                 onChange={(e) =>
-                  setFormData({ ...formData, refCodigo: e.target.value })
+                  updateFormField("refCodigo", e.target.value)
                 }
                 placeholder="Ex: BLU-001, REG-002..."
                 required
@@ -212,7 +252,7 @@ export const ProdutoFormComponent: React.FC<ProdutoFormProps> = ({
                 id="descricao"
                 value={formData.descricao}
                 onChange={(e) =>
-                  setFormData({ ...formData, descricao: e.target.value })
+                  updateFormField("descricao", e.target.value)
                 }
                 placeholder="Descrição do produto..."
                 required
@@ -368,6 +408,12 @@ export const ProdutoFormComponent: React.FC<ProdutoFormProps> = ({
               )}
             </div>
           </div>
+
+          {validationMessage && (
+            <div className="form-error-message" role="alert">
+              {validationMessage}
+            </div>
+          )}
 
           <div className="form-actions">
             <button type="submit" className="save-button">
