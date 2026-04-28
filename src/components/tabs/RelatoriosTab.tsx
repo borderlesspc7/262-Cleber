@@ -721,7 +721,7 @@ export const RelatoriosTab: React.FC = () => {
 
   return (
     <div className="tab-content">
-      <div className="tab-header">
+      <div className="tab-header tab-header-relatorios">
         <div>
           <h2 className="tab-title">Relatórios</h2>
           <p className="tab-subtitle">

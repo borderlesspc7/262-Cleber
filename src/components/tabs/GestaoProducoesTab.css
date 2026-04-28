@@ -159,7 +159,40 @@
   display: flex;
   flex-direction: column;
   align-items: flex-end;
+  gap: 0.75rem;
+}
+
+.gestao-card-badges {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
   gap: 0.5rem;
+}
+
+.gestao-card-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.gestao-icon-button {
+  border: none;
+  background: #f8fafc;
+  border-radius: 0.75rem;
+  padding: 0.6rem;
+  color: #475569;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gestao-icon-button:hover {
+  background: #e2e8f0;
+  color: #1e293b;
 }
 
 .gestao-badge {
@@ -356,26 +389,6 @@
   color: #ffffff;
 }
 
-.gestao-action-print {
-  border-color: #bfdbfe;
-  background: #eff6ff;
-  color: #1d4ed8;
-}
-
-.gestao-action-print .gestao-action-icon {
-  color: #1d4ed8;
-}
-
-.gestao-action-print:hover:not(:disabled) {
-  background: #2563eb;
-  color: #ffffff;
-  border-color: #2563eb;
-}
-
-.gestao-action-print:hover:not(:disabled) .gestao-action-icon {
-  color: #ffffff;
-}
-
 .gestao-action-delete {
   background: #fef2f2;
   border-color: #fecaca;
@@ -408,6 +421,20 @@
 @media (max-width: 768px) {
   .gestao-producoes-filters {
     flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .gestao-producoes-search {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .gestao-producoes-stage-filter {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
   }
 
   .gestao-card-header {
@@ -418,7 +445,9 @@
     align-items: flex-start;
     width: 100%;
     flex-direction: row;
-    gap: 0.5rem;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.75rem;
   }
 
   .gestao-card-details {

@@ -11,7 +11,12 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 import type { DocumentData, UpdateData } from "firebase/firestore";
-import { db } from "../lib/firebaseconfig";
+import {
+  ref,
+  uploadBytes,
+  getDownloadURL,
+} from "firebase/storage";
+import { db, storage } from "../lib/firebaseconfig";
 import type {
   Categoria,
   Cor,
@@ -22,6 +27,13 @@ import type {
   TamanhoForm,
   ProdutoForm,
 } from "../types/product";
+
+const MAX_PRODUTO_IMAGE_BYTES = 5 * 1024 * 1024;
+
+function sanitizeProdutoImageFileName(originalName: string): string {
+  const base = originalName.replace(/[^\w.-]+/g, "_").replace(/^\.+/, "");
+  return base || "imagem";
+}
 
 const PRODUCT_COLLECTIONS = {
   categorias: ["Categorias", "categorias"],
@@ -341,6 +353,10 @@ export const produtoService = {
           coresIds: data.coresIds || [],
           tamanhosIds: data.tamanhosIds || [],
           etapasProducaoIds: data.etapasProducaoIds || [],
+          imagemUrl:
+            typeof data.imagemUrl === "string" && data.imagemUrl.trim() !== ""
+              ? data.imagemUrl
+              : undefined,
           ativo: data.ativo !== false,
           userId: data.userId,
           createdAt: data.createdAt?.toDate() || new Date(),
@@ -376,6 +392,9 @@ export const produtoService = {
         coresIds: produtoForm.coresIds,
         tamanhosIds: produtoForm.tamanhosIds,
         etapasProducaoIds: produtoForm.etapasProducao || [],
+        ...(produtoForm.imagemUrl?.trim()
+          ? { imagemUrl: produtoForm.imagemUrl.trim() }
+          : {}),
         userId,
         ativo: true,
         createdAt: serverTimestamp(),
@@ -402,6 +421,7 @@ export const produtoService = {
         coresIds: produtoForm.coresIds,
         tamanhosIds: produtoForm.tamanhosIds,
         etapasProducaoIds: produtoForm.etapasProducao || [],
+        imagemUrl: produtoForm.imagemUrl?.trim() || null,
         updatedAt: serverTimestamp(),
       });
     } catch (error) {
@@ -417,5 +437,33 @@ export const produtoService = {
       console.error("Erro ao deletar produto:", error);
       throw error;
     }
+  },
+
+  /**
+   * Envia imagem de referência ao Storage (pasta por usuário/produto).
+   * Retorna a URL pública para gravar em Firestore.
+   */
+  async uploadProdutoImagem(
+    userId: string,
+    produtoId: string,
+    file: File
+  ): Promise<string> {
+    if (!file.type.startsWith("image/")) {
+      throw new Error("Arquivo inválido: selecione uma imagem.");
+    }
+    if (file.size > MAX_PRODUTO_IMAGE_BYTES) {
+      throw new Error("A imagem deve ter no máximo 5 MB.");
+    }
+
+    const safeName = sanitizeProdutoImageFileName(file.name);
+    const storageRef = ref(
+      storage,
+      `produtos/${userId}/${produtoId}/${Date.now()}_${safeName}`
+    );
+
+    await uploadBytes(storageRef, file, {
+      contentType: file.type || "image/jpeg",
+    });
+    return getDownloadURL(storageRef);
   },
 };

@@ -193,7 +193,11 @@
     padding: 0.5rem;
   }
 
-  .etapas-description {
+}
+
+/* Em faixa tablet a tabela ainda é linha; ellipsis evita estourar horizontalmente */
+@media (min-width: 641px) and (max-width: 768px) {
+  .etapas-table .etapas-description {
     max-width: 200px;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -205,6 +209,11 @@
   .etapas-table-container {
     border: 1px solid #e5e7eb;
     border-radius: 0.5rem;
+    overflow-x: visible;
+  }
+
+  .etapas-table {
+    width: 100%;
   }
 
   .etapas-table thead {
@@ -223,36 +232,69 @@
     background: white;
   }
 
-  .etapas-table td {
+  .etapas-table tbody td {
     display: block;
     border: none;
-    padding: 0.25rem 0;
+    padding: 0.35rem 0;
+    max-width: 100%;
   }
 
-  .etapas-table td:before {
-    content: attr(data-label) ": ";
+  /* Labels explícitos (especificidade > .etapas-table td); nunca attr(data-label) vazio */
+  .etapas-table tbody td.etapas-order:before,
+  .etapas-table tbody td.etapas-name:before,
+  .etapas-table tbody td.etapas-description:before,
+  .etapas-table tbody td.etapas-actions:before {
     font-weight: 600;
     color: #374151;
+    margin-right: 0.25rem;
   }
 
-  .etapas-order:before {
+  .etapas-table tbody td.etapas-order:before {
     content: "Ordem: ";
   }
 
-  .etapas-name:before {
+  .etapas-table tbody td.etapas-name:before {
     content: "Nome: ";
   }
 
-  .etapas-description:before {
+  .etapas-table tbody td.etapas-description:before {
     content: "Descrição: ";
   }
 
-  .etapas-actions {
+  .etapas-table tbody td.etapas-order {
     text-align: left;
-    margin-top: 0.5rem;
+    width: auto;
   }
 
-  .etapas-actions:before {
+  .etapas-table tbody td.etapas-name {
+    min-width: 0;
+  }
+
+  .etapas-table tbody td.etapas-description {
+    white-space: normal;
+    overflow: visible;
+    max-width: none;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+
+  .etapas-table tbody td.etapas-actions {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    text-align: left;
+  }
+
+  .etapas-table tbody td.etapas-actions:before {
     content: "Ações: ";
+    flex-shrink: 0;
+    margin-right: 0;
+  }
+
+  .etapas-table tbody td.etapas-actions .etapas-action {
+    flex-shrink: 0;
   }
 }

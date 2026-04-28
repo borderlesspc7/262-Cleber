@@ -36,6 +36,8 @@ export interface EtapaProducao {
 export interface Produto {
   id: string;
   refCodigo: string;
+  /** URL público da imagem de referência da peça (Firebase Storage ou similar) */
+  imagemUrl?: string;
   descricao: string;
   categoria: Categoria;
   cores: Cor[];
@@ -82,6 +84,8 @@ export interface EtapaProducaoForm {
 
 export interface ProdutoForm {
   refCodigo: string;
+  /** Mantida ao editar quando não há upload novo; atualizada pelo serviço após upload */
+  imagemUrl?: string;
   descricao: string;
   categoriaId: string;
   coresIds: string[];

@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { Plus, X, ChevronDown } from "lucide-react";
+import React, { useEffect, useState, useRef } from "react";
+import { Plus, X, ChevronDown, ImageIcon } from "lucide-react";
 import { stepService } from "../../services/stepService";
 import type { ProductionStep } from "../../types/step";
 import type {
@@ -18,8 +18,13 @@ interface ProdutoFormProps {
   categorias: Categoria[];
   cores: Cor[];
   tamanhos: Tamanho[];
-  onAdd: (produto: ProdutoForm) => void;
-  onEdit: (id: string, produto: ProdutoForm) => void;
+  onAdd: (produto: ProdutoForm, imagemArquivo?: File | null) => void;
+  onEdit: (
+    id: string,
+    produto: ProdutoForm,
+    imagemArquivo?: File | null,
+    removerImagem?: boolean
+  ) => void;
   onDelete: (id: string) => void;
 }
 
@@ -41,6 +46,7 @@ export const ProdutoFormComponent: React.FC<ProdutoFormProps> = ({
   );
   const [formData, setFormData] = useState<ProdutoForm>({
     refCodigo: "",
+    imagemUrl: "",
     descricao: "",
     categoriaId: "",
     coresIds: [],
@@ -48,7 +54,24 @@ export const ProdutoFormComponent: React.FC<ProdutoFormProps> = ({
     etapasProducao: [],
   });
 
+  const [arquivoImagem, setArquivoImagem] = useState<File | null>(null);
+  const [previewObjectUrl, setPreviewObjectUrl] = useState<string | null>(null);
+  const [removerImagemMarcado, setRemoverImagemMarcado] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const { user } = useAuth();
+
+  useEffect(() => {
+    if (!arquivoImagem) {
+      setPreviewObjectUrl(null);
+      return;
+    }
+    const url = URL.createObjectURL(arquivoImagem);
+    setPreviewObjectUrl(url);
+    return () => {
+      URL.revokeObjectURL(url);
+    };
+  }, [arquivoImagem]);
 
   const updateFormField = <K extends keyof ProdutoForm>(
     field: K,
@@ -109,9 +132,9 @@ export const ProdutoFormComponent: React.FC<ProdutoFormProps> = ({
     }
 
     if (editingId) {
-      onEdit(editingId, formData);
+      onEdit(editingId, formData, arquivoImagem, removerImagemMarcado);
     } else {
-      onAdd(formData);
+      onAdd(formData, arquivoImagem);
     }
 
     resetForm();
@@ -120,12 +143,18 @@ export const ProdutoFormComponent: React.FC<ProdutoFormProps> = ({
   const resetForm = () => {
     setFormData({
       refCodigo: "",
+      imagemUrl: "",
       descricao: "",
       categoriaId: "",
       coresIds: [],
       tamanhosIds: [],
       etapasProducao: [],
     });
+    setArquivoImagem(null);
+    setRemoverImagemMarcado(false);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
     setShowForm(false);
     setEditingId(null);
     setShowCategorias(false);
@@ -135,6 +164,7 @@ export const ProdutoFormComponent: React.FC<ProdutoFormProps> = ({
   const handleEdit = (produto: Produto) => {
     setFormData({
       refCodigo: produto.refCodigo,
+      imagemUrl: produto.imagemUrl || "",
       descricao: produto.descricao,
       categoriaId: produto.categoria.id,
       coresIds: produto.cores.map((c) => c.id),
@@ -146,9 +176,39 @@ export const ProdutoFormComponent: React.FC<ProdutoFormProps> = ({
           ordem: etapa.ordem,
         })) || [],
     });
+    setArquivoImagem(null);
+    setRemoverImagemMarcado(false);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
     setEditingId(produto.id);
     setShowForm(true);
     setValidationMessage("");
+  };
+
+  const handleImagemSelecionada = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setValidationMessage("Selecione um arquivo de imagem (JPG, PNG, etc.).");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setValidationMessage("A imagem deve ter no máximo 5 MB.");
+      return;
+    }
+    setArquivoImagem(file);
+    setRemoverImagemMarcado(false);
+    setValidationMessage("");
+  };
+
+  const handleRemoverImagem = () => {
+    setArquivoImagem(null);
+    setRemoverImagemMarcado(!!editingId);
+    updateFormField("imagemUrl", "");
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   const handleCategoriaChange = (categoriaId: string) => {
@@ -214,6 +274,12 @@ export const ProdutoFormComponent: React.FC<ProdutoFormProps> = ({
     (c) => c.id === formData.categoriaId
   );
 
+  const imagemPreviewSrc =
+    previewObjectUrl ||
+    (!removerImagemMarcado && formData.imagemUrl?.trim()
+      ? formData.imagemUrl.trim()
+      : null);
+
   return (
     <div className="produto-form">
       <div className="form-header">
@@ -258,6 +324,45 @@ export const ProdutoFormComponent: React.FC<ProdutoFormProps> = ({
                 required
               />
             </div>
+          </div>
+
+          <div className="form-group produto-imagem-grupo">
+            <label htmlFor="produto-imagem">Imagem da peça (opcional)</label>
+            <p className="produto-imagem-hint">
+              Foto de referência para conferência. JPG ou PNG, até 5 MB.
+            </p>
+            <div className="produto-imagem-toolbar">
+              <label className="produto-imagem-file-label">
+                <ImageIcon size={18} aria-hidden />
+                Escolher imagem
+                <input
+                  ref={fileInputRef}
+                  id="produto-imagem"
+                  type="file"
+                  accept="image/*"
+                  className="produto-imagem-input-native"
+                  onChange={handleImagemSelecionada}
+                />
+              </label>
+              {imagemPreviewSrc && (
+                <button
+                  type="button"
+                  className="produto-imagem-remove-text"
+                  onClick={handleRemoverImagem}
+                >
+                  Remover imagem
+                </button>
+              )}
+            </div>
+            {imagemPreviewSrc && (
+              <div className="produto-imagem-preview-wrap">
+                <img
+                  src={imagemPreviewSrc}
+                  alt="Pré-visualização da peça"
+                  className="produto-imagem-preview"
+                />
+              </div>
+            )}
           </div>
 
           <div className="form-group">
@@ -429,6 +534,15 @@ export const ProdutoFormComponent: React.FC<ProdutoFormProps> = ({
       <div className="produtos-list">
         {produtos.map((produto) => (
           <div key={produto.id} className="produto-item">
+            {produto.imagemUrl?.trim() && (
+              <div className="produto-thumb-wrap">
+                <img
+                  src={produto.imagemUrl.trim()}
+                  alt=""
+                  className="produto-thumb"
+                />
+              </div>
+            )}
             <div className="produto-info">
               <div className="produto-header">
                 <h4>{produto.refCodigo}</h4>

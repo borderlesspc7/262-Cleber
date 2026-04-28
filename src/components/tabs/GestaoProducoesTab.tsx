@@ -594,18 +594,30 @@ export const GestaoProducoesTab: React.FC = () => {
                   </div>
                 </div>
                 <div className="gestao-card-header-right">
-                  <span
-                    className={`gestao-badge gestao-badge-status ${
-                      isPaused ? "gestao-badge-paused" : ""
-                    }`}
-                  >
-                    {isPaused ? "Pausada" : "Em Andamento"}
-                  </span>
-                  {activeStage && (
-                    <span className="gestao-badge gestao-badge-stage">
-                      {activeStage.etapaNome}
+                  <div className="gestao-card-badges">
+                    <span
+                      className={`gestao-badge gestao-badge-status ${
+                        isPaused ? "gestao-badge-paused" : ""
+                      }`}
+                    >
+                      {isPaused ? "Pausada" : "Em Andamento"}
                     </span>
-                  )}
+                    {activeStage && (
+                      <span className="gestao-badge gestao-badge-stage">
+                        {activeStage.etapaNome}
+                      </span>
+                    )}
+                  </div>
+                  <div className="gestao-card-header-actions">
+                    <button
+                      type="button"
+                      className="gestao-icon-button"
+                      onClick={() => handlePrintOrder(order)}
+                      title="Imprimir ordem de produção"
+                    >
+                      <Printer size={16} />
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -708,27 +720,18 @@ export const GestaoProducoesTab: React.FC = () => {
                   )}
                 </div>
                 <div className="gestao-card-actions-secondary">
-                  <button
-                    type="button"
-                    className="gestao-action-btn gestao-action-print"
-                    onClick={() => handlePrintOrder(order)}
-                    title="Imprimir ordem de produção"
-                  >
-                    <Printer size={16} className="gestao-action-icon" />
-                    Imprimir OP
+                  <button className="gestao-action-btn gestao-action-report">
+                    <AlertTriangle size={16} className="gestao-action-icon" />
+                    Reportar Problema
                   </button>
-                <button className="gestao-action-btn gestao-action-report">
-                  <AlertTriangle size={16} className="gestao-action-icon" />
-                  Reportar Problema
-                </button>
-                <button
-                  className="gestao-action-btn gestao-action-delete"
-                  onClick={() => handleDeleteClick(order.id)}
-                  title="Excluir ordem"
-                >
-                  <Trash2 size={16} className="gestao-action-icon" />
-                  Excluir
-                </button>
+                  <button
+                    className="gestao-action-btn gestao-action-delete"
+                    onClick={() => handleDeleteClick(order.id)}
+                    title="Excluir ordem"
+                  >
+                    <Trash2 size={16} className="gestao-action-icon" />
+                    Excluir
+                  </button>
                 </div>
               </div>
             </article>
@@ -822,7 +825,7 @@ export const GestaoProducoesTab: React.FC = () => {
         cancelText="Cancelar"
       />
 
-      {orderToPrint && (
+      {isPrintModalOpen && orderToPrint && (
         <PrintOrderModal
           isOpen={isPrintModalOpen}
           onClose={() => {

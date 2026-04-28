@@ -292,12 +292,26 @@ export const ProdutoTab: React.FC = () => {
   };
 
   // Funções para gerenciar produtos
-  const handleAddProduto = async (produtoForm: ProdutoForm) => {
+  const handleAddProduto = async (
+    produtoForm: ProdutoForm,
+    imagemArquivo?: File | null
+  ) => {
     if (!user) return;
 
     try {
-      await produtoService.createProduto(user.uid, produtoForm);
-      await loadAllData(); // Recarregar dados
+      const novoId = await produtoService.createProduto(user.uid, produtoForm);
+      if (imagemArquivo) {
+        const url = await produtoService.uploadProdutoImagem(
+          user.uid,
+          novoId,
+          imagemArquivo
+        );
+        await produtoService.updateProduto(novoId, {
+          ...produtoForm,
+          imagemUrl: url,
+        });
+      }
+      await loadAllData();
       toast.success("Produto criado com sucesso!", {
         icon: <Check size={20} />,
       });
@@ -311,13 +325,43 @@ export const ProdutoTab: React.FC = () => {
     }
   };
 
-  const handleEditProduto = async (id: string, produtoForm: ProdutoForm) => {
+  const handleEditProduto = async (
+    id: string,
+    produtoForm: ProdutoForm,
+    imagemArquivo?: File | null,
+    removerImagem?: boolean
+  ) => {
+    if (!user) return;
     try {
-      await produtoService.updateProduto(id, produtoForm);
-      await loadAllData(); // Recarregar dados
+      if (removerImagem) {
+        await produtoService.updateProduto(id, {
+          ...produtoForm,
+          imagemUrl: "",
+        });
+      } else if (imagemArquivo) {
+        const url = await produtoService.uploadProdutoImagem(
+          user.uid,
+          id,
+          imagemArquivo
+        );
+        await produtoService.updateProduto(id, {
+          ...produtoForm,
+          imagemUrl: url,
+        });
+      } else {
+        await produtoService.updateProduto(id, produtoForm);
+      }
+      await loadAllData();
+      toast.success("Produto atualizado com sucesso!", {
+        icon: <Check size={20} />,
+      });
     } catch (error) {
       console.error("Erro ao editar produto:", error);
-      alert("Erro ao editar produto");
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Erro ao atualizar produto. Tente novamente.";
+      toast.error(errorMessage);
     }
   };
 
