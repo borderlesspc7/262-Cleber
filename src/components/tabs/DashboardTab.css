@@ -9,12 +9,13 @@
 
 /* Dashboard Card */
 .dashboard-card {
-  background: white;
+  background: var(--bg-surface);
+  color: var(--text-primary);
   border-radius: 10px;
   padding: 0.875rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
   transition: all 0.3s ease;
-  border: 1px solid #f0f0f0;
+  border: 1px solid var(--border-secondary);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -44,7 +45,7 @@
 .card-title {
   font-size: 0.5rem;
   font-weight: 500;
-  color: #64748b;
+  color: var(--text-secondary);
   margin: 0 0 0.375rem 0;
   letter-spacing: 0.02em;
   line-height: 1.2;
@@ -54,14 +55,14 @@
   display: block;
   font-size: 1.25rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--text-primary);
   margin: 0 0 0.2rem 0;
   line-height: 1.1;
 }
 
 .card-subtitle {
   font-size: 0.65rem;
-  color: #94a3b8;
+  color: var(--text-tertiary);
   margin: 0;
   font-weight: 400;
   line-height: 1.2;
@@ -109,7 +110,7 @@
   align-items: center;
   justify-content: flex-start;
   padding-top: 0.5rem;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--border-primary);
   margin-top: auto;
 }
 
@@ -148,12 +149,13 @@
 
 /* Seção de Ordens Recentes */
 .recent-orders-section {
-  background: white;
+  background: var(--bg-surface);
+  color: var(--text-primary);
   border-radius: 12px;
   padding: 1.5rem;
   margin-top: 1.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  border: 1px solid #f0f0f0;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-secondary);
 }
 
 .recent-orders-header {
@@ -175,14 +177,14 @@
 .recent-orders-title {
   font-size: 1.25rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--text-primary);
   margin: 0 0 0.25rem 0;
   line-height: 1.2;
 }
 
 .recent-orders-subtitle {
   font-size: 0.875rem;
-  color: #64748b;
+  color: var(--text-secondary);
   margin: 0;
   font-weight: 400;
 }
@@ -196,7 +198,7 @@
 .no-orders {
   text-align: center;
   padding: 3rem 1rem;
-  color: #94a3b8;
+  color: var(--text-tertiary);
 }
 
 .no-orders p {
@@ -205,16 +207,16 @@
 }
 
 .order-item {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-surface-alt);
+  border: 1px solid var(--border-primary);
   border-radius: 8px;
   padding: 1rem;
   transition: all 0.2s ease;
 }
 
 .order-item:hover {
-  border-color: #cbd5e1;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border-color: var(--scrollbar-thumb);
+  box-shadow: var(--shadow-sm);
 }
 
 .order-item-header {
@@ -236,18 +238,18 @@
 .order-code {
   font-size: 0.75rem;
   font-weight: 600;
-  color: #475569;
-  background: white;
+  color: var(--text-secondary);
+  background: var(--bg-surface);
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border-primary);
   white-space: nowrap;
 }
 
 .order-product {
   font-size: 0.9375rem;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--text-primary);
   margin: 0;
   flex: 1;
   min-width: 0;
@@ -281,9 +283,9 @@
 }
 
 .order-details-btn {
-  background: white;
-  color: #667eea;
-  border: 1px solid #667eea;
+  background: var(--bg-surface);
+  color: var(--accent-primary);
+  border: 1px solid var(--accent-primary);
   padding: 0.5rem 1rem;
   border-radius: 6px;
   font-size: 0.875rem;
@@ -294,8 +296,8 @@
 }
 
 .order-details-btn:hover {
-  background: #667eea;
-  color: white;
+  background: var(--accent-primary);
+  color: #fff;
   transform: translateY(-1px);
   box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
 }
@@ -305,7 +307,7 @@
   align-items: center;
   gap: 0.5rem;
   font-size: 0.8125rem;
-  color: #64748b;
+  color: var(--text-secondary);
 }
 
 .order-stage {
@@ -313,11 +315,11 @@
 }
 
 .order-status-dot {
-  color: #cbd5e1;
+  color: var(--text-tertiary);
 }
 
 .order-status {
-  color: #475569;
+  color: var(--text-secondary);
 }
 
 /* Responsive */

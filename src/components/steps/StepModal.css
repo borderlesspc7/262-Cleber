@@ -14,7 +14,7 @@
 }
 
 .step-modal {
-  background: white;
+  background: var(--bg-surface);
   border-radius: 0.75rem;
   width: 100%;
   max-width: 500px;
@@ -28,7 +28,7 @@
   align-items: flex-start;
   justify-content: space-between;
   padding: 1.5rem 1.5rem 0 1.5rem;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--border-primary);
   margin-bottom: 1.5rem;
 }
 
@@ -39,13 +39,13 @@
 .step-modal-title {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #111827;
+  color: var(--text-primary);
   margin: 0 0 0.25rem 0;
 }
 
 .step-modal-subtitle {
   font-size: 0.875rem;
-  color: #6b7280;
+  color: var(--text-secondary);
   margin: 0;
 }
 
@@ -53,7 +53,7 @@
   background: none;
   border: none;
   font-size: 1.25rem;
-  color: #6b7280;
+  color: var(--text-secondary);
   cursor: pointer;
   padding: 0.25rem;
   border-radius: 0.25rem;
@@ -62,7 +62,7 @@
 
 .step-modal-close:hover {
   background-color: #f3f4f6;
-  color: #374151;
+  color: var(--text-primary);
 }
 
 .step-modal-form {
@@ -77,14 +77,14 @@
   display: block;
   font-size: 0.875rem;
   font-weight: 500;
-  color: #374151;
+  color: var(--text-primary);
   margin-bottom: 0.5rem;
 }
 
 .step-modal-input {
   width: 100%;
   padding: 0.75rem;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--border-primary);
   border-radius: 0.5rem;
   font-size: 0.875rem;
   transition: border-color 0.2s, box-shadow 0.2s;
@@ -100,7 +100,7 @@
 .step-modal-textarea {
   width: 100%;
   padding: 0.75rem;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--border-primary);
   border-radius: 0.5rem;
   font-size: 0.875rem;
   transition: border-color 0.2s, box-shadow 0.2s;

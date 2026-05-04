@@ -2,6 +2,7 @@ import { useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { AppRoutes } from "./routes/AppRoutes";
 import { AuthProvider } from "./contexts/AuthContext";
+import { ThemeProvider } from "./contexts/ThemeContext";
 import { Toaster, type ToastPosition } from "react-hot-toast";
 import "./styles/toast.css";
 
@@ -107,10 +108,12 @@ function ResponsiveToaster() {
 
 function App() {
   return (
-    <AuthProvider>
-      <AppRoutes />
-      <ResponsiveToaster />
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <AppRoutes />
+        <ResponsiveToaster />
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 

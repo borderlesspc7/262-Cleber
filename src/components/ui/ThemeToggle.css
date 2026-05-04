@@ -1,0 +1,123 @@
+/* ===== Theme Toggle Switch ===== */
+.theme-toggle-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  outline: none;
+  display: flex;
+  align-items: center;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.theme-toggle-track {
+  position: relative;
+  width: 52px;
+  height: 28px;
+  border-radius: 14px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  padding: 0 6px;
+  justify-content: space-between;
+  overflow: hidden;
+}
+
+.theme-toggle-track.track-light {
+  background: linear-gradient(135deg, #93c5fd 0%, #60a5fa 50%, #38bdf8 100%);
+  box-shadow: 
+    0 1px 3px rgba(59, 130, 246, 0.3),
+    inset 0 1px 2px rgba(255, 255, 255, 0.2);
+}
+
+.theme-toggle-track.track-dark {
+  background: linear-gradient(135deg, #1e293b 0%, #334155 50%, #475569 100%);
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.4),
+    inset 0 1px 2px rgba(255, 255, 255, 0.05);
+}
+
+/* Thumb */
+.theme-toggle-thumb {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 2;
+}
+
+.theme-toggle-thumb.thumb-light {
+  left: 3px;
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  box-shadow: 
+    0 2px 6px rgba(245, 158, 11, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.3) inset;
+}
+
+.theme-toggle-thumb.thumb-dark {
+  left: 27px;
+  background: linear-gradient(135deg, #c4b5fd 0%, #a78bfa 100%);
+  box-shadow:
+    0 2px 6px rgba(167, 139, 250, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.15) inset;
+}
+
+.theme-toggle-icon {
+  color: white;
+  flex-shrink: 0;
+}
+
+/* Label icons (sun & moon positioned on track) */
+.theme-toggle-label-icon {
+  flex-shrink: 0;
+  transition: opacity 0.3s ease;
+  z-index: 1;
+}
+
+.theme-toggle-label-icon.sun-icon {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.theme-toggle-label-icon.moon-icon {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* Hide the icon that's behind the thumb */
+.track-light .sun-icon {
+  opacity: 0;
+}
+
+.track-light .moon-icon {
+  opacity: 0.8;
+}
+
+.track-dark .sun-icon {
+  opacity: 0.8;
+}
+
+.track-dark .moon-icon {
+  opacity: 0;
+}
+
+/* Hover effect */
+.theme-toggle-btn:hover .theme-toggle-track {
+  filter: brightness(1.1);
+}
+
+.theme-toggle-btn:hover .theme-toggle-thumb {
+  transform: scale(1.08);
+}
+
+.theme-toggle-btn:active .theme-toggle-thumb {
+  transform: scale(0.95);
+}
+
+/* Focus visible */
+.theme-toggle-btn:focus-visible .theme-toggle-track {
+  outline: 2px solid #667eea;
+  outline-offset: 2px;
+}

@@ -13,7 +13,7 @@
 .finalize-modal {
   width: min(600px, 100%);
   max-height: 90vh;
-  background: #ffffff;
+  background: var(--bg-surface);
   border-radius: 1rem;
   box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.35);
   overflow: hidden;
@@ -23,24 +23,24 @@
 
 .finalize-modal-header {
   padding: 1.5rem 2rem;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--border-primary);
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
-  background: linear-gradient(to bottom, #fafafa, #ffffff);
+  background: linear-gradient(to bottom, var(--bg-surface-hover), var(--bg-surface));
 }
 
 .finalize-modal-header h2 {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--text-primary);
   margin: 0;
 }
 
 .finalize-modal-header p {
   margin: 0.25rem 0 0 0;
-  color: #64748b;
+  color: var(--text-secondary);
   font-size: 0.9rem;
 }
 
@@ -51,11 +51,11 @@
   padding: 0.5rem;
   cursor: pointer;
   transition: background 0.2s;
-  color: #475569;
+  color: var(--text-secondary);
 }
 
 .finalize-modal-close:hover:not(:disabled) {
-  background: #f1f5f9;
+  background: var(--bg-surface-hover);
 }
 
 .finalize-modal-close:disabled {
@@ -80,7 +80,7 @@
 .finalize-section-title {
   font-size: 1rem;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--text-primary);
   margin: 0;
   padding-bottom: 0.5rem;
   border-bottom: 2px solid #e2e8f0;
@@ -101,7 +101,7 @@
 .finalize-form-field label {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--text-primary);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -110,12 +110,12 @@
 .field-hint {
   font-size: 0.75rem;
   font-weight: 400;
-  color: #64748b;
+  color: var(--text-secondary);
 }
 
 .finalize-form-field input,
 .finalize-form-field textarea {
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--border-primary);
   border-radius: 0.5rem;
   padding: 0.75rem;
   font-size: 0.95rem;
@@ -133,7 +133,7 @@
 
 .finalize-form-field input:disabled,
 .finalize-form-field textarea:disabled {
-  background: #f1f5f9;
+  background: var(--bg-surface-hover);
   cursor: not-allowed;
 }
 
@@ -144,7 +144,7 @@
 .finalize-select-wrapper select {
   appearance: none;
   width: 100%;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--border-primary);
   border-radius: 0.5rem;
   padding: 0.75rem;
   padding-right: 2.5rem;
@@ -153,7 +153,7 @@
   outline: none;
   transition: all 0.2s;
   cursor: pointer;
-  background: #ffffff;
+  background: var(--bg-surface);
 }
 
 .finalize-select-wrapper select:focus {
@@ -162,7 +162,7 @@
 }
 
 .finalize-select-wrapper select:disabled {
-  background: #f1f5f9;
+  background: var(--bg-surface-hover);
   cursor: not-allowed;
 }
 
@@ -171,7 +171,7 @@
   right: 0.75rem;
   top: 50%;
   transform: translateY(-50%);
-  color: #64748b;
+  color: var(--text-secondary);
   pointer-events: none;
 }
 
@@ -189,7 +189,7 @@
 
 .finalize-modal-footer {
   padding: 1.5rem 2rem;
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid var(--border-primary);
   display: flex;
   justify-content: flex-end;
   gap: 1rem;
@@ -212,14 +212,14 @@
 }
 
 .finalize-btn-cancel {
-  background: #ffffff;
-  color: #475569;
+  background: var(--bg-surface);
+  color: var(--text-secondary);
   border: 1px solid #cbd5e1;
 }
 
 .finalize-btn-cancel:hover:not(:disabled) {
-  background: #f8fafc;
-  border-color: #94a3b8;
+  background: var(--bg-primary);
+  border-color: var(--text-tertiary);
 }
 
 .finalize-btn-submit {

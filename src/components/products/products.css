@@ -7,7 +7,7 @@
   display: flex;
   gap: 0.5rem;
   margin-bottom: 2rem;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--border-primary);
   overflow-x: auto;
 }
 
@@ -18,7 +18,7 @@
   padding: 0.75rem 1rem;
   background: none;
   border: none;
-  color: #64748b;
+  color: var(--text-secondary);
   cursor: pointer;
   border-bottom: 2px solid transparent;
   transition: all 0.2s;
@@ -28,8 +28,8 @@
 }
 
 .product-tab-button:hover {
-  color: #1e293b;
-  background-color: #f8fafc;
+  color: var(--text-primary);
+  background-color: var(--bg-primary);
 }
 
 .product-tab-button.active {
@@ -39,7 +39,7 @@
 }
 
 .product-tab-content {
-  background-color: white;
+  background-color: var(--bg-surface);
   border-radius: 0.5rem;
   padding: 2rem;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
@@ -52,13 +52,13 @@
   align-items: center;
   margin-bottom: 2rem;
   padding-bottom: 1rem;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--border-primary);
 }
 
 .form-header h3 {
   font-size: 1.25rem;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--text-primary);
   margin: 0;
 }
 
@@ -74,8 +74,8 @@
 }
 
 .etapa-card {
-  background: #ffffff;
-  border: 2px solid #e2e8f0;
+  background: var(--bg-surface);
+  border: 2px solid var(--border-primary);
   border-radius: 0.75rem;
   padding: 1rem;
   transition: all 0.2s ease;
@@ -88,7 +88,7 @@
 
 .etapa-card.active {
   border-color: #7c3aed;
-  background: linear-gradient(to bottom, #faf5ff, #ffffff);
+  background: linear-gradient(to bottom, var(--accent-primary-bg), var(--bg-surface));
   box-shadow: 0 2px 12px rgba(124, 58, 237, 0.1);
 }
 
@@ -120,27 +120,27 @@
 
 .etapa-card-nome {
   font-weight: 600;
-  color: #1e293b;
+  color: var(--text-primary);
   font-size: 0.95rem;
   line-height: 1.3;
 }
 
 .etapa-card-desc {
   font-size: 0.8rem;
-  color: #64748b;
+  color: var(--text-secondary);
   line-height: 1.4;
 }
 
 .etapa-card-custo {
   padding-top: 0.75rem;
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid var(--border-primary);
 }
 
 .etapa-card-custo label {
   display: block;
   font-size: 0.8rem;
   font-weight: 600;
-  color: #64748b;
+  color: var(--text-secondary);
   margin-bottom: 0.5rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -149,22 +149,22 @@
 .currency-input {
   display: flex;
   align-items: center;
-  background: #f8fafc;
-  border: 1px solid #d1d5db;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-primary);
   border-radius: 0.5rem;
   padding: 0.5rem 0.75rem;
   transition: all 0.2s;
 }
 
 .currency-input:focus-within {
-  background: #ffffff;
+  background: var(--bg-surface);
   border-color: #7c3aed;
   box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
 }
 
 .currency-symbol {
   font-weight: 600;
-  color: #64748b;
+  color: var(--text-secondary);
   font-size: 0.9rem;
   margin-right: 0.5rem;
 }
@@ -176,18 +176,18 @@
   background: transparent;
   font-size: 0.95rem;
   font-weight: 500;
-  color: #1e293b;
+  color: var(--text-primary);
   font-family: 'Courier New', monospace;
 }
 
 .currency-input input::placeholder {
-  color: #94a3b8;
+  color: var(--text-tertiary);
 }
 
 .etapas-empty {
   text-align: center;
   padding: 3rem 1rem;
-  background: #f8fafc;
+  background: var(--bg-primary);
   border: 2px dashed #cbd5e1;
   border-radius: 0.75rem;
 }
@@ -195,12 +195,12 @@
 .etapas-empty p {
   margin: 0 0 0.5rem 0;
   font-weight: 600;
-  color: #475569;
+  color: var(--text-secondary);
   font-size: 0.95rem;
 }
 
 .etapas-empty span {
-  color: #64748b;
+  color: var(--text-secondary);
   font-size: 0.85rem;
 }
 
@@ -230,11 +230,11 @@
 }
 
 .form {
-  background-color: #f8fafc;
+  background-color: var(--bg-primary);
   padding: 1.5rem;
   border-radius: 0.5rem;
   margin-bottom: 2rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border-primary);
 }
 
 .form-row {
@@ -260,7 +260,7 @@
 .form-group select {
   width: 100%;
   padding: 0.5rem 0.75rem;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--border-primary);
   border-radius: 0.375rem;
   font-size: 0.875rem;
   transition: border-color 0.2s;
@@ -279,7 +279,7 @@
   display: block;
   margin-top: 0.25rem;
   font-size: 0.75rem;
-  color: #6b7280;
+  color: var(--text-secondary);
 }
 
 .form-error-message {
@@ -317,7 +317,7 @@
 
 .cancel-button {
   padding: 0.5rem 1rem;
-  background-color: #6b7280;
+  background-color: var(--text-secondary);
   color: white;
   border: none;
   border-radius: 0.375rem;
@@ -328,7 +328,7 @@
 }
 
 .cancel-button:hover {
-  background-color: #4b5563;
+  background-color: var(--text-secondary);
 }
 
 /* Color Input Group */
@@ -341,7 +341,7 @@
 .color-picker {
   width: 3rem;
   height: 2.5rem;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--border-primary);
   border-radius: 0.375rem;
   cursor: pointer;
 }
@@ -363,14 +363,14 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border-primary);
   border-radius: 0.375rem;
   cursor: pointer;
   transition: background-color 0.2s;
 }
 
 .checkbox-item:hover {
-  background-color: #f8fafc;
+  background-color: var(--bg-primary);
 }
 
 .checkbox-item input[type="checkbox"] {
@@ -382,7 +382,7 @@
   width: 1rem;
   height: 1rem;
   border-radius: 50%;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--border-primary);
 }
 
 /* Dropdown Styles */
@@ -393,10 +393,10 @@
 .dropdown-button {
   width: 100%;
   padding: 0.5rem 0.75rem;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--border-primary);
   border-radius: 0.375rem;
-  background-color: white;
-  color: #374151;
+  background-color: var(--bg-surface);
+  color: var(--text-primary);
   cursor: pointer;
   display: flex;
   justify-content: space-between;
@@ -415,8 +415,8 @@
   top: 100%;
   left: 0;
   right: 0;
-  background-color: white;
-  border: 1px solid #d1d5db;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-primary);
   border-radius: 0.375rem;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   z-index: 10;
@@ -432,12 +432,12 @@
   text-align: left;
   cursor: pointer;
   font-size: 0.875rem;
-  color: #374151;
+  color: var(--text-primary);
   transition: background-color 0.2s;
 }
 
 .dropdown-item:hover {
-  background-color: #f8fafc;
+  background-color: var(--bg-primary);
 }
 
 /* Etapas Section */
@@ -454,10 +454,10 @@
   justify-content: space-between;
   align-items: center;
   padding: 0.75rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border-primary);
   border-radius: 0.375rem;
   margin-bottom: 0.5rem;
-  background-color: #f8fafc;
+  background-color: var(--bg-primary);
 }
 
 .etapa-info {
@@ -469,7 +469,7 @@
 .custo-input {
   width: 100px;
   padding: 0.25rem 0.5rem;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--border-primary);
   border-radius: 0.25rem;
   font-size: 0.875rem;
 }
@@ -495,9 +495,9 @@
 .etapa-select {
   width: 100%;
   padding: 0.5rem 0.75rem;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--border-primary);
   border-radius: 0.375rem;
-  background-color: white;
+  background-color: var(--bg-surface);
   font-size: 0.875rem;
 }
 
@@ -520,9 +520,9 @@
   justify-content: space-between;
   align-items: center;
   padding: 1rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border-primary);
   border-radius: 0.5rem;
-  background-color: white;
+  background-color: var(--bg-surface);
   transition: box-shadow 0.2s;
 }
 
@@ -555,7 +555,7 @@
   margin: 0 0 0.25rem 0;
   font-size: 1rem;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--text-primary);
 }
 
 .categoria-info .descricao,
@@ -563,7 +563,7 @@
 .produto-info .descricao {
   margin: 0.25rem 0 0 0;
   font-size: 0.875rem;
-  color: #6b7280;
+  color: var(--text-secondary);
 }
 
 .cor-info {
@@ -576,7 +576,7 @@
   width: 2rem;
   height: 2rem;
   border-radius: 50%;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--border-primary);
 }
 
 .cor-details h4 {
@@ -586,7 +586,7 @@
 .cor-details .codigo {
   margin: 0.25rem 0 0 0;
   font-size: 0.75rem;
-  color: #6b7280;
+  color: var(--text-secondary);
   font-family: monospace;
 }
 
@@ -639,11 +639,11 @@
 
 .produto-details > div {
   font-size: 0.875rem;
-  color: #6b7280;
+  color: var(--text-secondary);
 }
 
 .produto-details strong {
-  color: #374151;
+  color: var(--text-primary);
 }
 
 .produto-thumb-wrap {
@@ -655,8 +655,8 @@
   height: 72px;
   border-radius: 0.5rem;
   object-fit: cover;
-  border: 1px solid #e2e8f0;
-  background: #f8fafc;
+  border: 1px solid var(--border-primary);
+  background: var(--bg-primary);
 }
 
 .produto-imagem-grupo {
@@ -666,7 +666,7 @@
 .produto-imagem-hint {
   margin: 0 0 0.75rem 0;
   font-size: 0.8125rem;
-  color: #64748b;
+  color: var(--text-secondary);
 }
 
 .produto-imagem-toolbar {
@@ -682,8 +682,8 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.55rem 1rem;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-primary);
   border-radius: 0.5rem;
   cursor: pointer;
   font-size: 0.875rem;
@@ -693,7 +693,7 @@
 }
 
 .produto-imagem-file-label:hover {
-  background: #f1f5f9;
+  background: var(--bg-surface-hover);
   border-color: #cbd5e1;
 }
 
@@ -707,7 +707,7 @@
 .produto-imagem-remove-text {
   background: none;
   border: none;
-  color: #64748b;
+  color: var(--text-secondary);
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
@@ -726,9 +726,9 @@
   max-width: 100%;
   max-height: 220px;
   border-radius: 0.5rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border-primary);
   object-fit: contain;
-  background: #f8fafc;
+  background: var(--bg-primary);
 }
 
 .categoria-actions,

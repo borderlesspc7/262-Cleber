@@ -1,9 +1,11 @@
 /* Etapas Tab Styles */
 .etapas-container {
-  background: white;
+  background: var(--bg-surface);
+  color: var(--text-primary);
   border-radius: 0.75rem;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  box-shadow: var(--shadow-sm);
   overflow: hidden;
+  border: 1px solid var(--border-primary);
 }
 
 .etapas-header {
@@ -11,7 +13,7 @@
   align-items: flex-start;
   justify-content: space-between;
   padding: 1.5rem;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--border-primary);
 }
 
 .etapas-title-section {
@@ -21,18 +23,18 @@
 .etapas-title {
   font-size: 1.25rem;
   font-weight: 700;
-  color: #111827;
+  color: var(--text-primary);
   margin: 0 0 0.25rem 0;
 }
 
 .etapas-subtitle {
   font-size: 0.875rem;
-  color: #6b7280;
+  color: var(--text-secondary);
   margin: 0;
 }
 
 .etapas-add-button {
-  background: #1e3a8a;
+  background: var(--accent-primary);
   border: none;
   border-radius: 0.5rem;
   padding: 0.75rem 1rem;
@@ -44,18 +46,18 @@
 }
 
 .etapas-add-button:hover {
-  background: #1e40af;
+  background: var(--accent-primary-hover);
   transform: scale(1.02);
 }
 
 .etapas-add-icon {
-  color: white;
+  color: #fff;
   font-size: 1rem;
   font-weight: 300;
 }
 
 .etapas-add-text {
-  color: white;
+  color: #fff;
   font-size: 0.875rem;
   font-weight: 500;
 }
@@ -68,7 +70,7 @@
 .etapas-empty {
   text-align: center;
   padding: 3rem 1rem;
-  color: #6b7280;
+  color: var(--text-secondary);
 }
 
 .etapas-empty-subtitle {
@@ -88,42 +90,43 @@
 }
 
 .etapas-table thead {
-  background: #f9fafb;
+  background: var(--bg-surface-alt);
 }
 
 .etapas-table th {
   padding: 0.75rem;
   text-align: left;
   font-weight: 600;
-  color: #374151;
-  border-bottom: 1px solid #e5e7eb;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-primary);
 }
 
 .etapas-table td {
   padding: 0.75rem;
-  border-bottom: 1px solid #f3f4f6;
+  border-bottom: 1px solid var(--border-secondary);
   vertical-align: top;
+  color: var(--text-primary);
 }
 
 .etapas-table tbody tr:hover {
-  background: #f9fafb;
+  background: var(--bg-surface-hover);
 }
 
 .etapas-order {
   font-weight: 500;
-  color: #6b7280;
+  color: var(--text-secondary);
   text-align: center;
   width: 80px;
 }
 
 .etapas-name {
   font-weight: 600;
-  color: #111827;
+  color: var(--text-primary);
   min-width: 120px;
 }
 
 .etapas-description {
-  color: #6b7280;
+  color: var(--text-secondary);
   line-height: 1.4;
 }
 
@@ -134,7 +137,7 @@
 
 .etapas-action {
   background: none;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--border-primary);
   padding: 0.25rem;
   border-radius: 0.25rem;
   cursor: pointer;
@@ -149,23 +152,23 @@
 }
 
 .etapas-edit {
-  color: #374151;
-  border-color: #d1d5db;
+  color: var(--text-secondary);
+  border-color: var(--border-primary);
 }
 
 .etapas-edit:hover {
-  background: #f3f4f6;
-  border-color: #9ca3af;
+  background: var(--bg-surface-hover);
+  border-color: var(--text-tertiary);
 }
 
 .etapas-delete {
-  color: #dc2626;
-  border-color: #fecaca;
+  color: var(--accent-danger);
+  border-color: var(--accent-danger-bg);
 }
 
 .etapas-delete:hover {
-  background: #fef2f2;
-  border-color: #fca5a5;
+  background: var(--accent-danger-bg);
+  border-color: var(--accent-danger);
 }
 
 /* Responsive Design */
@@ -192,10 +195,8 @@
   .etapas-table td {
     padding: 0.5rem;
   }
-
 }
 
-/* Em faixa tablet a tabela ainda é linha; ellipsis evita estourar horizontalmente */
 @media (min-width: 641px) and (max-width: 768px) {
   .etapas-table .etapas-description {
     max-width: 200px;
@@ -207,7 +208,7 @@
 
 @media (max-width: 640px) {
   .etapas-table-container {
-    border: 1px solid #e5e7eb;
+    border: 1px solid var(--border-primary);
     border-radius: 0.5rem;
     overflow-x: visible;
   }
@@ -222,14 +223,15 @@
 
   .etapas-table tbody tr {
     display: block;
-    border: 1px solid #e5e7eb;
+    border: 1px solid var(--border-primary);
     border-radius: 0.5rem;
     margin-bottom: 0.5rem;
     padding: 1rem;
+    background: var(--bg-surface);
   }
 
   .etapas-table tbody tr:hover {
-    background: white;
+    background: var(--bg-surface);
   }
 
   .etapas-table tbody td {
@@ -239,13 +241,12 @@
     max-width: 100%;
   }
 
-  /* Labels explícitos (especificidade > .etapas-table td); nunca attr(data-label) vazio */
   .etapas-table tbody td.etapas-order:before,
   .etapas-table tbody td.etapas-name:before,
   .etapas-table tbody td.etapas-description:before,
   .etapas-table tbody td.etapas-actions:before {
     font-weight: 600;
-    color: #374151;
+    color: var(--text-primary);
     margin-right: 0.25rem;
   }
 

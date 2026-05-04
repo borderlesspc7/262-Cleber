@@ -9,4 +9,147 @@
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
+
+  /* ===== Light Theme (default) ===== */
+  --bg-primary: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-surface-hover: #f1f5f9;
+  --bg-surface-alt: #f8fafc;
+  --bg-input: #ffffff;
+
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --text-tertiary: #94a3b8;
+  --text-inverse: #ffffff;
+
+  --border-primary: #e2e8f0;
+  --border-secondary: #f0f0f0;
+  --border-focus: #667eea;
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+
+  --accent-primary: #667eea;
+  --accent-primary-hover: #5a6fd6;
+  --accent-primary-bg: rgba(102, 126, 234, 0.1);
+
+  --accent-success: #10b981;
+  --accent-success-bg: rgba(16, 185, 129, 0.1);
+
+  --accent-danger: #ef4444;
+  --accent-danger-bg: rgba(239, 68, 68, 0.1);
+
+  --accent-warning: #f59e0b;
+  --accent-warning-bg: rgba(245, 158, 11, 0.1);
+
+  --nav-active-bg: #eff6ff;
+  --nav-active-text: #1e40af;
+  --nav-active-border: #3b82f6;
+
+  --scrollbar-track: #f1f5f9;
+  --scrollbar-thumb: #cbd5e1;
+
+  color-scheme: light;
+}
+
+/* ===== Dark Theme ===== */
+[data-theme="dark"] {
+  --bg-primary: #0f172a;
+  --bg-surface: #1e293b;
+  --bg-surface-hover: #334155;
+  --bg-surface-alt: #1a2332;
+  --bg-input: #1e293b;
+
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-tertiary: #64748b;
+  --text-inverse: #0f172a;
+
+  --border-primary: #334155;
+  --border-secondary: #2a3a4e;
+  --border-focus: #818cf8;
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+
+  --accent-primary: #818cf8;
+  --accent-primary-hover: #6d77e6;
+  --accent-primary-bg: rgba(129, 140, 248, 0.15);
+
+  --accent-success: #34d399;
+  --accent-success-bg: rgba(52, 211, 153, 0.15);
+
+  --accent-danger: #f87171;
+  --accent-danger-bg: rgba(248, 113, 113, 0.15);
+
+  --accent-warning: #fbbf24;
+  --accent-warning-bg: rgba(251, 191, 36, 0.15);
+
+  --nav-active-bg: rgba(129, 140, 248, 0.12);
+  --nav-active-text: #a5b4fc;
+  --nav-active-border: #818cf8;
+
+  --scrollbar-track: #1e293b;
+  --scrollbar-thumb: #475569;
+
+  color-scheme: dark;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+/* Conteúdo comum às abas do dashboard (classes usadas em várias telas) */
+.tab-content {
+  background-color: transparent;
+  min-height: calc(100vh - 5.75rem);
+}
+
+.tab-header {
+  margin-bottom: 1rem;
+}
+
+.tab-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.tab-subtitle {
+  font-size: 1rem;
+  color: var(--text-secondary);
+}
+
+.tab-body {
+  background-color: var(--bg-surface);
+  color: var(--text-primary);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-primary);
+}
+
+/* Smooth theme transition on key elements */
+body,
+.layout-container,
+.sidebar,
+.header,
+.main-content,
+.page-content,
+.dashboard-card,
+.chart-card,
+.agenda-card,
+.recent-orders-section,
+.tab-body,
+.tab-content,
+.tab-title,
+.tab-subtitle,
+.card,
+.faccoes-container,
+.cadastros-container {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }

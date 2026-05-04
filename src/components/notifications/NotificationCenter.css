@@ -15,13 +15,13 @@
     border: none;
     border-radius: 8px;
     cursor: pointer;
-    color: #64748b;
+    color: var(--text-secondary);
     transition: all 0.2s ease;
   }
   
   .notification-bell:hover {
-    background: #f1f5f9;
-    color: #1e293b;
+    background: var(--bg-surface-hover);
+    color: var(--text-primary);
   }
   
   .notification-badge {
@@ -58,10 +58,10 @@
     right: 0;
     width: 380px;
     max-height: 500px;
-    background: white;
+    background: var(--bg-surface);
     border-radius: 12px;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--border-primary);
     z-index: 1000;
     display: flex;
     flex-direction: column;
@@ -85,7 +85,7 @@
     align-items: center;
     justify-content: space-between;
     padding: 1rem;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid var(--border-primary);
   }
   
   .notification-header-title {
@@ -97,13 +97,13 @@
   .notification-header-title h3 {
     font-size: 1rem;
     font-weight: 600;
-    color: #1e293b;
+    color: var(--text-primary);
     margin: 0;
   }
   
   .unread-count-badge {
-    background: #667eea;
-    color: white;
+    background: var(--accent-primary);
+    color: #fff;
     font-size: 0.75rem;
     font-weight: 600;
     padding: 0.125rem 0.5rem;
@@ -126,18 +126,18 @@
     border: none;
     border-radius: 6px;
     cursor: pointer;
-    color: #64748b;
+    color: var(--text-secondary);
     transition: all 0.2s ease;
   }
   
   .mark-all-read-btn:hover {
-    background: #f1f5f9;
+    background: var(--bg-surface-hover);
     color: #10b981;
   }
   
   .close-dropdown-btn:hover {
-    background: #f1f5f9;
-    color: #1e293b;
+    background: var(--bg-surface-hover);
+    color: var(--text-primary);
   }
   
   /* Content */
@@ -155,7 +155,7 @@
     align-items: center;
     justify-content: center;
     padding: 3rem 1rem;
-    color: #94a3b8;
+    color: var(--text-tertiary);
     gap: 0.5rem;
   }
   
@@ -174,18 +174,18 @@
     display: flex;
     gap: 0.75rem;
     padding: 0.875rem 1rem;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid var(--border-primary);
     cursor: pointer;
     transition: all 0.2s ease;
     position: relative;
   }
   
   .notification-item:hover {
-    background: #f8fafc;
+    background: var(--bg-primary);
   }
   
   .notification-item.unread {
-    background: #f0f9ff;
+    background: var(--accent-primary-bg);
   }
   
   .notification-item.unread::before {
@@ -195,7 +195,7 @@
     top: 0;
     bottom: 0;
     width: 3px;
-    background: #667eea;
+    background: var(--accent-primary);
   }
   
   /* Ícone da Notificação */
@@ -207,7 +207,7 @@
     align-items: center;
     justify-content: center;
     border-radius: 10px;
-    background: #f1f5f9;
+    background: var(--bg-surface-hover);
   }
   
   .notification-icon.warning {
@@ -227,7 +227,7 @@
   }
   
   .notification-icon.info {
-    color: #667eea;
+    color: var(--accent-primary);
   }
   
   /* Conteúdo da Notificação */
@@ -239,7 +239,7 @@
   .notification-item-title {
     font-size: 0.875rem;
     font-weight: 600;
-    color: #1e293b;
+    color: var(--text-primary);
     margin: 0 0 0.25rem 0;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -248,7 +248,7 @@
   
   .notification-item-message {
     font-size: 0.8125rem;
-    color: #64748b;
+    color: var(--text-secondary);
     margin: 0 0 0.25rem 0;
     line-height: 1.4;
     display: -webkit-box;
@@ -259,7 +259,7 @@
   
   .notification-item-time {
     font-size: 0.75rem;
-    color: #94a3b8;
+    color: var(--text-tertiary);
   }
   
   /* Botão Deletar */
@@ -274,7 +274,7 @@
     border: none;
     border-radius: 6px;
     cursor: pointer;
-    color: #94a3b8;
+    color: var(--text-tertiary);
     opacity: 0;
     transition: all 0.2s ease;
   }
@@ -294,7 +294,7 @@
   }
   
   .notification-content::-webkit-scrollbar-track {
-    background: #f1f5f9;
+    background: var(--bg-surface-hover);
   }
   
   .notification-content::-webkit-scrollbar-thumb {

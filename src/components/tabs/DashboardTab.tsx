@@ -7,6 +7,7 @@ import { financeiroService } from "../../services/financeiroService";
 import { notificationMonitor } from "../../services/notificationMonitorService";
 import { useAuth } from "../../hooks/useAuth";
 import { AgendaCard } from "../agenda/AgendaCard";
+import { ProductionCharts } from "../charts/ProductionCharts";
 import type { ProductionOrder } from "../../types/order";
 import type { Produto } from "../../types/product";
 import type { Faccao } from "../../types/faccao";
@@ -230,6 +231,8 @@ export const DashboardTab = () => {
             </span>
           </div>
         </div>
+
+        <ProductionCharts orders={orders} progressos={progressos} />
 
         <AgendaCard />
       </div>

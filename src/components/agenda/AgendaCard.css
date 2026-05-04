@@ -1,10 +1,12 @@
 /* Agenda Card Styles */
 .agenda-card {
-  background: white;
+  background: var(--bg-surface);
+  color: var(--text-primary);
   border-radius: 0.75rem;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  box-shadow: var(--shadow-sm);
   overflow: hidden;
   height: fit-content;
+  border: 1px solid var(--border-primary);
 }
 
 .agenda-header {
@@ -12,7 +14,7 @@
   align-items: flex-start;
   justify-content: space-between;
   padding: 1.5rem;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--border-primary);
 }
 
 .agenda-title-section {
@@ -33,18 +35,18 @@
 .agenda-title h3 {
   font-size: 1.25rem;
   font-weight: 700;
-  color: #111827;
+  color: var(--text-primary);
   margin: 0;
 }
 
 .agenda-subtitle {
   font-size: 0.875rem;
-  color: #6b7280;
+  color: var(--text-secondary);
   margin: 0;
 }
 
 .agenda-add-button {
-  background: #1e3a8a;
+  background: var(--accent-primary);
   border: none;
   border-radius: 0.5rem;
   width: 2.5rem;
@@ -57,12 +59,12 @@
 }
 
 .agenda-add-button:hover {
-  background: #374151;
+  background: var(--accent-primary-hover);
   transform: scale(1.05);
 }
 
 .agenda-add-icon {
-  color: white;
+  color: #fff;
   font-size: 1.25rem;
   font-weight: 300;
 }
@@ -75,7 +77,7 @@
 .agenda-empty {
   text-align: center;
   padding: 2rem 1rem;
-  color: #6b7280;
+  color: var(--text-secondary);
 }
 
 .agenda-empty-subtitle {
@@ -91,22 +93,22 @@
 }
 
 .agenda-task {
-  background: white;
-  border: 1px solid #e5e7eb;
+  background: var(--bg-surface-alt);
+  border: 1px solid var(--border-primary);
   border-radius: 0.5rem;
   padding: 1rem;
   transition: all 0.2s;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
 }
 
 .agenda-task:hover {
-  border-color: #d1d5db;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  border-color: var(--scrollbar-thumb);
+  box-shadow: var(--shadow-md);
 }
 
 .agenda-task.task-completed {
   opacity: 0.6;
-  background: #f9fafb;
+  background: var(--bg-surface-hover);
 }
 
 .task-content {
@@ -123,14 +125,14 @@
 .task-description {
   font-size: 0.875rem;
   font-weight: 700;
-  color: #111827;
+  color: var(--text-primary);
   margin: 0 0 0.5rem 0;
   line-height: 1.4;
 }
 
 .task-completed .task-description {
   text-decoration: line-through;
-  color: #6b7280;
+  color: var(--text-secondary);
 }
 
 .task-meta {
@@ -149,23 +151,23 @@
 }
 
 .task-priority-high {
-  background: #dc2626;
-  color: white;
+  background: var(--accent-danger);
+  color: #fff;
 }
 
 .task-priority-medium {
-  background: #111827;
-  color: white;
+  background: var(--text-secondary);
+  color: #fff;
 }
 
 .task-priority-low {
-  background: #6b7280;
-  color: white;
+  background: var(--text-tertiary);
+  color: #fff;
 }
 
 .task-time {
   font-size: 0.875rem;
-  color: #6b7280;
+  color: var(--text-secondary);
   font-weight: 400;
 }
 
@@ -177,7 +179,7 @@
 
 .task-action {
   background: none;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--border-primary);
   padding: 0.25rem;
   border-radius: 0.25rem;
   cursor: pointer;
@@ -188,48 +190,48 @@
   justify-content: center;
   width: 1.75rem;
   height: 1.75rem;
-  color: #374151;
+  color: var(--text-secondary);
 }
 
 .task-complete {
-  color: #374151;
-  border-color: #d1d5db;
+  color: var(--text-secondary);
+  border-color: var(--border-primary);
 }
 
 .task-complete:hover {
-  background: #f3f4f6;
-  border-color: #9ca3af;
+  background: var(--bg-surface-hover);
+  border-color: var(--text-tertiary);
 }
 
 .task-completed-icon {
-  background: #10b981;
-  color: white;
-  border-color: #10b981;
+  background: var(--accent-success);
+  color: #fff;
+  border-color: var(--accent-success);
 }
 
 .task-completed-icon:hover {
-  background: #059669;
-  border-color: #059669;
+  filter: brightness(1.05);
+  border-color: var(--accent-success);
 }
 
 .task-edit {
-  color: #374151;
-  border-color: #d1d5db;
+  color: var(--text-secondary);
+  border-color: var(--border-primary);
 }
 
 .task-edit:hover {
-  background: #f3f4f6;
-  border-color: #9ca3af;
+  background: var(--bg-surface-hover);
+  border-color: var(--text-tertiary);
 }
 
 .task-delete {
-  color: #dc2626;
-  border-color: #fecaca;
+  color: var(--accent-danger);
+  border-color: var(--accent-danger-bg);
 }
 
 .task-delete:hover {
-  background: #fef2f2;
-  border-color: #fca5a5;
+  background: var(--accent-danger-bg);
+  border-color: var(--accent-danger);
 }
 
 /* Responsive Design */

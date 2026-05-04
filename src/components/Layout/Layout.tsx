@@ -16,6 +16,7 @@ import {
 import { authService } from "../../services/authService";
 import { companyService } from "../../services/companyService";
 import { NotificationCenter } from "../notifications/NotificationCenter";
+import { ThemeToggle } from "../ui/ThemeToggle";
 import type { Company } from "../../types/company";
 import "./Layout.css";
 import { useNavigate } from "react-router-dom";
@@ -163,6 +164,7 @@ export const Layout: React.FC<LayoutProps> = ({
             </h1>
           </div>
           <div className="header-right">
+            <ThemeToggle />
             <NotificationCenter onNavigate={handleNotificationNavigate} />
           </div>
         </header>

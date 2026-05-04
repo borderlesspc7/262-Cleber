@@ -4,36 +4,9 @@
   height: 100%;
 }
 
-/* Tab Content Styles */
-.tab-content {
-  background-color: #f8fafc;
-  min-height: calc(100vh - 80px);
-}
+/* Estilos de aba movidos para index.css (tema global); mantidos aqui apenas overrides específicos */
 
-.tab-header {
-  margin-bottom: 1rem;
-}
-
-.tab-title {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #1e293b;
-  margin-bottom: 0.5rem;
-}
-
-.tab-subtitle {
-  font-size: 1rem;
-  color: #64748b;
-}
-
-.tab-body {
-  background-color: white;
-  border-radius: 0.5rem;
-  padding: 1rem;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-}
-
-/* Dashboard Grid */
+/* Dashboard Grid (páginas que reutilizam esta grade) */
 .dashboard-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -42,22 +15,23 @@
 }
 
 .dashboard-card {
-  background-color: white;
-  border: 1px solid #e2e8f0;
+  background-color: var(--bg-surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border-primary);
   border-radius: 0.5rem;
   padding: 1.5rem;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
 }
 
 .dashboard-card h3 {
   font-size: 1.125rem;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--text-primary);
   margin-bottom: 0.5rem;
 }
 
 .dashboard-card p {
-  color: #64748b;
+  color: var(--text-secondary);
   font-size: 0.875rem;
 }
 
@@ -66,11 +40,11 @@
   .tab-content {
     padding: 1rem;
   }
-  
+
   .tab-body {
     padding: 1.5rem;
   }
-  
+
   .dashboard-grid {
     grid-template-columns: 1fr;
   }

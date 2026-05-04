@@ -22,7 +22,7 @@
 }
 
 .delete-modal {
-  background: white;
+  background: var(--bg-surface);
   border-radius: 12px;
   width: 90%;
   max-width: 480px;
@@ -47,7 +47,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 20px 24px;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--border-primary);
 }
 
 .delete-modal-icon-wrapper {
@@ -68,7 +68,7 @@
   background: none;
   border: none;
   cursor: pointer;
-  color: #6b7280;
+  color: var(--text-secondary);
   padding: 4px;
   display: flex;
   align-items: center;
@@ -79,7 +79,7 @@
 
 .delete-modal-close:hover:not(:disabled) {
   background-color: #f3f4f6;
-  color: #374151;
+  color: var(--text-primary);
 }
 
 .delete-modal-close:disabled {
@@ -94,20 +94,20 @@
 .delete-modal-title {
   font-size: 20px;
   font-weight: 600;
-  color: #111827;
+  color: var(--text-primary);
   margin: 0 0 12px 0;
 }
 
 .delete-modal-message {
   font-size: 15px;
-  color: #4b5563;
+  color: var(--text-secondary);
   line-height: 1.5;
   margin: 0 0 8px 0;
 }
 
 .delete-modal-item-name {
   font-weight: 600;
-  color: #111827;
+  color: var(--text-primary);
 }
 
 .delete-modal-warning {
@@ -139,7 +139,7 @@
 
 .delete-btn-cancel {
   background-color: #f3f4f6;
-  color: #374151;
+  color: var(--text-primary);
 }
 
 .delete-btn-cancel:hover:not(:disabled) {

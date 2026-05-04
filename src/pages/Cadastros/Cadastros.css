@@ -1,11 +1,12 @@
 .cadastros-container {
-  background-color: #f8fafc;
-  min-height: 100vh;
+  background-color: transparent;
+  min-height: 100%;
+  color: var(--text-primary);
 }
 
 .section-description {
   font-size: 0.875rem;
-  color: #64748b;
+  color: var(--text-secondary);
   margin: 0;
   font-weight: 400;
 }
@@ -18,20 +19,20 @@
 
 .section-header {
   margin-bottom: 1.5rem;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--border-primary);
   padding-bottom: 1rem;
 }
 
 .section-title {
   font-size: 1.875rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--text-primary);
   margin: 0 0 0.5rem 0;
 }
 
 .section-subtitle {
   font-size: 1rem;
-  color: #64748b;
+  color: var(--text-secondary);
   margin: 0;
 }
 
@@ -44,11 +45,12 @@
 
 /* Card Individual */
 .card {
-  background: white;
+  background: var(--bg-surface);
+  color: var(--text-primary);
   border-radius: 12px;
   padding: 1.5rem;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-  border: 1px solid #e2e8f0;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-primary);
   transition: all 0.2s ease;
   display: flex;
   flex-direction: column;
@@ -56,15 +58,14 @@
 }
 
 .card:hover {
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
-    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow: var(--shadow-md);
   transform: translateY(-2px);
 }
 
 .card-icon {
   width: 48px;
   height: 48px;
-  background-color: #f3f4f6;
+  background-color: var(--bg-surface-hover);
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -80,13 +81,13 @@
 .card-title {
   font-size: 1.125rem;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--text-primary);
   margin: 0 0 0.5rem 0;
 }
 
 .card-description {
   font-size: 0.875rem;
-  color: #64748b;
+  color: var(--text-secondary);
   margin: 0 0 1rem 0;
   line-height: 1.5;
 }
@@ -94,16 +95,16 @@
 .card-count {
   font-size: 0.875rem;
   font-weight: 500;
-  color: #1e3a8a;
-  background-color: #dbeafe;
+  color: var(--nav-active-text);
+  background-color: var(--nav-active-bg);
   padding: 0.25rem 0.75rem;
   border-radius: 6px;
   display: inline-block;
 }
 
 .card-button {
-  background-color: #1e3a8a;
-  color: white;
+  background-color: var(--accent-primary);
+  color: #fff;
   border: none;
   border-radius: 8px;
   padding: 0.75rem 1.5rem;
@@ -115,7 +116,7 @@
 }
 
 .card-button:hover {
-  background-color: #1e40af;
+  background-color: var(--accent-primary-hover);
   transform: translateY(-2px);
 }
 
@@ -127,8 +128,9 @@
 }
 
 .acao-rapida-btn {
-  background: white;
-  border: 2px solid #e2e8f0;
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  border: 2px solid var(--border-primary);
   border-radius: 8px;
   padding: 1rem 1.5rem;
   display: flex;
@@ -136,32 +138,31 @@
   gap: 0.75rem;
   cursor: pointer;
   transition: background-color 0.3s ease, transform 0.3s ease,
-    box-shadow 0.3s ease;
+    box-shadow 0.3s ease, color 0.3s ease;
   font-size: 0.875rem;
   font-weight: 500;
-  color: #374151;
 }
 
 .acao-rapida-btn:hover {
-  background-color: #f8fafc;
+  background-color: var(--bg-surface-hover);
   transform: translateY(-2px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  color: rgb(0, 0, 0);
+  box-shadow: var(--shadow-sm);
+  color: var(--text-primary);
 }
 
 .acoes-rapidas-section {
   margin-bottom: 3rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border-primary);
   padding: 1rem;
-  background-color: white;
+  background-color: var(--bg-surface);
+  color: var(--text-primary);
   border-radius: 12px;
   transition: all 0.2s ease;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  box-shadow: var(--shadow-sm);
 }
 
 .acoes-rapidas-section:hover {
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
-    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow: var(--shadow-md);
   transform: translateY(-2px);
 }
 
