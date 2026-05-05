@@ -73,6 +73,110 @@
   padding: 1.5rem;
 }
 
+.agenda-calendar-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.agenda-calendar-month {
+  text-transform: capitalize;
+  color: var(--text-primary);
+}
+
+.agenda-calendar-nav {
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid var(--border-primary);
+  border-radius: 0.5rem;
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.agenda-calendar-nav:hover {
+  background: var(--bg-surface-hover);
+  color: var(--text-primary);
+}
+
+.agenda-calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.35rem;
+  margin-bottom: 0.35rem;
+}
+
+.agenda-calendar-weekdays span {
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+}
+
+.agenda-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.35rem;
+  margin-bottom: 1rem;
+}
+
+.agenda-calendar-day {
+  min-height: 2.4rem;
+  border: 1px solid var(--border-primary);
+  border-radius: 0.45rem;
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.agenda-calendar-day:hover {
+  background: var(--bg-surface-hover);
+}
+
+.agenda-calendar-day.today {
+  border-color: var(--accent-primary);
+}
+
+.agenda-calendar-day.selected {
+  background: var(--accent-primary-bg);
+  border-color: var(--accent-primary);
+}
+
+.agenda-calendar-day.outside-month {
+  opacity: 0.45;
+}
+
+.agenda-calendar-badge {
+  position: absolute;
+  bottom: 2px;
+  right: 4px;
+  font-size: 0.6rem;
+  color: var(--accent-primary);
+  font-weight: 700;
+}
+
+.agenda-selected-date {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.75rem 0 0.5rem;
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  text-transform: capitalize;
+}
+
+.agenda-selected-date strong {
+  color: var(--text-primary);
+}
+
 .agenda-loading,
 .agenda-empty {
   text-align: center;

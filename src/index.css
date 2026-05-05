@@ -7,6 +7,7 @@
 
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-size: 16.5px;
   line-height: 1.5;
   font-weight: 400;
 
@@ -100,6 +101,12 @@
 body {
   background-color: var(--bg-primary);
   color: var(--text-primary);
+}
+
+@media (max-width: 768px) {
+  :root {
+    font-size: 16px;
+  }
 }
 
 /* Conteúdo comum às abas do dashboard (classes usadas em várias telas) */

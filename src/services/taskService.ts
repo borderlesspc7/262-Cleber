@@ -16,8 +16,10 @@ export const taskService = {
   async createTask(userId: string, taskData: CreateTaskData): Promise<Task> {
     try {
       const now = new Date();
+      const scheduledDate = new Date(`${taskData.scheduledDate}T00:00:00`);
       const taskRef = await addDoc(collection(db, "tasks"), {
         ...taskData,
+        scheduledDate: Timestamp.fromDate(scheduledDate),
         completed: false,
         userId,
         createdAt: Timestamp.fromDate(now),
@@ -27,6 +29,7 @@ export const taskService = {
       return {
         id: taskRef.id,
         ...taskData,
+        scheduledDate,
         completed: false,
         userId,
         createdAt: now,
@@ -48,10 +51,14 @@ export const taskService = {
 
       querySnapshot.forEach((doc) => {
         const data = doc.data();
+        const scheduledDate = data.scheduledDate
+          ? data.scheduledDate.toDate()
+          : data.createdAt.toDate();
         tasks.push({
           id: doc.id,
           description: data.description,
           time: data.time,
+          scheduledDate,
           priority: data.priority,
           completed: data.completed,
           userId: data.userId,
@@ -71,9 +78,21 @@ export const taskService = {
   async updateTask(taskId: string, updateData: UpdateTaskData): Promise<void> {
     try {
       const taskRef = doc(db, "tasks", taskId);
-      await updateDoc(taskRef, {
-        ...updateData,
+      const { scheduledDate, ...rest } = updateData;
+      const payload: Omit<UpdateTaskData, "scheduledDate"> & {
+        updatedAt: Timestamp;
+        scheduledDate?: Timestamp;
+      } = {
+        ...rest,
         updatedAt: Timestamp.fromDate(new Date()),
+      };
+      if (scheduledDate) {
+        payload.scheduledDate = Timestamp.fromDate(
+          new Date(`${scheduledDate}T00:00:00`)
+        );
+      }
+      await updateDoc(taskRef, {
+        ...payload,
       });
     } catch (error) {
       console.error("Erro ao atualizar tarefa:", error);
@@ -106,30 +125,9 @@ export const taskService = {
     }
   },
 
-  async deleteOldTasks(userId: string): Promise<void> {
-    try {
-      const hoje = new Date();
-      hoje.setHours(0, 0, 0, 0);
-
-      const q = query(collection(db, "tasks"), where("userId", "==", userId));
-
-      const querySnapshot = await getDocs(q);
-      const deletePromises: Promise<void>[] = [];
-
-      querySnapshot.forEach((docSnapshot) => {
-        const data = docSnapshot.data();
-        const taskDate = data.createdAt.toDate();
-        taskDate.setHours(0, 0, 0, 0);
-
-        if (taskDate.getTime() < hoje.getTime()) {
-          deletePromises.push(deleteDoc(doc(db, "tasks", docSnapshot.id)));
-        }
-      });
-
-      await Promise.all(deletePromises);
-    } catch (error) {
-      console.error("Erro ao deletar tarefas antigas:", error);
-      throw new Error("Erro ao deletar tarefas antigas");
-    }
+  async deleteOldTasks(_userId: string): Promise<void> {
+    // Mantido apenas para compatibilidade; não removemos tarefas automaticamente
+    // para permitir histórico e navegação no calendário.
+    return Promise.resolve();
   },
 };

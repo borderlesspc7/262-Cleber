@@ -9,6 +9,7 @@ interface TaskModalProps {
   onClose: () => void;
   onSubmit: (taskData: CreateTaskData) => Promise<void>;
   isLoading?: boolean;
+  initialDate?: string;
 }
 
 export const TaskModal: React.FC<TaskModalProps> = ({
@@ -16,12 +17,24 @@ export const TaskModal: React.FC<TaskModalProps> = ({
   onClose,
   onSubmit,
   isLoading = false,
+  initialDate,
 }) => {
+  const getTodayInputDate = () => new Date().toISOString().split("T")[0];
+
   const [formData, setFormData] = useState<CreateTaskData>({
     description: "",
     time: "",
+    scheduledDate: initialDate ?? getTodayInputDate(),
     priority: "media",
   });
+
+  React.useEffect(() => {
+    if (!isOpen) return;
+    setFormData((prev) => ({
+      ...prev,
+      scheduledDate: initialDate ?? prev.scheduledDate ?? getTodayInputDate(),
+    }));
+  }, [initialDate, isOpen]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -46,6 +59,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
       setFormData({
         description: "",
         time: "",
+        scheduledDate: initialDate ?? getTodayInputDate(),
         priority: "media",
       });
       onClose();
@@ -58,6 +72,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
     setFormData({
       description: "",
       time: "",
+      scheduledDate: initialDate ?? getTodayInputDate(),
       priority: "media",
     });
     onClose();
@@ -92,6 +107,21 @@ export const TaskModal: React.FC<TaskModalProps> = ({
               value={formData.description}
               onChange={handleInputChange}
               placeholder="Digite a descrição da tarefa"
+              className="task-modal-input"
+              required
+            />
+          </div>
+
+          <div className="task-modal-field">
+            <label className="task-modal-label" htmlFor="scheduledDate">
+              Data
+            </label>
+            <input
+              id="scheduledDate"
+              name="scheduledDate"
+              type="date"
+              value={formData.scheduledDate}
+              onChange={handleInputChange}
               className="task-modal-input"
               required
             />

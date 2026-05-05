@@ -1,5 +1,13 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { Clock, Plus, Check, Edit, Trash2 } from "lucide-react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
+import {
+  Clock,
+  Plus,
+  Check,
+  Edit,
+  Trash2,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { taskService } from "../../services/taskService";
 import { TaskModal } from "./TaskModal";
@@ -12,6 +20,27 @@ export const AgendaCard: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingTasks, setIsLoadingTasks] = useState(true);
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return today;
+  });
+  const [currentMonth, setCurrentMonth] = useState(() => {
+    const today = new Date();
+    return new Date(today.getFullYear(), today.getMonth(), 1);
+  });
+
+  const formatDateInput = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
+  const sameDate = (a: Date, b: Date) =>
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate();
 
   const loadTasks = useCallback(async () => {
     if (!user) return;
@@ -19,20 +48,7 @@ export const AgendaCard: React.FC = () => {
     try {
       setIsLoadingTasks(true);
       const userTasks = await taskService.getTasksByUser(user.uid);
-
-      const hoje = new Date();
-      hoje.setHours(0, 0, 0, 0);
-      const amanha = new Date();
-      amanha.setDate(amanha.getDate() + 1);
-
-      const taskDoDia = userTasks.filter((task) => {
-        const taskDate = new Date(task.createdAt);
-        taskDate.setHours(0, 0, 0, 0);
-        return taskDate.getTime() === hoje.getTime();
-      });
-      setTasks(taskDoDia);
-
-      await taskService.deleteOldTasks(user.uid);
+      setTasks(userTasks);
     } catch (error) {
       console.error("Erro ao carregar tarefas:", error);
     } finally {
@@ -57,6 +73,57 @@ export const AgendaCard: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const monthDays = useMemo(() => {
+    const startOfMonth = new Date(
+      currentMonth.getFullYear(),
+      currentMonth.getMonth(),
+      1
+    );
+    const firstWeekDay = (startOfMonth.getDay() + 6) % 7;
+    const calendarStart = new Date(startOfMonth);
+    calendarStart.setDate(startOfMonth.getDate() - firstWeekDay);
+
+    return Array.from({ length: 42 }, (_, index) => {
+      const date = new Date(calendarStart);
+      date.setDate(calendarStart.getDate() + index);
+      return date;
+    });
+  }, [currentMonth]);
+
+  const tasksByDate = useMemo(() => {
+    const map = new Map<string, number>();
+    tasks.forEach((task) => {
+      const key = formatDateInput(task.scheduledDate);
+      map.set(key, (map.get(key) ?? 0) + 1);
+    });
+    return map;
+  }, [tasks]);
+
+  const selectedDateTasks = useMemo(
+    () =>
+      tasks
+        .filter((task) => sameDate(task.scheduledDate, selectedDate))
+        .sort((a, b) => a.time.localeCompare(b.time)),
+    [selectedDate, tasks]
+  );
+
+  const selectedDateLabel = selectedDate.toLocaleDateString("pt-BR", {
+    weekday: "long",
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
+
+  const monthLabel = currentMonth.toLocaleDateString("pt-BR", {
+    month: "long",
+    year: "numeric",
+  });
+
+  const openCreateModalForDate = (date: Date) => {
+    setSelectedDate(date);
+    setIsModalOpen(true);
   };
 
   const handleToggleComplete = async (taskId: string, completed: boolean) => {
@@ -111,33 +178,99 @@ export const AgendaCard: React.FC = () => {
         <div className="agenda-title-section">
           <div className="agenda-title">
             <Clock className="agenda-icon" size={20} />
-            <h3>Agenda do Dia</h3>
+            <h3>Agenda</h3>
           </div>
-          <p className="agenda-subtitle">Suas tarefas e compromissos de hoje</p>
+          <p className="agenda-subtitle">Clique duas vezes no dia para criar evento</p>
         </div>
         <button
           className="agenda-add-button"
-          onClick={() => setIsModalOpen(true)}
+          onClick={() => openCreateModalForDate(selectedDate)}
+          title="Adicionar evento na data selecionada"
         >
           <Plus className="agenda-add-icon" size={20} />
         </button>
       </div>
 
       <div className="agenda-content">
+        <div className="agenda-calendar-toolbar">
+          <button
+            className="agenda-calendar-nav"
+            onClick={() =>
+              setCurrentMonth(
+                new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1)
+              )
+            }
+            title="Mês anterior"
+          >
+            <ChevronLeft size={16} />
+          </button>
+          <strong className="agenda-calendar-month">{monthLabel}</strong>
+          <button
+            className="agenda-calendar-nav"
+            onClick={() =>
+              setCurrentMonth(
+                new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1)
+              )
+            }
+            title="Próximo mês"
+          >
+            <ChevronRight size={16} />
+          </button>
+        </div>
+
+        <div className="agenda-calendar-weekdays">
+          {["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"].map((day) => (
+            <span key={day}>{day}</span>
+          ))}
+        </div>
+
+        <div className="agenda-calendar-grid">
+          {monthDays.map((day) => {
+            const isCurrentMonth = day.getMonth() === currentMonth.getMonth();
+            const isSelected = sameDate(day, selectedDate);
+            const isToday = sameDate(day, new Date());
+            const eventsCount = tasksByDate.get(formatDateInput(day)) ?? 0;
+
+            return (
+              <button
+                key={day.toISOString()}
+                className={`agenda-calendar-day ${isCurrentMonth ? "" : "outside-month"} ${
+                  isSelected ? "selected" : ""
+                } ${isToday ? "today" : ""}`}
+                onClick={() => setSelectedDate(day)}
+                onDoubleClick={() => openCreateModalForDate(day)}
+                title={`${
+                  day.toLocaleDateString("pt-BR")
+                } - duplo clique para criar evento`}
+              >
+                <span>{day.getDate()}</span>
+                {eventsCount > 0 && (
+                  <small className="agenda-calendar-badge">{eventsCount}</small>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="agenda-selected-date">
+          <strong>{selectedDateLabel}</strong>
+          <span>{selectedDateTasks.length} evento(s)</span>
+        </div>
+
         {isLoadingTasks ? (
           <div className="agenda-loading">
             <p>Carregando tarefas...</p>
           </div>
-        ) : tasks.length === 0 ? (
+        ) : selectedDateTasks.length === 0 ? (
           <div className="agenda-empty">
-            <p>Nenhuma tarefa cadastrada</p>
+            <p>Nenhum evento nesta data</p>
             <p className="agenda-empty-subtitle">
-              Clique no botão + para adicionar uma nova tarefa
+              Dê dois cliques em um dia ou use o botão + para adicionar
             </p>
           </div>
         ) : (
           <div className="agenda-tasks">
-            {tasks.map((task) => (
+            {selectedDateTasks.map((task) => (
               <div
                 key={task.id}
                 className={`agenda-task ${
@@ -200,6 +333,7 @@ export const AgendaCard: React.FC = () => {
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleCreateTask}
         isLoading={isLoading}
+        initialDate={formatDateInput(selectedDate)}
       />
     </div>
   );

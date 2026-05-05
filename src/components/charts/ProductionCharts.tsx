@@ -17,16 +17,32 @@ const MONTH_NAMES_SHORT = [
 
 interface MonthlyData {
   month: string;
-  planejada: number;
-  em_producao: number;
-  concluida: number;
-  total: number;
+  planejadaPecas: number;
+  emProducaoPecas: number;
+  concluidaPecas: number;
+  totalPecas: number;
+  ordens: number;
+  planejadaOrdens: number;
+  emProducaoOrdens: number;
+  concluidaOrdens: number;
 }
 
 export const ProductionCharts: React.FC<ProductionChartsProps> = ({
   orders,
   progressos,
 }) => {
+  const getOrderTotalPieces = (order: ProductionOrder): number =>
+    order.grade?.reduce((acc, row) => acc + row.total, 0) || 0;
+
+  const getOrderMonthDate = (order: ProductionOrder): Date => {
+    // Para volume produtivo, data de início é mais representativa que createdAt.
+    if (order.dataInicio) {
+      const [year, month, day] = order.dataInicio.split("-").map(Number);
+      if (year && month && day) return new Date(year, month - 1, day);
+    }
+    return new Date(order.createdAt);
+  };
+
   // ===== Dados para o gráfico de barras (volume mensal) =====
   const monthlyData: MonthlyData[] = useMemo(() => {
     const now = new Date();
@@ -39,30 +55,72 @@ export const ProductionCharts: React.FC<ProductionChartsProps> = ({
       const label = `${MONTH_NAMES_SHORT[d.getMonth()]}`;
 
       const monthOrders = orders.filter((o) => {
-        const orderDate = new Date(o.createdAt);
+        const orderDate = getOrderMonthDate(o);
         const orderKey = `${orderDate.getFullYear()}-${String(orderDate.getMonth() + 1).padStart(2, "0")}`;
         return orderKey === monthKey;
       });
 
+      let planejadaPecas = 0;
+      let emProducaoPecas = 0;
+      let concluidaPecas = 0;
+
+      monthOrders.forEach((order) => {
+        const totalPecas = getOrderTotalPieces(order);
+        if (order.status === "planejada") {
+          planejadaPecas += totalPecas;
+        } else if (order.status === "em_producao") {
+          emProducaoPecas += totalPecas;
+        } else {
+          concluidaPecas += totalPecas;
+        }
+      });
+
       months.push({
         month: label,
-        planejada: monthOrders.filter((o) => o.status === "planejada").length,
-        em_producao: monthOrders.filter((o) => o.status === "em_producao").length,
-        concluida: monthOrders.filter((o) => o.status === "concluida").length,
-        total: monthOrders.length,
+        planejadaPecas,
+        emProducaoPecas,
+        concluidaPecas,
+        totalPecas: planejadaPecas + emProducaoPecas + concluidaPecas,
+        ordens: monthOrders.length,
+        planejadaOrdens: monthOrders.filter((order) => order.status === "planejada").length,
+        emProducaoOrdens: monthOrders.filter((order) => order.status === "em_producao").length,
+        concluidaOrdens: monthOrders.filter((order) => order.status === "concluida").length,
       });
     }
 
     return months;
-  }, [orders]);
+  }, [orders, progressos]);
+
+  const monthlyChartData = useMemo(
+    () =>
+      monthlyData.map((data) => ({
+        month: data.month,
+        planejada: data.planejadaPecas,
+        emProducao: data.emProducaoPecas,
+        concluida: data.concluidaPecas,
+        total: data.totalPecas,
+        planejadaOrdens: data.planejadaOrdens,
+        emProducaoOrdens: data.emProducaoOrdens,
+        concluidaOrdens: data.concluidaOrdens,
+        totalOrdens: data.ordens,
+      })),
+    [monthlyData]
+  );
 
   const maxBarValue = useMemo(() => {
     const max = Math.max(
-      ...monthlyData.flatMap((d) => [d.planejada, d.em_producao, d.concluida]),
+      ...monthlyChartData.flatMap((d) => [d.planejada, d.emProducao, d.concluida]),
       1
     );
     return max;
-  }, [monthlyData]);
+  }, [monthlyChartData]);
+
+  const getBarHeight = (value: number): string => {
+    if (value <= 0) return "0%";
+    const rawHeight = (value / maxBarValue) * 100;
+    // Mantém uma altura mínima leve sem achatar todos os meses.
+    return `${Math.max(rawHeight, 4)}%`;
+  };
 
   // ===== Dados para o gráfico donut (distribuição por status) =====
   const statusDistribution = useMemo(() => {
@@ -166,62 +224,72 @@ export const ProductionCharts: React.FC<ProductionChartsProps> = ({
             </div>
             <div>
               <h3 className="chart-card-title">Volume de Produção</h3>
-              <p className="chart-card-subtitle">Últimos 6 meses</p>
+              <p className="chart-card-subtitle">Últimos 6 meses (peças e ordens)</p>
             </div>
           </div>
-          <span className="chart-card-badge">
-            {productivityRate.finalizadas}/{productivityRate.totalPecas} peças
-          </span>
+          <div className="chart-card-header-actions">
+            <span className="chart-card-badge">
+              {productivityRate.finalizadas}/{productivityRate.totalPecas} peças
+            </span>
+          </div>
         </div>
 
         {hasOrders ? (
           <div className="bar-chart-container">
             <div className="bar-chart-wrapper">
-              {monthlyData.map((data, index) => (
+              {monthlyChartData.map((data, index) => (
                 <div className="bar-chart-column" key={index}>
+                  <div className="bar-chart-month-tooltip">
+                    <p className="bar-chart-month-tooltip-title">{data.month}</p>
+                    <p>Planejada: <strong>{data.planejada}</strong> peças ({data.planejadaOrdens} ordens)</p>
+                    <p>Em Produção: <strong>{data.emProducao}</strong> peças ({data.emProducaoOrdens} ordens)</p>
+                    <p>Concluída: <strong>{data.concluida}</strong> peças ({data.concluidaOrdens} ordens)</p>
+                    <p>Total: <strong>{data.total}</strong> peças ({data.totalOrdens} ordens)</p>
+                  </div>
                   <div className="bar-chart-bar-group">
                     <div
                       className="bar-chart-bar bar-planejada"
                       style={{
-                        height: `${(data.planejada / maxBarValue) * 100}%`,
+                        height: getBarHeight(data.planejada),
                       }}
                     >
                       {data.planejada > 0 && (
                         <span className="bar-chart-bar-tooltip">
-                          {data.planejada} planejada{data.planejada !== 1 ? "s" : ""}
+                          {data.planejada} peças planejadas
                         </span>
                       )}
                     </div>
                     <div
                       className="bar-chart-bar bar-em-producao"
                       style={{
-                        height: `${(data.em_producao / maxBarValue) * 100}%`,
+                        height: getBarHeight(data.emProducao),
                       }}
                     >
-                      {data.em_producao > 0 && (
+                      {data.emProducao > 0 && (
                         <span className="bar-chart-bar-tooltip">
-                          {data.em_producao} em produção
+                          {data.emProducao} peças em produção
                         </span>
                       )}
                     </div>
                     <div
                       className="bar-chart-bar bar-concluida"
                       style={{
-                        height: `${(data.concluida / maxBarValue) * 100}%`,
+                        height: getBarHeight(data.concluida),
                       }}
                     >
                       {data.concluida > 0 && (
                         <span className="bar-chart-bar-tooltip">
-                          {data.concluida} concluída{data.concluida !== 1 ? "s" : ""}
+                          {data.concluida} peças concluídas
                         </span>
                       )}
                     </div>
                   </div>
+                  <span className="bar-chart-total">{data.total}</span>
                 </div>
               ))}
             </div>
             <div className="bar-chart-labels">
-              {monthlyData.map((data, index) => (
+              {monthlyChartData.map((data, index) => (
                 <span className="bar-chart-label" key={index}>
                   {data.month}
                 </span>

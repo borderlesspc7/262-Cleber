@@ -12,10 +12,8 @@ export const useNotifications = (userId: string ) => {
 
         try{
             setLoading(true);
-            const [allNotifications, unreadNotifications] = await Promise.all([
-                notificationService.getNotificationsByUser(userId),
-                notificationService.getUnreadNotifications(userId),
-            ])
+            const allNotifications = await notificationService.getNotificationsByUser(userId);
+            const unreadNotifications = allNotifications.filter((notification) => !notification.read);
 
             setNotifications(allNotifications);
             setUnreadCount(unreadNotifications.length);
